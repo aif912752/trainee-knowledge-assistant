@@ -490,6 +490,60 @@ pnpm install -D vue-tsc
 
 ---
 
+## Session 21: Adding Error Handling, Zod Validation, and Nuxt-Security
+
+**Prompt:**
+> ควรมี ระบบจัดการ Error กลาง และ ติดตั้ง zod มาช่วยเช็ค Input และใช้ nuxt-security ด้วยจะดีกว่าไหม
+
+**AI Response:**
+เห็นด้วยอย่างยิ่ง! ไอเดียยยอดเยี่ยมมาก จะช่วย:
+- ✅ Code Quality +5 คะแนน (Input validation, error handling)
+- ✅ Security ดีขึ้น (ป้องกัน attacks)
+- ✅ Maintainability ดีขึ้น (code สะอาด, ง่ายแก้ไข)
+- ✅ Consistency (ทุก API ใช้รูปแบบเดียวกัน)
+
+Implement ทีละส่วน:
+
+**Step 1: Install Dependencies**
+```bash
+pnpm install zod nuxt-security
+```
+
+**Step 2: Create Error Handling System**
+- `server/utils/errors.ts` - Custom ApiError class hierarchy
+- Specific error types: BadRequest, Unauthorized, Forbidden, NotFound, ValidationError, InternalServerError
+- `handleApiError()` - Consistent error responses
+- `asyncHandler()` - Async error wrapper
+
+**Step 3: Create Validation Schemas with Zod**
+- `server/validations/auth.validation.ts` - Login schema (username, password rules)
+- `server/validations/document.validation.ts` - Upload schema (file type, size validation)
+- `server/validations/chat.validation.ts` - Chat schema (message, documentId)
+- `server/validations/index.ts` - Export all
+
+**Step 4: Configure Nuxt-Security**
+- Add to nuxt.config.ts modules
+- Configure security headers:
+  - X-Frame-Options: DENY
+  - X-Content-Type-Options: nosniff
+  - X-XSS-Protection: 1; mode=block
+  - Content-Security-Policy
+  - Referrer-Policy: no-referrer
+
+**My Adjustment:**
+Implement สำเร็จทั้งหมด พร้อม commit ทีละส่วน (4 commits):
+1. Dependencies (zod, nuxt-security)
+2. Error handling system
+3. Validation schemas
+4. Nuxt-security configuration
+
+เรียนรู้:
+- Zod ทำให้ validation type-safe และง่ายขึ้น
+- Centralized error handling ทำให้ code สะอาด
+- Security headers สำคัญมากสำหรับ production
+
+---
+
 ## เริ่ม Implement
 
 ต่อไปจะเริ่ม implement Required Features (30 คะแนน):
