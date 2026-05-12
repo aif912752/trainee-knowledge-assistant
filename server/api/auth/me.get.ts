@@ -41,6 +41,8 @@ export default defineEventHandler(async (event) => {
     };
 
   } catch (error) {
-    return handleApiError(error);
+    const { data, status } = handleApiError(error);
+    setResponseStatus(event, status);
+    return data;
   }
 });

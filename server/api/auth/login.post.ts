@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
 
     // Check if authentication failed
     if (!result.success) {
-      throw new UnauthorizedError(result.error || 'Authentication failed');
+      throw new UnauthorizedError(result.error || 'การยืนยันตัวตนล้มเหลว');
     }
 
     // Create session cookie
@@ -30,6 +30,8 @@ export default defineEventHandler(async (event) => {
     };
 
   } catch (error) {
-    return handleApiError(error);
+    const { data, status } = handleApiError(error);
+    setResponseStatus(event, status);
+    return data;
   }
 });
