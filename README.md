@@ -4,7 +4,7 @@ A web application for chatting with AI about uploaded documents. Built with Nuxt
 
 ## Tech Stack
 
-- **Frontend:** Nuxt 3 + TypeScript + Tailwind CSS
+- **Frontend:** Nuxt 4 + TypeScript + Tailwind CSS
 - **Backend:** Nuxt Server Routes (built-in)
 - **Database:** SQLite (better-sqlite3)
 - **AI API:** z.ai (Claude API proxy)

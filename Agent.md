@@ -9,7 +9,7 @@
 **Mini Knowledge Assistant** — Web application สำหรับคุยกับ AI เกี่ยวกับเอกสารที่อัปโหลด
 
 **Tech Stack:**
-- Frontend: Nuxt 3 + TypeScript + Tailwind CSS
+- Frontend: Nuxt 4 + TypeScript + Tailwind CSS
 - Backend: Nuxt Server Routes (built-in)
 - Database: SQLite (better-sqlite3)
 - AI API: z.ai (Claude API proxy)
