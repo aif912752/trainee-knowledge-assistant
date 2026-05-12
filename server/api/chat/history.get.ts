@@ -1,5 +1,6 @@
 import { ChatService } from '~~/server/services/chat.service';
 import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
+import { successResponse } from '~~/server/utils/response';
 
 /**
  * Get chat history API endpoint
@@ -18,14 +19,9 @@ export default defineEventHandler(async (event) => {
     const chatService = new ChatService();
     const messages = chatService.getChatHistory(user.id, documentId);
 
-    return {
-      success: true,
-      messages
-    };
+    return successResponse(event, { messages });
 
   } catch (error) {
-    const { data, status } = handleApiError(error);
-    setResponseStatus(event, status);
-    return data;
+    return handleApiError(event, error);
   }
 });

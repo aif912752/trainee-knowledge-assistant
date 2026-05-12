@@ -1,7 +1,15 @@
 import { toast } from 'vue-sonner'
 import { apiFetch } from './useApi'
-import type { LoginInput, LoginResult } from '~~/types/auth'
+import type { LoginInput } from '~~/types/auth'
 import type { UserWithoutPassword } from '~~/types/user'
+
+interface ApiResponse<T> {
+  success: boolean
+  data: T
+  message?: string
+}
+
+type LoginResponse = ApiResponse<{ user?: UserWithoutPassword }>
 
 /**
  * Authentication composable
@@ -14,12 +22,12 @@ export function useAuth() {
   /**
    * Login with username and password
    */
-  async function login(credentials: LoginInput): Promise<LoginResult> {
+  async function login(credentials: LoginInput): Promise<LoginResponse> {
     isLoading.value = true
     error.value = ''
 
     try {
-      const response = await apiFetch<LoginResult>('/api/auth/login', {
+      const response = await apiFetch<LoginResponse>('/api/auth/login', {
         method: 'POST',
         body: credentials,
       })
@@ -57,8 +65,8 @@ export function useAuth() {
    */
   async function checkAuth(): Promise<boolean> {
     try {
-      const response = await apiFetch<{ authenticated: boolean; user?: UserWithoutPassword }>('/api/auth/me')
-      return response.authenticated
+      const response = await apiFetch<ApiResponse<{ authenticated: boolean; user?: UserWithoutPassword | null }>>('/api/auth/me')
+      return response.success && response.data.authenticated
     } catch (err) {
       return false
     }

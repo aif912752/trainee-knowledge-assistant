@@ -25,27 +25,21 @@ export default defineEventHandler(async (event) => {
   const userId = getSessionUserId(event);
 
   if (!userId) {
-    const { data, status } = handleApiError(new UnauthorizedError('กรุณาเข้าสู่ระบบ'));
-    setResponseStatus(event, status);
-    return data;
+    return handleApiError(event, new UnauthorizedError('กรุณาเข้าสู่ระบบ'));
   }
 
   // Validate session
   const authService = new AuthService();
 
   if (!authService.validateSession(userId)) {
-    const { data, status } = handleApiError(new UnauthorizedError('เซสชันไม่ถูกต้อง'));
-    setResponseStatus(event, status);
-    return data;
+    return handleApiError(event, new UnauthorizedError('เซสชันไม่ถูกต้อง'));
   }
 
   // Get user and attach to context
   const user = authService.getUserById(userId);
 
   if (!user) {
-    const { data, status } = handleApiError(new UnauthorizedError('ไม่พบผู้ใช้งาน'));
-    setResponseStatus(event, status);
-    return data;
+    return handleApiError(event, new UnauthorizedError('ไม่พบผู้ใช้งาน'));
   }
 
   // Attach user to event context for use in route handlers

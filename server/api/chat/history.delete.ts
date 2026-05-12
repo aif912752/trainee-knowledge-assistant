@@ -1,5 +1,6 @@
 import { ChatService } from '~~/server/services/chat.service';
 import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
+import { successResponse } from '~~/server/utils/response';
 
 /**
  * Clear chat history API endpoint
@@ -15,14 +16,9 @@ export default defineEventHandler(async (event) => {
     const chatService = new ChatService();
     chatService.clearHistory(user.id);
 
-    return {
-      success: true,
-      message: 'ล้างประวัติการสนทนาเรียบร้อยแล้ว'
-    };
+    return successResponse(event, null, 'ล้างประวัติการสนทนาเรียบร้อยแล้ว');
 
   } catch (error) {
-    const { data, status } = handleApiError(error);
-    setResponseStatus(event, status);
-    return data;
+    return handleApiError(event, error);
   }
 });

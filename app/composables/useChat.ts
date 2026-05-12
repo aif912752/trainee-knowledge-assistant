@@ -4,24 +4,30 @@ import type { ChatInput } from '~~/shared/validations/chat.validation'
 
 interface ChatResponse {
   success: boolean
-  data: Message
-  usage: {
-    input: number
-    output: number
-    total: number
+  data: {
+    message: Message
+    usage: {
+      input: number
+      output: number
+      total: number
+    }
   }
 }
 
 interface HistoryResponse {
   success: boolean
-  messages: Message[]
+  data: {
+    messages: Message[]
+  }
 }
 
 interface UsageResponse {
   success: boolean
-  usage: {
-    total: number
-    sessions: any[]
+  data: {
+    usage: {
+      total: number
+      sessions: any[]
+    }
   }
 }
 
@@ -46,7 +52,7 @@ export function useChat() {
         query: { documentId }
       })
       if (response.success) {
-        messages.value = response.messages
+        messages.value = response.data.messages
       }
     } catch (err) {
       console.error('Failed to fetch history:', err)
@@ -62,7 +68,7 @@ export function useChat() {
     try {
       const response = await apiFetch<UsageResponse>('/api/chat/usage')
       if (response.success) {
-        totalTokens.value = response.usage.total
+        totalTokens.value = response.data.usage.total
       }
     } catch (err) {
       console.error('Failed to fetch usage:', err)
@@ -103,7 +109,7 @@ export function useChat() {
       if (response.success) {
         // Replace temp message with server message if needed, or just refresh history
         // For simplicity, we just add the assistant message
-        messages.value.push(response.data)
+        messages.value.push(response.data.message)
         // Update usage
         await fetchUsage()
       }

@@ -11,7 +11,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   // Check authentication via API
   const { data } = await useFetch('/api/auth/me')
 
-  if (!data.value?.authenticated) {
+  if (!data.value?.success || !data.value.data.authenticated) {
     // Redirect to login if not authenticated
     return navigateTo('/login')
   }

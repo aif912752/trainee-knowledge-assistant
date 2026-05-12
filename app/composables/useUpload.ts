@@ -1,11 +1,21 @@
 import { toast } from 'vue-sonner'
 import { apiFetch } from './useApi'
 import { uploadDocumentSchema } from '~~/shared/validations'
-import type { Document } from '~~/types/document'
+interface UploadedDocument {
+  id: number
+  filename: string
+  originalName: string
+  fileType: string
+  fileSize: number
+  contentLength: number
+}
 
 export interface UploadResponse {
   success: boolean
-  document: Document
+  data: {
+    document: UploadedDocument
+  }
+  message?: string
 }
 
 /**
@@ -61,7 +71,7 @@ export function useUpload() {
 
       if (response.success) {
         toast.success('อัปโหลดสำเร็จ', {
-          description: `"${response.document.original_name}" ถูกอัปโหลดเรียบร้อยแล้ว`,
+          description: `"${response.data.document.originalName}" ถูกอัปโหลดเรียบร้อยแล้ว`,
         })
       }
 

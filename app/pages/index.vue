@@ -16,8 +16,8 @@ definePageMeta({
 
 const { data: authData } = await useFetch('/api/auth/me')
 
-const isAuthenticated = computed(() => authData.value?.authenticated || false)
-const user = computed(() => authData.value?.user)
+const isAuthenticated = computed(() => (authData.value?.success && authData.value.data.authenticated) || false)
+const user = computed(() => authData.value?.data.user)
 
 if (!isAuthenticated.value) {
   await navigateTo('/login')

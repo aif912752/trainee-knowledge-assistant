@@ -3,6 +3,7 @@ import { validateBody } from '~~/shared/validations/helpers';
 import { loginSchema } from '~~/shared/validations';
 import { createUserSession } from '~~/server/utils/session';
 import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
+import { successResponse } from '~~/server/utils/response';
 import type { LoginInput } from '~~/types/auth';
 
 export default defineEventHandler(async (event) => {
@@ -24,14 +25,9 @@ export default defineEventHandler(async (event) => {
     createUserSession(event, result.user!);
 
     // Return user data
-    return {
-      success: true,
-      user: result.user
-    };
+    return successResponse(event, { user: result.user });
 
   } catch (error) {
-    const { data, status } = handleApiError(error);
-    setResponseStatus(event, status);
-    return data;
+    return handleApiError(event, error);
   }
 });

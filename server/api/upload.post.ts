@@ -1,6 +1,6 @@
 import { DocumentService } from '~~/server/services/document.service';
 import { UnauthorizedError, ValidationError, handleApiError } from '~~/server/utils/errors';
-import formidable from 'formidable';
+import { successResponse } from '~~/server/utils/response';
 
 /**
  * Upload file API endpoint
@@ -17,9 +17,7 @@ export default defineEventHandler(async (event) => {
 
     if (!user) {
       console.log('❌ Unauthorized upload attempt');
-      const { data, status } = handleApiError(new UnauthorizedError('กรุณาเข้าสู่ระบบ'));
-      setResponseStatus(event, status);
-      return data;
+      return handleApiError(event, new UnauthorizedError('กรุณาเข้าสู่ระบบ'));
     }
 
     const documentService = new DocumentService();
@@ -34,17 +32,13 @@ export default defineEventHandler(async (event) => {
     const file = Array.isArray(fileArray) ? fileArray[0] : fileArray;
 
     if (!file) {
-      const { data, status } = handleApiError(new ValidationError('ไม่พบไฟล์ที่อัปโหลด'));
-      setResponseStatus(event, status);
-      return data;
+      return handleApiError(event, new ValidationError('ไม่พบไฟล์ที่อัปโหลด'));
     }
 
     // Upload and process document
     const result = await documentService.uploadDocument(user.id, file);
 
-    return {
-      success: true,
-      message: 'อัปโหลดและประมวลผลไฟล์สำเร็จ',
+    return successResponse(event, {
       document: {
         id: result.id,
         filename: result.filename,
@@ -53,11 +47,9 @@ export default defineEventHandler(async (event) => {
         fileSize: result.fileSize,
         contentLength: result.content?.length || 0,
       },
-    };
+    }, 'อัปโหลดและประมวลผลไฟล์สำเร็จ');
 
   } catch (error) {
-    const { data, status } = handleApiError(error);
-    setResponseStatus(event, status);
-    return data;
+    return handleApiError(event, error);
   }
 });

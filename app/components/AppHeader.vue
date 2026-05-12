@@ -15,7 +15,7 @@ const props = defineProps<{
 }>()
 
 const { data: authData } = useFetch('/api/auth/me')
-const user = computed(() => authData.value?.user)
+const user = computed(() => authData.value?.data.user)
 const isLoggingOut = ref(false)
 
 const navItems = [

@@ -1,6 +1,7 @@
 import { getSessionUserId } from '~~/server/utils/session';
 import { AuthService } from '~~/server/services/auth.service';
-import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
+import { handleApiError } from '~~/server/utils/errors';
+import { successResponse } from '~~/server/utils/response';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -8,10 +9,10 @@ export default defineEventHandler(async (event) => {
     const userId = getSessionUserId(event);
 
     if (!userId) {
-      return {
+      return successResponse(event, {
         authenticated: false,
         user: null
-      };
+      });
     }
 
     // Validate session
@@ -19,30 +20,28 @@ export default defineEventHandler(async (event) => {
     const isValid = authService.validateSession(userId);
 
     if (!isValid) {
-      return {
+      return successResponse(event, {
         authenticated: false,
         user: null
-      };
+      });
     }
 
     // Get user details
     const user = authService.getUserById(userId);
 
     if (!user) {
-      return {
+      return successResponse(event, {
         authenticated: false,
         user: null
-      };
+      });
     }
 
-    return {
+    return successResponse(event, {
       authenticated: true,
       user
-    };
+    });
 
   } catch (error) {
-    const { data, status } = handleApiError(error);
-    setResponseStatus(event, status);
-    return data;
+    return handleApiError(event, error);
   }
 });

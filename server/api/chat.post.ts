@@ -2,6 +2,7 @@ import { ChatService } from '~~/server/services/chat.service';
 import { validateBody } from '~~/shared/validations/helpers';
 import { chatSchema } from '~~/shared/validations';
 import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
+import { successResponse } from '~~/server/utils/response';
 import type { ChatInput } from '~~/shared/validations/chat.validation';
 
 /**
@@ -28,15 +29,12 @@ export default defineEventHandler(async (event) => {
     const chatService = new ChatService();
     const result = await chatService.sendMessage(user.id, input, sessionId);
 
-    return {
-      success: true,
-      data: result.message,
+    return successResponse(event, {
+      message: result.message,
       usage: result.usage
-    };
+    });
 
   } catch (error) {
-    const { data, status } = handleApiError(error);
-    setResponseStatus(event, status);
-    return data;
+    return handleApiError(event, error);
   }
 });

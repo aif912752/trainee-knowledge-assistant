@@ -68,9 +68,9 @@ async function uploadFile() {
 
     if (response.success) {
       uploadResult.value = {
-        id: response.document.id,
-        filename: response.document.filename,
-        originalName: response.document.original_name,
+        id: response.data.document.id,
+        filename: response.data.document.filename,
+        originalName: response.data.document.originalName,
       }
     }
   } catch (error) {

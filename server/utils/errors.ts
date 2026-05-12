@@ -7,6 +7,7 @@ import {
   ValidationError, 
   InternalServerError 
 } from '~~/shared/errors';
+import type { H3Event } from 'h3';
 
 export { 
   ApiError, 
@@ -19,44 +20,46 @@ export {
 };
 
 /**
- * Error handler for API routes
- * Returns both response data and status code
+ * Centralized API error logger.
+ * Keep logging here so route handlers do not need their own error logging.
  */
-export function handleApiError(error: unknown): {
-  data: { success: false; error: string; code?: string };
-  status: number;
-} {
+export function apiErrorLogger(error: unknown): void {
   console.error('API Error:', error);
+}
+
+/**
+ * Centralized error handler for API routes.
+ * Sets response status and returns standardized error response.
+ */
+export function handleApiError(
+  event: H3Event,
+  error: unknown
+): { success: false; error: string; code?: string } {
+  apiErrorLogger(error);
 
   if (error instanceof ApiError) {
+    setResponseStatus(event, error.statusCode);
     return {
-      data: {
-        success: false,
-        error: error.message,
-        code: error.code
-      },
-      status: error.statusCode
+      success: false,
+      error: error.message,
+      code: error.code
     };
   }
 
   if (error instanceof Error) {
+    setResponseStatus(event, 500);
     return {
-      data: {
-        success: false,
-        error: error.message,
-        code: 'UNKNOWN_ERROR'
-      },
-      status: 500
+      success: false,
+      error: error.message,
+      code: 'UNKNOWN_ERROR'
     };
   }
 
+  setResponseStatus(event, 500);
   return {
-    data: {
-      success: false,
-      error: 'เกิดข้อผิดพลาดที่ไม่คาดคิด',
-      code: 'UNKNOWN_ERROR'
-    },
-    status: 500
+    success: false,
+    error: 'เกิดข้อผิดพลาดที่ไม่คาดคิด',
+    code: 'UNKNOWN_ERROR'
   };
 }
 

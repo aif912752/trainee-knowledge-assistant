@@ -69,10 +69,31 @@ describe('ChatService', () => {
     const sessionId = 'test-session';
     const input = { message: 'สวัสดี' };
 
+    // Both fail
     mockFetch.mockRejectedValue(new Error('API Failure'));
 
     await expect(chatService.sendMessage(userId, input, sessionId)).rejects.toThrow('API Failure');
     expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('should handle non-existent documentId gracefully', async () => {
+    const userId = user.id;
+    const sessionId = 'test-session';
+    const input = { message: 'สวัสดี', documentId: 999 }; // Non-existent ID
+
+    mockFetch.mockResolvedValueOnce({
+      content: [{ text: 'สวัสดีครับ' }],
+      usage: { input_tokens: 5, output_tokens: 5 }
+    });
+
+    const result = await chatService.sendMessage(userId, input, sessionId);
+
+    expect(result.message.content).toBe('สวัสดีครับ');
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    // Should NOT include context since doc doesn't exist
+    const callArgs = mockFetch.mock.calls[0];
+    expect(callArgs[1].body.messages[0].content).not.toContain('เนื้อหาจากไฟล์เอกสาร');
+    expect(callArgs[1].body.messages[0].content).toBe('สวัสดี');
   });
 
   it('should include document context when documentId is provided', async () => {
@@ -98,23 +119,48 @@ describe('ChatService', () => {
     expect(callArgs[1].body.messages[0].content).toContain('สรุปให้ที');
   });
 
-  it('should record token usage in the database', async () => {
+  it('should record token usage in the database across multiple sessions', async () => {
     const userId = user.id;
-    const sessionId = 'session-123';
     
     mockFetch.mockResolvedValue({
       content: [{ text: 'ตอบกลับ' }],
       usage: { input_tokens: 5, output_tokens: 5 }
     });
 
-    await chatService.sendMessage(userId, { message: 'msg 1' }, sessionId);
-    await chatService.sendMessage(userId, { message: 'msg 2' }, sessionId);
+    await chatService.sendMessage(userId, { message: 'msg 1' }, 'session-1');
+    await chatService.sendMessage(userId, { message: 'msg 2' }, 'session-2');
 
     const usage = chatService.getTokenUsage(userId);
     expect(usage.total).toBe(20); // (5+5) * 2
-    expect(usage.sessions).toHaveLength(1);
-    expect(usage.sessions[0].session_id).toBe(sessionId);
-    expect(usage.sessions[0].total_tokens).toBe(20);
+    expect(usage.sessions).toHaveLength(2);
+    expect(usage.sessions.find(s => s.session_id === 'session-1').total_tokens).toBe(10);
+    expect(usage.sessions.find(s => s.session_id === 'session-2').total_tokens).toBe(10);
+  });
+
+  it('should include truncated document context when document is very large', async () => {
+    const userId = user.id;
+    const sessionId = 'test-session';
+    
+    // Create a very large mock document (e.g., 20,000 characters)
+    const largeContent = 'A'.repeat(20000);
+    db.prepare('INSERT INTO documents (user_id, filename, original_name, file_type, file_size, content) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(userId, 'large.txt', 'large.txt', 'text/plain', 20000, largeContent);
+    
+    const input = { message: 'สรุป', documentId: 1 };
+
+    mockFetch.mockResolvedValueOnce({
+      content: [{ text: 'สรุปให้แล้วครับ' }],
+      usage: { input_tokens: 100, output_tokens: 10 }
+    });
+
+    await chatService.sendMessage(userId, input, sessionId);
+
+    const callArgs = mockFetch.mock.calls[0];
+    const sentContent = callArgs[1].body.messages[0].content;
+    
+    // Check if it's truncated (we want to truncate at 10,000 characters)
+    expect(sentContent.length).toBeLessThan(11000); 
+    expect(sentContent).toContain('... [เนื้อหาถูกตัดเนื่องจากยาวเกินไป]');
   });
 
   it('should clear chat history for a user', async () => {
