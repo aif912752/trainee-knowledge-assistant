@@ -40,7 +40,8 @@ export default defineNuxtConfig({
   imports: {
     dirs: [
       fileURLToPath(new URL('./types', import.meta.url)),
-      fileURLToPath(new URL('./shared', import.meta.url))
+      fileURLToPath(new URL('./shared', import.meta.url)),
+      fileURLToPath(new URL('./app/composables', import.meta.url))
     ],
   },
 

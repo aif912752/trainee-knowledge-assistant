@@ -2,20 +2,17 @@
  * Authentication middleware
  * Protects routes that require authentication
  */
-export default defineNuxtRouteMiddleware((to, from) => {
-  // Only run on client side
-  if (import.meta.client) {
-    // Skip middleware for login page
-    if (to.path === '/login') {
-      return
-    }
+export default defineNuxtRouteMiddleware(async (to, from) => {
+  // Skip middleware for login page
+  if (to.path === '/login') {
+    return
+  }
 
-    // Check if user has session cookie
-    const hasSession = document.cookie.includes('session_id=')
+  // Check authentication via API
+  const { data } = await useFetch('/api/auth/me')
 
-    if (!hasSession) {
-      // Redirect to login if not authenticated
-      return navigateTo('/login')
-    }
+  if (!data.value?.authenticated) {
+    // Redirect to login if not authenticated
+    return navigateTo('/login')
   }
 })
