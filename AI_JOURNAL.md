@@ -345,3 +345,27 @@
 - ปรับปรุงข้อความตอบกลับใน Middleware (`protected.ts`) และ Auth API (`login.post.ts`)
 **My Adjustment:** ระบบแสดงข้อความ Error และ Validation เป็นภาษาไทยทั้งหมดเพื่อความง่ายต่อการใช้งาน
 
+## Session 43: Refactoring API Utility to Nuxt Composable
+**Prompt:** "api ควรย้ายไปอยู่ใน composables ไหม", "มดำเนินการย้ายให้เลย"
+**AI Response:**
+- สร้างโฟลเดอร์ `app/composables/`
+- ย้าย API Logic จาก `app/utils/api.ts` ไปยัง `app/composables/useApi.ts`
+- ใช้ประโยชน์จาก Auto-import ของ Nuxt ทำให้ไม่ต้อง import `api` เองในแต่ละหน้า
+- ลบไฟล์เก่า `app/utils/api.ts` ออก
+- อัปเดต `app/pages/login.vue` ให้ใช้ `api` แบบ Auto-import
+**My Adjustment:** ปรับปรุงโครงสร้างให้เป็นมาตรฐาน Nuxt 4 มากขึ้น และลดความซ้ำซ้อนในการเขียนโค้ด (Clean Code)
+
+## Session 44: Implementing Feature 2 - Upload File
+**Prompt:** "งั้นทำ Feature 2"
+**AI Response:**
+- สร้าง `DocumentService` สำหรับจัดการเอกสาร (validation, sanitization, text extraction)
+- สร้าง Upload API endpoint (`server/api/upload/post.post.ts`)
+- สร้าง FormData parsing utility (`server/utils/form-data.ts`)
+- สร้าง Upload page UI (`app/pages/upload.vue`) พร้อม Drag & Drop
+- File type validation: PDF/TXT only
+- File size validation: max 5MB
+- Filename sanitization: remove special chars, add timestamp
+- PDF text extraction ด้วย pdf-parse
+- TXT file reading ด้วย UTF-8
+**My Adjustment:** Feature 2 (Upload File) สำเร็จครบถ้วน (5 คะแนน)
+
