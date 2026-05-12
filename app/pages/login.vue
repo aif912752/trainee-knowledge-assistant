@@ -2,6 +2,8 @@
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import { loginSchema } from '~~/shared/validations'
+import { toast } from 'vue-sonner'
+import { api } from '~~/app/utils/api'
 
 // Define form schema type
 type LoginFormValues = {
@@ -14,7 +16,7 @@ const isLoading = ref(false)
 const errorMessage = ref('')
 
 // Initialize vee-validate form
-const { defineField, handleSubmit, errors, resetForm } = useForm<LoginFormValues>({
+const { defineField, handleSubmit, errors } = useForm<LoginFormValues>({
   validationSchema: toTypedSchema(loginSchema),
   initialValues: {
     username: '',
@@ -33,20 +35,22 @@ const onSubmit = handleSubmit(async (values) => {
   try {
     isLoading.value = true
 
-    const response = await $fetch('/api/auth/login', {
-      method: 'POST',
-      body: values
-    })
+    const response = await api.post<{ success: boolean, user?: any }>('/api/auth/login', values)
 
     if (response.success) {
+      toast.success('เข้าสู่ระบบสำเร็จ', {
+        description: 'ยินดีต้อนรับกลับเข้าสู่ระบบ'
+      })
       // Redirect to home page on success
       await navigateTo('/')
-    } else {
-      errorMessage.value = response.error || 'Login failed'
     }
   } catch (error: any) {
-    console.error('Login error:', error)
-    errorMessage.value = error.data?.error || 'Invalid username or password'
+    // Error is already processed by apiFetch, just use the message
+    errorMessage.value = error.friendlyMessage
+    
+    toast.error('เข้าสู่ระบบไม่สำเร็จ', {
+      description: errorMessage.value
+    })
   } finally {
     isLoading.value = false
   }
@@ -54,92 +58,100 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="w-full max-w-md">
-      <Card>
-        <CardHeader class="space-y-1">
-          <CardTitle class="text-2xl font-bold text-center">
-            Sign in to your account
+  <div class="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+    <div class="w-full max-w-[400px]">
+      <Card class="border-none shadow-xl">
+        <CardHeader class="space-y-1 pb-6 text-center">
+          <div class="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-2">
+            <LucideLogIn class="w-6 h-6 text-primary" />
+          </div>
+          <CardTitle class="text-2xl font-bold tracking-tight">
+            ยินดีต้อนรับ
           </CardTitle>
-          <CardDescription class="text-center">
-            Enter your username and password below
+          <CardDescription>
+            กรุณาเข้าสู่ระบบเพื่อใช้งาน Assistant
           </CardDescription>
         </CardHeader>
 
         <CardContent>
           <!-- Error Alert -->
-          <div v-if="errorMessage" class="mb-4 rounded-md bg-red-50 border border-red-200 p-4">
-            <div class="flex">
-              <svg class="h-5 w-5 text-red-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-              </svg>
-              <div class="ml-3">
-                <p class="text-sm font-medium text-red-800">
-                  {{ errorMessage }}
-                </p>
-              </div>
-            </div>
+          <div v-if="errorMessage" class="mb-4 rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+            <LucideAlertCircle class="w-4 h-4" />
+            {{ errorMessage }}
           </div>
 
           <!-- Login Form -->
-          <form @submit="onSubmit" class="space-y-4">
+          <form @submit="onSubmit" class="space-y-5">
             <!-- Username Field -->
             <div class="space-y-2">
-              <Label for="username">Username</Label>
+              <Label for="username">ชื่อผู้ใช้</Label>
               <Input
                 id="username"
                 v-model="username"
                 v-bind="usernameAttrs"
                 type="text"
-                placeholder="Enter your username"
+                placeholder="ระบุชื่อผู้ใช้ของคุณ"
                 :disabled="isLoading"
                 autocomplete="username"
-                :class="{ 'border-red-500 focus-visible:ring-red-500': errors.username }"
+                :class="{ 'border-destructive focus-visible:ring-destructive': errors.username }"
               />
-              <p v-if="errors.username" class="text-sm text-red-600">
+              <p v-if="errors.username" class="text-xs text-destructive">
                 {{ errors.username }}
-              </p>
-              <p class="text-xs text-gray-500">
-                Demo: <span class="font-mono bg-gray-100 px-1 rounded">admin</span>
               </p>
             </div>
 
             <!-- Password Field -->
             <div class="space-y-2">
-              <Label for="password">Password</Label>
+              <Label for="password">รหัสผ่าน</Label>
               <Input
                 id="password"
                 v-model="password"
                 v-bind="passwordAttrs"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="ระบุรหัสผ่านของคุณ"
                 :disabled="isLoading"
                 autocomplete="current-password"
-                :class="{ 'border-red-500 focus-visible:ring-red-500': errors.password }"
+                :class="{ 'border-destructive focus-visible:ring-destructive': errors.password }"
               />
-              <p v-if="errors.password" class="text-sm text-red-600">
+              <p v-if="errors.password" class="text-xs text-destructive">
                 {{ errors.password }}
-              </p>
-              <p class="text-xs text-gray-500">
-                Demo: <span class="font-mono bg-gray-100 px-1 rounded">admin123</span>
               </p>
             </div>
 
             <!-- Submit Button -->
             <Button
               type="submit"
-              class="w-full"
+              class="w-full h-11 text-base font-semibold transition-all"
               :disabled="isLoading"
             >
-              <span v-if="!isLoading">Sign in</span>
-              <span v-else>Signing in...</span>
+              <LucideLoader2 v-if="isLoading" class="mr-2 h-4 w-4 animate-spin" />
+              <span v-if="!isLoading">เข้าสู่ระบบ</span>
+              <span v-else>กำลังตรวจสอบข้อมูล...</span>
             </Button>
           </form>
+
+          <!-- Demo Credentials Hint -->
+          <div class="mt-6 p-4 rounded-lg bg-secondary/50 border border-border/50 text-xs">
+            <p class="font-bold text-secondary-foreground mb-1 flex items-center gap-1">
+              <LucideInfo class="w-3 h-3 text-primary" />
+              Demo Credentials:
+            </p>
+            <div class="grid grid-cols-2 gap-2 mt-2">
+              <div class="bg-background p-2 rounded border border-border/40">
+                <span class="text-muted-foreground block">User:</span>
+                <code class="font-mono text-primary font-bold">admin</code>
+              </div>
+              <div class="bg-background p-2 rounded border border-border/40">
+                <span class="text-muted-foreground block">Pass:</span>
+                <code class="font-mono text-primary font-bold">admin123</code>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       <!-- Footer -->
-      <p class="mt-4 text-center text-sm text-gray-500">
+      <p class="mt-6 text-center text-xs text-muted-foreground">
         Mini Knowledge Assistant © 2025
       </p>
     </div>
