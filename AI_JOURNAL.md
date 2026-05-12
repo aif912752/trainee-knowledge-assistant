@@ -214,3 +214,16 @@
 - สร้างหน้า Login ที่สมบูรณ์ด้วย vee-validate + shadcn-nuxt
 - วางระบบ Authentication ครบถ้วน (API, Middleware, Pages)
 - เตรียมพร้อมสำหรับการทดสอบระบบ Login
+
+## Session 30: Fixing CSS Loading and Nuxt 4 Structure Alignment
+**Prompt:** "เหมือน css จะไม่เข้านะ ดูจากหน้า login ทั้งๆที่มีการตั้งค่าธีมสีไว้แล้ว แต่ไม่มีสีไรเลย"
+**AI Response:** 
+- ปัญหาเกิดจาก `app.vue` ยังเป็นค่าเริ่มต้น (`<NuxtWelcome />`) และไม่ได้โหลดไฟล์ CSS
+- โครงสร้างโปรเจกต์ยังไม่เป็น Nuxt 4 เต็มรูปแบบ (pages และ middleware อยู่นอกโฟลเดอร์ `app/`)
+- ต้องเพิ่มไฟล์ CSS เข้าไปใน `nuxt.config.ts` และอัปเดต `app.vue` ให้ใช้ `<NuxtPage />`
+**My Adjustment:** 
+- ย้าย `pages/` และ `middleware/` เข้าไปอยู่ใน `app/` เพื่อให้เป็น Nuxt 4 structure ที่ถูกต้อง
+- ลบ `srcDir: '.'` ออกจาก `nuxt.config.ts` เพื่อใช้ค่าเริ่มต้นของ Nuxt 4 (ซึ่งจะมอง `app/` เป็นหลัก)
+- เพิ่ม `css: ['~/assets/css/tailwind.css']` ใน `nuxt.config.ts`
+- อัปเดต `app/app.vue` ให้รองรับ Routing (`<NuxtPage />`) และติดตั้ง `<Toaster />` สำหรับการแจ้งเตือน
+- ปรับปรุง Import paths ให้ใช้ Alias `~/` ที่ชี้ไปยังโฟลเดอร์ `app/` โดยตรง

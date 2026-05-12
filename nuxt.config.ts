@@ -3,10 +3,15 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
 
-  // Configure directory structure
-  srcDir: '.',
-
   modules: ["@nuxtjs/tailwindcss", "shadcn-nuxt", "nuxt-security"],
+
+  css: ['~/assets/css/tailwind.css'],
+
+  tailwindcss: {
+    cssPath: '~/assets/css/tailwind.css',
+    exposeConfig: true,
+    viewer: true,
+  },
 
   runtimeConfig: {
     // Server-side environment variables (private)
@@ -65,6 +70,6 @@ export default defineNuxtConfig({
      * @link https://nuxt.com/docs/api/nuxt-config#alias
      * @default "@/components/ui"
      */
-    componentDir: "./app/components/ui",
+    componentDir: "~/components/ui",
   },
 });
