@@ -392,3 +392,33 @@
 - เปลี่ยน Google Fonts import ใน `app/assets/css/tailwind.css` เป็น `Noto Sans Thai`
 - อัปเดต CSS Variable `--font-sans` ให้ใช้ `'Noto Sans Thai', sans-serif` ทั้งในโหมดปกติและ Dark mode
 **My Adjustment:** เปลี่ยนฟอนต์หลักของระบบเป็น Noto Sans Thai เพื่อการแสดงผลภาษาไทยที่สวยงามและอ่านง่ายขึ้น
+
+## Session 49: Fixing Login Redirect Issue
+**Prompt:** "เมื่อ login สำเร็จ ตอนนี้ยังไม่สามารถเข้าหน้าต่างๆได้", "มันขึ้น เข้าสู่ระบบสำเร็จ แล้วมันเด้งไปหน้าแชทสักพัก มันก็กลับมาหน้า login"
+**AI Response:**
+- วิเคราะห์ปัญหา: `navigateTo(/)` ไม่ทำงานหลัง login
+- แก้ไขโดยใช้ `window.location.href = /` แทน `navigateTo(/)` ใน login.vue
+- วิเคราะห์ปัญหา middleware: middleware/auth.ts เช็ค `document.cookie` แต่ session cookie เป็น httpOnly อ่านไม่ได้
+- แก้ไข middleware ให้เช็ค session ผ่าน API `/api/auth/me` แทนการอ่าน cookie โดยตรง
+**My Adjustment:** แก้ไขปัญหา redirect loop หลัง login สำเร็จ โดยใช้ window.location.href และเช็ค session ผ่าน API
+
+## Session 50: Refactoring to Feature-Based Composables
+**Prompts:**
+- "เอา api ไปเขียนไว้ใน composables แทนแล้วค่อยเรียกใช้แทน"
+- "useAuth ไม่จำเป็นต้อง export type เพราะมี shared types แล้ว"
+- "แล้ว useAuth ก็ต้องเรียกใช้ useApi ด้วยไหม เพื่อจัดการ try catch"
+**AI Response:**
+- สร้าง `useAuth.ts` composable สำหรับ login, logout, checkAuth
+- สร้าง `useUpload.ts` composable สำหรับ uploadFile, validateFile
+- ใช้ shared types จาก `~/types/` แทนการประกาศใหม่ (LoginInput, LoginResult, UserWithoutPassword, Document)
+- แก้ไข Nuxt 4 alias: `~/` ชี้ไป `app/`, `~~/` ชี้ไป root
+- Refactor `useApi.ts` ให้ export `apiFetch` function และ `api` object
+- Composables เรียกใช้ `apiFetch` เพื่อ centralized error handling
+- Pages เรียกใช้ Composables (ไม่เรียก API โดยตรง)
+**My Adjustment:**
+- Layer 1: `useApi` - centralized error handling ด้วย apiFetch
+- Layer 2: Composables (useAuth, useUpload) - feature logic
+- Layer 3: Pages - UI เรียกใช้ composables
+- ใช้ shared types จาก `types/` directory เพื่อ Type safety
+- Error handling รวมอยู่ที่ apiFetch ส่ง friendlyMessage กลับมา
+
