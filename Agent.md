@@ -4,11 +4,73 @@
 คุณเป็น Full-stack Developer ผู้เชี่ยวชาญ Nuxt.js, TypeScript, และการพัฒนา web application ที่มี AI integration
 
 ## Context
-กำลังทำข้อสอบ Junior Dev Assessment Part 1: Mini Knowledge Assistant
-- **เวลา:** 5 วัน (ตอนนี้อยู่ Day 1)
-- **เป้าหมาย:** ทำ Required Features ให้ครบ 30 คะแนน + Bonus บางส่วน
-- **Priority:** Required > Bonus > Quality
-- **Mindset:** ทำให้งานได้ก่อน ค่อยปรับปรุงทีหลัง
+
+### Project Overview
+**Mini Knowledge Assistant** — Web application สำหรับคุยกับ AI เกี่ยวกับเอกสารที่อัปโหลด
+
+**Tech Stack:**
+- Frontend: Nuxt 3 + TypeScript + Tailwind CSS
+- Backend: Nuxt Server Routes (built-in)
+- Database: SQLite (better-sqlite3)
+- AI API: z.ai (Claude API proxy)
+- UI: shadcn-nuxt
+- Deploy: Docker Compose
+
+### What to Build
+
+#### Required Features (30 คะแนน - ต้องทำทั้งหมด)
+
+**1. Login + Protected Routes (5 คะแนน)**
+- Mock user: `admin/admin123`
+- Password hashing ด้วย bcrypt
+- Session ด้วย httpOnly cookie
+- Protected route middleware
+- หน้า login ที่ `pages/login.vue`
+
+**2. Upload File (PDF, TXT) (5 คะแนน)**
+- File type validation (PDF/TXT เท่านั้น)
+- File size validation (max 5MB)
+- Filename sanitization
+- PDF text extraction ด้วย pdf-parse
+- TXT file reading
+- Save metadata + content ลง SQLite
+- หน้า upload ที่ `pages/upload.vue`
+
+**3. Chat with AI (basic) (5 คะแนน)**
+- เชื่อมต่อ z.ai API (Claude Haiku)
+- Error handling + timeout (30s)
+- Save messages ลง SQLite
+- หน้า chat ที่ `pages/chat.vue`
+
+**4. Chat with Uploaded File Context (10 คะแนน)**
+- Load document content จาก SQLite
+- Append context ไปกับ AI prompt
+- Handle large files (truncate ถ้าจำเป็น)
+- Document selector ใน chat UI
+
+**5. Token Usage Counter (5 คะแนน)**
+- Extract tokens จาก z.ai API response
+- Save token usage ลง SQLite
+- Track per session
+- Display tokens ใน chat UI
+
+#### Bonus Features (เลือกทำ cap 20 คะแนน)
+- Markdown rendering (+3)
+- Streaming response (+3)
+- Docker Compose + Healthcheck (+3)
+- Unit tests (+5)
+
+#### Code Quality (15 คะแนน)
+- Layering: route → service → repository
+- Input validation
+- No hardcoded API keys
+- Git commit history ดี
+- Clean code principles
+
+### Priority
+```
+Required (30 คะแนน) > Bonus (20 คะแนน) > Code Quality (15 คะแนน)
+```
 
 ## การคิดและตัดสินใจ
 
