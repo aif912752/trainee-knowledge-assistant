@@ -5,13 +5,15 @@ vi.mock('#app', () => ({
   useRuntimeConfig: () => ({
     databasePath: ':memory:',
     zaiApiKey: 'test-api-key',
-    zaiApiBase: 'https://api.test.com',
+    zaiApiBase: 'https://api.zai.com',
+    openrouterApiKey: 'test-openrouter-key',
+    openrouterApiBase: 'https://api.openrouter.ai',
     sessionSecret: 'test-session-secret',
   }),
 }));
 
 // Mock session utilities
-vi.mock('~/server/utils/session', () => ({
+vi.mock('~~/server/utils/session', () => ({
   getSessionUserId: vi.fn(() => null),
   createUserSession: vi.fn(),
   clearUserSession: vi.fn(),
@@ -23,6 +25,11 @@ global.setResponseStatus = vi.fn();
 global.useRuntimeConfig = () => ({
   databasePath: ':memory:',
   zaiApiKey: 'test-api-key',
-  zaiApiBase: 'https://api.test.com',
+  zaiApiBase: 'https://api.zai.com',
+  openrouterApiKey: 'test-openrouter-key',
+  openrouterApiBase: 'https://api.openrouter.ai',
   sessionSecret: 'test-session-secret',
 });
+
+// Mock $fetch globally
+global.$fetch = vi.fn();

@@ -17,8 +17,11 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     // Server-side environment variables (private)
-    zaiApiKey: process.env.ZAI_API_KEY || '',
-    zaiApiBase: process.env.ZAI_API_BASE || 'https://api.z.ai/api/anthropic',
+    zaiApiKey: process.env.ZAI_API_KEY,
+    zaiApiBase: process.env.ZAI_API_BASE,
+    openrouterApiKey: process.env.OPENROUTER_API_KEY,
+    openrouterApiBase: process.env.OPENROUTER_API_BASE,
+    fallbackModel: process.env.FALLBACK_MODEL,
     databasePath: process.env.DATABASE_PATH || './data/app.db',
     sessionSecret: process.env.SESSION_SECRET || 'change-this-in-production',
 

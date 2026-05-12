@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue'
-import { Bot, FileText, Loader2, Send, Sparkles, Trash2, User } from 'lucide-vue-next'
+import { Bot, FileText, Loader2, Send, Trash2, User } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
 import { useChat } from '~/composables/useChat'
 
@@ -67,42 +67,15 @@ const formatTime = (dateStr: string) => {
   <div class="flex h-screen flex-col bg-background text-foreground">
     <AppHeader active="chat" />
 
-    <section class="shrink-0 border-b bg-background/90">
-      <div class="mx-auto flex min-h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <div class="min-w-0">
-          <h1 class="flex items-center gap-2 truncate text-lg font-bold">
-            <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Sparkles class="size-4" />
-            </span>
-            แชทกับผู้ช่วย AI
-          </h1>
-          <p v-if="selectedDocumentId" class="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-            <FileText class="size-3.5" />
-            ใช้บริบทจากเอกสารที่เลือก
-          </p>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="hidden rounded-lg border bg-card px-3 py-2 text-right md:block">
-            <span class="block text-[11px] font-medium uppercase text-muted-foreground">Token ที่ใช้ไป</span>
-            <span class="block font-mono text-sm font-bold text-primary">{{ totalTokens.toLocaleString() }}</span>
-          </div>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <Button variant="outline" size="icon" class="text-muted-foreground hover:text-destructive" @click="handleClear">
-                  <Trash2 class="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>ล้างการสนทนา</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </div>
-    </section>
-
     <main ref="scrollContainer" class="min-h-0 flex-1 overflow-y-auto">
       <div class="mx-auto flex min-h-full w-full max-w-4xl flex-col px-4 py-6 sm:px-6">
+        <div v-if="selectedDocumentId" class="mb-4">
+          <span class="inline-flex items-center gap-1.5 rounded-md border bg-card px-3 py-1.5 text-xs text-muted-foreground shadow-sm">
+            <FileText class="size-3.5 text-primary" />
+            ใช้บริบทจากเอกสารที่เลือก
+          </span>
+        </div>
+
         <div v-if="messages.length === 0 && !isFetchingHistory" class="flex flex-1 items-center justify-center py-12 text-center">
           <div class="max-w-lg">
             <div class="mx-auto mb-5 flex size-16 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
@@ -196,9 +169,23 @@ const formatTime = (dateStr: string) => {
             <Send class="size-4" />
           </Button>
         </div>
-        <p class="mt-3 text-center text-[11px] text-muted-foreground">
-          AI อาจให้ข้อมูลคลาดเคลื่อน โปรดตรวจสอบข้อมูลสำคัญเสมอ
-        </p>
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+          <p>AI อาจให้ข้อมูลคลาดเคลื่อน โปรดตรวจสอบข้อมูลสำคัญเสมอ</p>
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-primary">{{ totalTokens.toLocaleString() }}</span>
+            <span>tokens</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button variant="ghost" size="icon-sm" class="text-muted-foreground hover:text-destructive" @click="handleClear">
+                    <Trash2 class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>ล้างการสนทนา</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
       </div>
     </footer>
   </div>

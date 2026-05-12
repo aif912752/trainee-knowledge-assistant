@@ -525,6 +525,11 @@
 **AI Response:** สร้าง ChatService, API Endpoints (Chat, History, Usage), useChat composable และหน้า Chat UI รองรับบริบทไฟล์และนับ Token
 **My Adjustment:** เพิ่ม Auto-scroll, Optimistic Update และ Timeout 30s. ระบบ Chat และ Token Tracking ทำงานสมบูรณ์ ✅
 
+## Session 58: AI Fallback & Strict Env Config
+**Prompt:** เพิ่มระบบ Fallback ไป OpenRouter (Gemini 2.0) และบังคับใช้ค่าจาก env เท่านั้น (ห้ามมี default ใน code)
+**AI Response:** ปรับ `nuxt.config.ts` ให้ใช้ `process.env` โดยตรง, แก้ไข `ChatService.ts` เพิ่ม retry logic ไปยัง OpenRouter และอัปเดต `.env.example`
+**My Adjustment:** แยก logic การเรียก API แต่ละเจ้าออกจากกันเพื่อให้ดูแลรักษาง่าย และอัปเดต Unit Test ให้ครอบคลุมการสลับ Provider ✅
+
 ## Session 58: UI Refresh Across Main Pages
 **Prompt:** "ปรับปรุง ui ทุกหน้าให้สวยขึ้นที สามารถดู ธีมได้ที่ tailwind.css"
 **AI Response:** ปรับ UI หน้า Dashboard, Login, Chat และ Upload ให้ใช้ theme tokens จาก `tailwind.css` สม่ำเสมอขึ้น พร้อมปรับ layout, cards, empty state, chat bubbles, upload drop zone และ responsive spacing
