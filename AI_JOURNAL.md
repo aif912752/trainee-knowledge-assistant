@@ -435,3 +435,29 @@
   - `server/api/upload.post.ts` → `/api/upload` (ถูกต้อง)
 - ย้ายไฟล์จาก `server/api/upload/post.post.ts` ไปเป็น `server/api/upload.post.ts`
 **My Adjustment:** แก้ไขปัญหา 404 บน upload API endpoint โดยใช้ Nitro route naming convention ที่ถูกต้อง
+
+## Session 53: Upload API Unit Tests & Vitest ES Import Mocking
+**Prompts:**
+- "ทำ unit test api upload"
+- "ทำไมไฟล์ test ไม่อยู่ที่ test"
+- "ข้อจำกัดของ vitest คืออะไร"
+- "Option 1: เปลี่ยนเป็น ES import"
+**AI Response:**
+- อธิบายข้อจำกัดของ vitest: **ไม่สามารถ mock `require()` ที่เรียกข้างใน method ได้**
+- vitest mock ทำงานกับ ES import เท่านั้น: `import x from 'module'` → ✅ mock ได้, `require('module')` → ❌ mock ไม่ได้
+- แนะนำให้เปลี่ยน `require('pdf-parse')` เป็น `import pdfParse from 'pdf-parse'`
+- ตั้งค่า mock ให้ถูกต้อง: `vi.mock('pdf-parse', () => ({ default: vi.fn(...) }))` เพราะใช้ default import
+- สร้าง test suite ครอบคลุม 20 test cases:
+  - File type validation (PDF, TXT)
+  - File size validation (5MB limit)
+  - Filename sanitization (special chars, Thai, spaces)
+  - Content extraction (TXT, PDF)
+  - Database storage and retrieval
+  - Document ownership checks
+  - Document deletion
+  - Document counting
+**My Adjustment:**
+- เปลี่ยน `DocumentService` จาก `require('pdf-parse')` เป็น `import pdfParse from 'pdf-parse'` เพื่อให้ vitest mock ทำงาน
+- สร้าง `test/api/upload.test.ts` พร้อม mock `pdf-parse` และ `getDatabase`
+- ผลลัพธ์: **20/20 tests ผ่าน** ✅
+- Bonus: Unit tests +5 คะแนน (รวมเป็น +10 จาก unit tests ก่อนหน้า)
