@@ -1,6 +1,6 @@
-import { getSessionUserId } from '~/server/utils/session';
-import { AuthService } from '~/server/services/auth.service';
-import { UnauthorizedError, handleApiError } from '~/server/utils/errors';
+import { getSessionUserId } from '~~/server/utils/session';
+import { AuthService } from '~~/server/services/auth.service';
+import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
 
 export default defineEventHandler(async (event) => {
   try {

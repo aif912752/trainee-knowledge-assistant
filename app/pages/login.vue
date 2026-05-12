@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { loginSchema } from '~/shared/validations'
+import { loginSchema } from '~~/shared/validations'
 
 // Define form schema type
 type LoginFormValues = {

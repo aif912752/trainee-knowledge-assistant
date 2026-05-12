@@ -1,5 +1,5 @@
 import type { Database } from 'better-sqlite3';
-import type { Document, CreateDocumentInput } from '~/types/document';
+import type { Document, CreateDocumentInput } from '~~/types/document';
 
 export class DocumentRepository {
   constructor(private db: Database) {}

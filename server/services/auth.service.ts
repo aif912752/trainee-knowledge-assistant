@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
-import { UserRepository } from '~/server/repositories/user.repository';
-import type { LoginInput, LoginResult } from '~/types/auth';
-import type { UserWithoutPassword } from '~/types/user';
+import { UserRepository } from '~~/server/repositories/user.repository';
+import type { LoginInput, LoginResult } from '~~/types/auth';
+import type { UserWithoutPassword } from '~~/types/user';
 
 export class AuthService {
   private userRepository: UserRepository;

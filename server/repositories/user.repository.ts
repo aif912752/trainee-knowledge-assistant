@@ -1,5 +1,5 @@
 import type { Database } from 'better-sqlite3';
-import type { User, CreateUserInput } from '~/types/user';
+import type { User, CreateUserInput } from '~~/types/user';
 
 export class UserRepository {
   constructor(private db: Database) {}

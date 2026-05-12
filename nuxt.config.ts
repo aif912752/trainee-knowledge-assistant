@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
@@ -36,7 +38,10 @@ export default defineNuxtConfig({
 
   // Auto-import configurations
   imports: {
-    dirs: ['types', 'shared'], // Auto-import types and shared utilities
+    dirs: [
+      fileURLToPath(new URL('./types', import.meta.url)),
+      fileURLToPath(new URL('./shared', import.meta.url))
+    ],
   },
 
   // Security headers configuration

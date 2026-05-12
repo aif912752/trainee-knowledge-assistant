@@ -1,5 +1,5 @@
 import type { Database } from 'better-sqlite3';
-import type { Message, CreateMessageInput } from '~/types/message';
+import type { Message, CreateMessageInput } from '~~/types/message';
 
 export class MessageRepository {
   constructor(private db: Database) {}

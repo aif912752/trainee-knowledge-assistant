@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3';
-import type { UserWithoutPassword } from '~/types/user';
+import type { UserWithoutPassword } from '~~/types/user';
 
 const SESSION_COOKIE_NAME = 'session_id';
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days in seconds

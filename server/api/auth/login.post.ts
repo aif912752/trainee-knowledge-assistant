@@ -1,9 +1,9 @@
-import { AuthService } from '~/server/services/auth.service';
-import { validateBody } from '~/shared/validations/helpers';
-import { loginSchema } from '~/shared/validations';
-import { createUserSession } from '~/server/utils/session';
-import { UnauthorizedError, handleApiError } from '~/server/utils/errors';
-import type { LoginInput } from '~/types/auth';
+import { AuthService } from '~~/server/services/auth.service';
+import { validateBody } from '~~/shared/validations/helpers';
+import { loginSchema } from '~~/shared/validations';
+import { createUserSession } from '~~/server/utils/session';
+import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
+import type { LoginInput } from '~~/types/auth';
 
 export default defineEventHandler(async (event) => {
   try {

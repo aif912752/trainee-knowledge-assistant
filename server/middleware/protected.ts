@@ -1,6 +1,6 @@
-import { AuthService } from '~/server/services/auth.service';
-import { getSessionUserId } from '~/server/utils/session';
-import { UnauthorizedError, handleApiError } from '~/server/utils/errors';
+import { AuthService } from '~~/server/services/auth.service';
+import { getSessionUserId } from '~~/server/utils/session';
+import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
 
 /**
  * Protected route middleware

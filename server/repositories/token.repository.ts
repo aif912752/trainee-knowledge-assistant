@@ -1,5 +1,5 @@
 import type { Database } from 'better-sqlite3';
-import type { TokenUsage, CreateTokenUsageInput, SessionTokenSummary } from '~/types/token';
+import type { TokenUsage, CreateTokenUsageInput, SessionTokenSummary } from '~~/types/token';
 
 export class TokenRepository {
   constructor(private db: Database) {}
