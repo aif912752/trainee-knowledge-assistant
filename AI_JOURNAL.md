@@ -1,5 +1,7 @@
 # AI Usage Journal
 
+> **IMPORTANT:** Record every prompt and conversation in this journal to maintain a complete history of development decisions and context.
+
 ## Session 1: Planning Assessment Strategy
 **Prompt:** "ถ้าจะทำข้อแรกก่อน นายว่าดีไหม"
 **AI Response:** 
