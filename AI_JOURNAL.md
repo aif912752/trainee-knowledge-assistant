@@ -250,6 +250,28 @@
 - ปรับปรุง `imports.dirs` ให้ใช้ Absolute Path เพื่อความแม่นยำในการ Auto-import จาก Root
 - แก้ไขปัญหา Warning ใน Nitro ได้อย่างถาวรและถูกต้องตามมาตรฐาน
 
+## Session 36: Centralizing Frontend Error Handling
+**Prompt:** "ในหน้า login การจัดการ error errorMessage ไม่ควรทำในหน้า front ควรทำฟังช่นจัดการ error code ให้ดีกว่านี้ อาจจะเขียนฟังชั่นกลางในการแสดง error ตาม code"
+**AI Response:** 
+- เห็นด้วยอย่างยิ่ง การแยก Logic ของ Error message ออกมาช่วยให้โค้ดสะอาดและแก้ไขง่ายขึ้น
+- สร้าง `app/utils/error-handler.ts` เพื่อเก็บ Map ระหว่าง Error code กับข้อความภาษาไทย
+- เพิ่มระบบ Fallback สำหรับ HTTP Status codes (401, 400, 500)
+**My Adjustment:** 
+- สร้างไฟล์ `app/utils/error-handler.ts`
+- Refactor หน้า Login ให้เรียกใช้ `getErrorMessage(error)` แทนการเขียนเงื่อนไขเอง
+
+## Session 37: Centralizing API Request Handling
+**Prompt:** "แล้ว api ของ front ก็ควรทำฟังชั่น Utility Function api กลางไว้ด้วย เพื่อที่ลดความซ้ำซ้อนและจัดการได้ในไฟล์เดียว"
+**AI Response:** 
+- การสร้าง API Utility ช่วยลดความซ้ำซ้อนและควบคุมพฤติกรรมของ Network requests ได้จากที่เดียว
+- สร้าง `app/utils/api.ts` ครอบ `$fetch` ของ Nuxt
+- รวมระบบ Error handling และ Auto-redirect เข้าไปใน Utility เลย
+**My Adjustment:** 
+- สร้าง `app/utils/api.ts` พร้อมเมธอดมาตรฐาน (get, post, put, delete)
+- ปรับหน้า Login ให้ใช้ `api.post` ซึ่งจะส่ง `friendlyMessage` กลับมาให้อัตโนมัติเมื่อเกิด Error
+- ใช้ `toast.success` เพื่อแจ้งเตือนการทำงานที่สำเร็จ
+
+
 ## Session 33: Fixing CommonJS require error in ESM environment
 **Prompt:** "require is not defined in ES module scope, you can use import instead"
 **AI Response:** 
@@ -269,4 +291,14 @@
 - แก้ไข `server/db/init.ts` ให้ใช้ `process.cwd()` ในการหาตำแหน่งไฟล์ `schema.sql` เมื่อรันในโหมด development
 - การใช้ `join(process.cwd(), 'server/db/schema.sql')` ช่วยให้ระบบอ้างอิงตำแหน่งไฟล์จาก Root ของโปรเจกต์ได้อย่างถูกต้องเสมอไม่ว่าจะรันจากที่ไหน
 - เพิ่ม logic ตรวจสอบสภาพแวดล้อม (`process.env.NODE_ENV`) เพื่อให้ยังคงทำงานได้ถูกต้องทั้งในโหมด Dev และ Production
+
+## Session 35: Fixing Missing getDatabase Import in Auth Service
+**Prompt:** "ERROR API Error: getDatabase is not defined"
+**AI Response:** 
+- ปัญหานี้เกิดจากลืม Import ฟังก์ชัน `getDatabase` ในไฟล์ `server/services/auth.service.ts`
+- ถึงแม้ Nuxt จะมีระบบ Auto-import แต่สำหรับไฟล์ในชั้น Service ที่อยู่นอกโครงสร้างมาตรฐานของ Nitro บางครั้งจำเป็นต้องระบุ Import ให้ชัดเจนเพื่อให้ TypeScript และ Runtime ทำงานได้ถูกต้อง
+**My Adjustment:** 
+- เพิ่ม `import { getDatabase } from '~~/server/db'` ใน `AuthService`
+- ยืนยันว่าการดึง Database instance มาใช้งานใน constructor ทำงานได้ถูกต้อง
+- ตรวจสอบความถูกต้องของ Path โดยใช้ Root Alias `~~/`
 
