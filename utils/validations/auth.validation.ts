@@ -14,10 +14,3 @@ export const loginSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
-
-/**
- * Validate login input
- */
-export function validateLoginInput(data: unknown) {
-  return loginSchema.safeParse(data);
-}

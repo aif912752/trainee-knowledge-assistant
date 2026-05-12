@@ -11,10 +11,3 @@ export const chatSchema = z.object({
 });
 
 export type ChatInput = z.infer<typeof chatSchema>;
-
-/**
- * Validate chat input
- */
-export function validateChatInput(data: unknown) {
-  return chatSchema.safeParse(data);
-}

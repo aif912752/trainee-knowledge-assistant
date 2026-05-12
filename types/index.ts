@@ -4,3 +4,4 @@ export * from './document';
 export * from './message';
 export * from './token';
 export * from './auth';
+export * from './schemas';

@@ -1,11 +1,6 @@
 import { z } from 'zod';
 
 /**
- * File type enum
- */
-const fileTypeEnum = z.enum(['pdf', 'txt']);
-
-/**
  * Upload document validation schema
  */
 export const uploadDocumentSchema = z.object({
@@ -22,10 +17,3 @@ export const uploadDocumentSchema = z.object({
 });
 
 export type UploadDocumentInput = z.infer<typeof uploadDocumentSchema>;
-
-/**
- * Validate upload input
- */
-export function validateUploadInput(data: unknown) {
-  return uploadDocumentSchema.safeParse(data);
-}
