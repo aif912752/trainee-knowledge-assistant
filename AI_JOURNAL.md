@@ -227,3 +227,46 @@
 - เพิ่ม `css: ['~/assets/css/tailwind.css']` ใน `nuxt.config.ts`
 - อัปเดต `app/app.vue` ให้รองรับ Routing (`<NuxtPage />`) และติดตั้ง `<Toaster />` สำหรับการแจ้งเตือน
 - ปรับปรุง Import paths ให้ใช้ Alias `~/` ที่ชี้ไปยังโฟลเดอร์ `app/` โดยตรง
+
+## Session 31: Fixing Nitro Import Path Resolution for Nuxt 4
+**Prompt:** "[nitro 21:51:17] ERROR Error: Could not load .../app//shared/validations"
+**AI Response:** 
+- ใน Nuxt 4 โฟลเดอร์ `shared`, `types`, และ `server` อยู่ที่ Root นอก `app/` ทำให้ Alias `~/` เริ่มต้นชี้ไปผิดที่
+- ต้องตั้งค่า `alias` ใน `nuxt.config.ts` โดยใช้ **Absolute Path** (ผ่าน `fileURLToPath`)
+**My Adjustment:** 
+- เพิ่ม `import { fileURLToPath } from 'node:url'` ใน `nuxt.config.ts`
+- ตั้งค่า `alias` แบบ Absolute Path สำหรับ `~/types`, `~/shared`, และ `~/server`
+- แก้ปัญหา ENOENT ใน Nitro สำเร็จ
+
+## Session 32: Standardizing Root Aliases with ~~
+**Prompt:** "ทำตามมาตรฐานของ nuxt"
+**AI Response:** 
+- ตามมาตรฐาน Nuxt 4: `~/` ชี้ไปที่ `srcDir` (โฟลเดอร์ `app/`), ส่วน `~~/` ชี้ไปที่ `rootDir` (Root ของโปรเจกต์)
+- การใช้ `~/` กับโฟลเดอร์นอก `app/` (เช่น `server`, `shared`, `types`) ทำให้เกิดคำเตือน duplicated modules และปัญหา path resolution
+- วิธีที่ถูกต้องและเป็นมาตรฐานที่สุดคือการใช้ `~~/` สำหรับโฟลเดอร์ที่อยู่ที่ Root
+**My Adjustment:** 
+- เปลี่ยนการเรียกใช้ Alias ทั้งหมดจาก `~/server/`, `~/shared/`, `~/types/` เป็น `~~/server/`, `~~/shared/`, `~~/types/`
+- ลบการตั้งค่า Custom Alias ใน `nuxt.config.ts` ออกเพื่อใช้มาตรฐาน Built-in ของ Nuxt
+- ปรับปรุง `imports.dirs` ให้ใช้ Absolute Path เพื่อความแม่นยำในการ Auto-import จาก Root
+- แก้ไขปัญหา Warning ใน Nitro ได้อย่างถาวรและถูกต้องตามมาตรฐาน
+
+## Session 33: Fixing CommonJS require error in ESM environment
+**Prompt:** "require is not defined in ES module scope, you can use import instead"
+**AI Response:** 
+- โปรเจกต์ถูกตั้งค่าเป็น ES Module (`"type": "module"` ใน `package.json`) ทำให้ไม่สามารถใช้ `require()` ได้
+- ต้องเปลี่ยนการเรียกใช้ `require('fs')` เป็นการใช้ `import` แบบมาตรฐาน
+**My Adjustment:** 
+- แก้ไขไฟล์ `server/db/init.ts` โดยการเพิ่ม `mkdirSync` เข้าไปในส่วนของ `import { ... } from 'fs'`
+- เปลี่ยนการเรียก `require('fs').mkdirSync` เป็น `mkdirSync` โดยตรง
+- ตรวจสอบไฟล์อื่นๆ ในโปรเจกต์เพื่อให้แน่ใจว่าไม่มีการใช้ `require()` หลงเหลืออยู่
+
+## Session 34: Fixing Schema File Path Resolution in Nitro Dev
+**Prompt:** "ENOENT: no such file or directory, open '.../.nuxt/dev/schema.sql'"
+**AI Response:** 
+- ปัญหานี้เกิดจากในโหมด Development ของ Nuxt/Nitro ตัวแปร `import.meta.url` จะชี้ไปยังโฟลเดอร์ build (`.nuxt/dev`) แทนที่จะเป็นโฟลเดอร์ source จริงๆ
+- ทำให้ระบบหาไฟล์ `schema.sql` ไม่เจอเพราะมันไม่ได้ถูก copy ไปไว้ในโฟลเดอร์ build ด้วย
+**My Adjustment:** 
+- แก้ไข `server/db/init.ts` ให้ใช้ `process.cwd()` ในการหาตำแหน่งไฟล์ `schema.sql` เมื่อรันในโหมด development
+- การใช้ `join(process.cwd(), 'server/db/schema.sql')` ช่วยให้ระบบอ้างอิงตำแหน่งไฟล์จาก Root ของโปรเจกต์ได้อย่างถูกต้องเสมอไม่ว่าจะรันจากที่ไหน
+- เพิ่ม logic ตรวจสอบสภาพแวดล้อม (`process.env.NODE_ENV`) เพื่อให้ยังคงทำงานได้ถูกต้องทั้งในโหมด Dev และ Production
+
