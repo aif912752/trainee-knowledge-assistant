@@ -1,17 +1,7 @@
 import bcrypt from 'bcrypt';
 import { UserRepository } from '~/server/repositories/user.repository';
-import type { User } from '~/server/repositories/user.repository';
-
-export interface LoginInput {
-  username: string;
-  password: string;
-}
-
-export interface LoginResult {
-  success: boolean;
-  user?: Omit<User, 'password_hash'>;
-  error?: string;
-}
+import type { LoginInput, LoginResult } from '~/types/auth';
+import type { UserWithoutPassword } from '~/types/user';
 
 export class AuthService {
   private userRepository: UserRepository;
@@ -72,14 +62,14 @@ export class AuthService {
 
     return {
       success: true,
-      user: userWithoutPassword
+      user: userWithoutPassword as UserWithoutPassword
     };
   }
 
   /**
    * Get user by ID
    */
-  getUserById(id: number): Omit<User, 'password_hash'> | undefined {
+  getUserById(id: number): UserWithoutPassword | undefined {
     const user = this.userRepository.findById(id);
 
     if (!user) {
@@ -87,7 +77,7 @@ export class AuthService {
     }
 
     const { password_hash, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return userWithoutPassword as UserWithoutPassword;
   }
 
   /**
