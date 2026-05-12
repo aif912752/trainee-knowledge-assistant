@@ -1,24 +1,5 @@
 import type { Database } from 'better-sqlite3';
-
-export interface Document {
-  id: number;
-  user_id: number;
-  filename: string;
-  original_name: string;
-  file_type: string;
-  file_size: number;
-  content: string | null;
-  created_at: string;
-}
-
-export interface CreateDocumentInput {
-  user_id: number;
-  filename: string;
-  original_name: string;
-  file_type: string;
-  file_size: number;
-  content?: string;
-}
+import type { Document, CreateDocumentInput } from '~/types/document';
 
 export class DocumentRepository {
   constructor(private db: Database) {}
