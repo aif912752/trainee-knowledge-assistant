@@ -23,9 +23,10 @@ export function useUpload() {
     const result = uploadDocumentSchema.safeParse({ file })
 
     if (!result.success) {
+      const firstError = result.error.errors?.[0]
       return {
         valid: false,
-        error: result.error.errors[0].message,
+        error: firstError?.message || 'ไฟล์ไม่ถูกต้อง',
       }
     }
 

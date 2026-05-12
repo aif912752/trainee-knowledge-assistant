@@ -12,6 +12,10 @@ const ALLOWED_FILE_TYPES = [
 // Max file size: 5MB
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
+import { createRequire } from 'module';
+import { pathToFileURL } from 'url';
+const require = createRequire(import.meta.url);
+
 export class FileValidationError extends Error {
   constructor(message: string, public code: string) {
     super(message);
@@ -86,16 +90,49 @@ export class DocumentService {
   }
 
   /**
-   * Extract text from PDF buffer
+   * Extract text from PDF buffer using pdfjs-dist directly
+   * This is more stable than pdf-parse in ESM environments
    */
   private async extractPDFText(buffer: Buffer): Promise<string> {
     try {
-      // Use dynamic import and handle default export manually for pdf-parse compatibility
-      const pdf = await import('pdf-parse');
-      const parse = (pdf.default || pdf) as any;
-      const data = await parse(buffer);
-      return data.text;
+      /**
+       * In Node.js environment, we must use the legacy build of pdfjs-dist.
+       * The modern ESM build requires browser-only globals like DOMMatrix.
+       */
+      const pdfjsPath = require.resolve('pdfjs-dist/legacy/build/pdf.mjs');
+      const pdfjs = await import(pathToFileURL(pdfjsPath).href);
+      
+      // Configure worker using a valid file:// URL for Windows compatibility
+      const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
+      pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
+      
+      const uint8Array = new Uint8Array(buffer);
+      const loadingTask = pdfjs.getDocument({
+        data: uint8Array,
+        useSystemFonts: true,
+        disableFontFace: true,
+        // Critical for Node.js: disable features that require a browser DOM
+        isEvalSupported: false,
+        useWorkerFetch: false,
+      });
+      
+      const pdf = await loadingTask.promise;
+      let fullText = '';
+      
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+          
+        fullText += pageText + '\n';
+      }
+      
+      return fullText.trim();
     } catch (error) {
+      console.error('PDF extraction error (pdfjs):', error);
       throw new FileValidationError(
         'ไม่สามารถอ่านไฟล์ PDF ได้ กรุณาลองไฟล์อื่น',
         'PDF_PARSE_ERROR'

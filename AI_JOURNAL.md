@@ -461,3 +461,25 @@
 - สร้าง `test/api/upload.test.ts` พร้อม mock `pdf-parse` และ `getDatabase`
 - ผลลัพธ์: **20/20 tests ผ่าน** ✅
 - Bonus: Unit tests +5 คะแนน (รวมเป็น +10 จาก unit tests ก่อนหน้า)
+
+## Session 54: Unifying Shared Validations & Types and Fixing ESM/TS Issues
+**Prompts:**
+- "เช็คให้หน่อยว่า api ฝั่ง frontend มีการใช้ validations shared ทั้งหมดแล้ว"
+- "ดำเนินการแก้ไข useUpload.ts ให้เรียกใช้ shared validation เลย"
+- "ปรับปรุงให้ฝั่ง Server ใช้ uploadDocumentSchema ในการตรวจสอบด้วยเช่นกัน"
+- "เช็ค validations shared กับ type shared ด้วย ว่าส่วนไหนที่ยังไม่เรียกใช้"
+- "Cleanup Types: ลบ Interface ที่ซ้ำซ้อนใน types/auth.ts และให้ไป Import จาก shared/validations แทน"
+- "Fix Shared Helpers: ปรับปรุง shared/validations/helpers.ts ไม่ให้เรียกใช้ Error ของฝั่ง Server โดยตรง เพื่อความปลอดภัยของ Frontend"
+- "Fixing TypeScript Errors in form-data.ts"
+- "Fixing pdf-parse ESM import error"
+**AI Response:**
+- ตรวจสอบและพบความซ้ำซ้อนของ Validation logic ใน `useUpload.ts` และ Server API
+- Refactor `useUpload.ts` และ `upload.post.ts` ให้ใช้ `uploadDocumentSchema` จาก shared validations
+- ลบ `LoginInput` interface ที่ซ้ำซ้อนใน `types/auth.ts` และเปลี่ยนไปใช้จาก shared validation แทน
+- แยก Error classes ออกมาเป็น `shared/errors.ts` เพื่อตัด dependency ระหว่าง Frontend และ Server (ป้องกัน Server leak)
+- แก้ไขปัญหา `pdf-parse` ESM import error โดยใช้ dynamic import `await import('pdf-parse')` และจัดการ default export compatibility
+- แก้ไข TypeScript "possibly undefined" และ Index type errors ใน `server/utils/form-data.ts` เพื่อความปลอดภัยของระบบ
+**My Adjustment:**
+- ระบบ Validation มีมาตรฐานเดียวกันทั้งโครงการ (Single Source of Truth)
+- โครงสร้าง Shared Assets ปลอดภัยต่อการใช้งานใน Frontend (ไม่มี Server dependency leak)
+- แก้ไข Bug ทางเทคนิค (ESM compatibility) และปรับปรุง Type safety ในส่วนของ Multipart parsing ให้สมบูรณ์

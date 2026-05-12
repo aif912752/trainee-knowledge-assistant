@@ -1,8 +1,11 @@
 import { DocumentService } from '~~/server/services/document.service';
-import { readFormData } from '~~/server/utils/form-data';
+import { readFormData } from 'h3';
 import { UnauthorizedError, ValidationError, handleApiError } from '~~/server/utils/errors';
 import { uploadDocumentSchema } from '~~/shared/validations';
 import { validateOrThrow } from '~~/shared/validations/helpers';
+
+// Max file size: 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 /**
  * Upload file API endpoint
@@ -22,22 +25,32 @@ export default defineEventHandler(async (event) => {
       return data;
     }
 
-    // Read form data with file
-    // Note: readFormData still uses a default max size for the raw stream parsing
-    const formData = await readFormData(event);
-    
-    // Validate using shared schema
-    validateOrThrow(uploadDocumentSchema, { file: formData.file?.file });
+    // Read form data with file using H3's built-in readFormData
+    const formData = await readFormData(event, {
+      maxFileSize: MAX_FILE_SIZE,
+    });
 
-    // At this point we know formData.file exists and is valid
-    const file = formData.file!;
+    const fileEntry = formData.get('file');
+
+    if (!fileEntry || !(fileEntry instanceof File)) {
+      const { data, status } = handleApiError(new ValidationError('ไม่พบไฟล์ที่อัปโหลด'));
+      setResponseStatus(event, status);
+      return data;
+    }
+
+    // Validate using shared schema
+    validateOrThrow(uploadDocumentSchema, { file: fileEntry });
+
+    // Convert File to Buffer
+    const arrayBuffer = await fileEntry.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
     // Upload document using service
     const documentService = new DocumentService();
     const result = await documentService.uploadDocument(
       user.id,
-      file.file,
-      file.buffer
+      fileEntry,
+      buffer
     );
 
     return {
