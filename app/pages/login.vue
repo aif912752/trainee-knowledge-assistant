@@ -2,21 +2,16 @@
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import { loginSchema } from '~~/shared/validations'
-import { toast } from 'vue-sonner'
 import { LogIn as LucideLogIn, AlertCircle as LucideAlertCircle, Loader2 as LucideLoader2, Info as LucideInfo } from 'lucide-vue-next'
 
-// Define form schema type
-type LoginFormValues = {
-  username: string
-  password: string
-}
+// Use auth composable
+const { login, isLoading: isAuthLoading } = useAuth()
 
-// State
-const isLoading = ref(false)
+// State for error display
 const errorMessage = ref('')
 
 // Initialize vee-validate form
-const { defineField, handleSubmit, errors } = useForm<LoginFormValues>({
+const { defineField, handleSubmit, errors } = useForm({
   validationSchema: toTypedSchema(loginSchema),
   initialValues: {
     username: '',
@@ -33,26 +28,15 @@ const onSubmit = handleSubmit(async (values) => {
   errorMessage.value = ''
 
   try {
-    isLoading.value = true
-
-    const response = await api.post<{ success: boolean, user?: any }>('/api/auth/login', values)
+    const response = await login(values)
 
     if (response.success) {
-      toast.success('เข้าสู่ระบบสำเร็จ', {
-        description: 'ยินดีต้อนรับกลับเข้าสู่ระบบ'
-      })
       // Redirect to home page on success
-      await navigateTo('/')
+      window.location.href = '/'
     }
   } catch (error: any) {
-    // Error is already processed by apiFetch, just use the message
-    errorMessage.value = error.friendlyMessage
-    
-    toast.error('เข้าสู่ระบบไม่สำเร็จ', {
-      description: errorMessage.value
-    })
-  } finally {
-    isLoading.value = false
+    // Error is already processed by apiFetch, just display message
+    errorMessage.value = error.friendlyMessage || error.data?.error || 'เข้าสู่ระบบไม่สำเร็จ'
   }
 })
 </script>
@@ -91,7 +75,7 @@ const onSubmit = handleSubmit(async (values) => {
                 v-bind="usernameAttrs"
                 type="text"
                 placeholder="ระบุชื่อผู้ใช้ของคุณ"
-                :disabled="isLoading"
+                :disabled="isAuthLoading"
                 autocomplete="username"
                 :class="{ 'border-destructive focus-visible:ring-destructive': errors.username }"
               />
@@ -109,7 +93,7 @@ const onSubmit = handleSubmit(async (values) => {
                 v-bind="passwordAttrs"
                 type="password"
                 placeholder="ระบุรหัสผ่านของคุณ"
-                :disabled="isLoading"
+                :disabled="isAuthLoading"
                 autocomplete="current-password"
                 :class="{ 'border-destructive focus-visible:ring-destructive': errors.password }"
               />
@@ -122,10 +106,10 @@ const onSubmit = handleSubmit(async (values) => {
             <Button
               type="submit"
               class="w-full h-11 text-base font-semibold transition-all"
-              :disabled="isLoading"
+              :disabled="isAuthLoading"
             >
-              <LucideLoader2 v-if="isLoading" class="mr-2 h-4 w-4 animate-spin" />
-              <span v-if="!isLoading">เข้าสู่ระบบ</span>
+              <LucideLoader2 v-if="isAuthLoading" class="mr-2 h-4 w-4 animate-spin" />
+              <span v-if="!isAuthLoading">เข้าสู่ระบบ</span>
               <span v-else>กำลังตรวจสอบข้อมูล...</span>
             </Button>
           </form>

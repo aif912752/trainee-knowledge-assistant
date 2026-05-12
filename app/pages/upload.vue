@@ -2,16 +2,14 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Upload, FileText, X, Check, AlertCircle } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { api } from '@/utils/api';
-import { toast } from 'vue-sonner';
 
 const router = useRouter();
 
+// Use upload composable
+const { isLoading: isUploading, validateFile, uploadFile: uploadDocument, formatFileSize, getFileIcon } = useUpload();
+
 // State
 const selectedFile = ref<File | null>(null);
-const isUploading = ref(false);
 const uploadResult = ref<{ id: number; filename: string; originalName: string } | null>(null);
 const dragOver = ref(false);
 
@@ -37,24 +35,10 @@ function validateAndSetFile(file: File) {
   // Reset result
   uploadResult.value = null;
 
-  // Check file type
-  const validTypes = ['application/pdf', 'text/plain'];
-  const validExtensions = ['.pdf', '.txt'];
-  const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
-
-  if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
-    toast.error('ไฟล์ไม่ถูกต้อง', {
-      description: 'อนุญาตเฉพาะไฟล์ PDF และ TXT เท่านั้น',
-    });
-    return;
-  }
-
-  // Check file size (5MB)
-  const maxSize = 5 * 1024 * 1024;
-  if (file.size > maxSize) {
-    toast.error('ไฟล์ขนาดใหญ่เกินไป', {
-      description: `ขนาดไฟล์ต้องไม่เกิน 5MB (ไฟล์ของคุณ: ${(file.size / 1024 / 1024).toFixed(2)}MB)`,
-    });
+  // Validate using composable
+  const validation = validateFile(file);
+  if (!validation.valid) {
+    // Composable already handles toast
     return;
   }
 
@@ -96,59 +80,23 @@ function removeFile() {
 }
 
 /**
- * Format file size
- */
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / 1024 / 1024).toFixed(2) + ' MB';
-}
-
-/**
- * Get file icon based on type
- */
-function getFileIcon(filename: string) {
-  const ext = filename.split('.').pop()?.toLowerCase();
-  return ext === 'pdf' ? '📄' : '📝';
-}
-
-/**
  * Upload file
  */
 async function uploadFile() {
   if (!selectedFile.value) return;
 
-  isUploading.value = true;
-
   try {
-    // Create FormData
-    const formData = new FormData();
-    formData.append('file', selectedFile.value);
-
-    // Upload to server
-    const response = await api.post('/api/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await uploadDocument(selectedFile.value);
 
     if (response.success) {
       uploadResult.value = {
         id: response.document.id,
         filename: response.document.filename,
-        originalName: response.document.originalName,
+        originalName: response.document.original_name,
       };
-
-      toast.success('อัปโหลดสำเร็จ', {
-        description: `"${response.document.originalName}" ถูกอัปโหลดเรียบร้อยแล้ว`,
-      });
     }
-  } catch (error: any) {
-    toast.error('อัปโหลดล้มเหลว', {
-      description: error.friendlyMessage || error.message || 'กรุณาลองใหม่อีกครั้ง',
-    });
-  } finally {
-    isUploading.value = false;
+  } catch (error) {
+    // Error is already handled by composable
   }
 }
 
