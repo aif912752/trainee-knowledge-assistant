@@ -3,7 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
 
-  modules: ["@nuxtjs/tailwindcss", "shadcn-nuxt"],
+  modules: ["@nuxtjs/tailwindcss", "shadcn-nuxt", "nuxt-security"],
 
   runtimeConfig: {
     // Server-side environment variables (private)
@@ -29,6 +29,25 @@ export default defineNuxtConfig({
   // Auto-import configurations
   imports: {
     dirs: ['types'], // Auto-import types from types/ directory
+  },
+
+  // Security headers configuration
+  security: {
+    // Enable security headers
+    headers: {
+      xFrameOptions: 'DENY', // Prevent clickjacking
+      xContentTypeOptions: 'nosniff', // Prevent MIME sniffing
+      xXSSProtection: '1; mode=block', // XSS protection
+      referrerPolicy: 'no-referrer', // No referrer policy
+      contentSecurityPolicy: {
+        // CSP for basic protection
+        'default-src': ["'self'"],
+        'script-src': ["'self'", "'unsafe-inline'"],
+        'style-src': ["'self'", "'unsafe-inline'"],
+        'img-src': ["'self'", 'data:', 'https:'],
+        'connect-src': ["'self'"],
+      }
+    }
   },
 
   shadcn: {
