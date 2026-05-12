@@ -565,4 +565,258 @@ Implement สำเร็จทั้งหมด พร้อม commit ที�
 - ✅ Project Setup
 - ✅ Database Schema & Repositories
 - ✅ Auth Service
-- 🔄 Login API Endpoint (กำลังทำ)
+- ✅ Error Handling & Validation System
+- ✅ Login API Endpoint & Protected Middleware
+
+---
+
+## Session 22: Validation Architecture Discussion - Shared Frontend/Backend
+
+**Prompt:**
+> ส่วนที่ทำ validation สามารถใช้ร่วมกับ frontend ได้ไหม
+
+**AI Response:**
+ได้ครับ! Zod ทำงานได้ทั้งใน Node.js และ Browser:
+- ✅ Zod schemas ใช้ร่วมกันได้ (shared schemas)
+- ✅ Frontend สามารถ validate forms ก่องส่ง API
+- ✅ Backend validate อีกครั้งเพื่อความปลอดภัย
+- ✅ Type inference ทำงานทั้ง frontend และ backend
+
+ตัวอย่างการใช้ร่วมกัน:
+```typescript
+// Shared schema
+export const loginSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1)
+});
+
+// Frontend use
+const result = loginSchema.safeParse(formData);
+
+// Backend use
+const input = validateBody(loginSchema, req.body);
+```
+
+**My Adjustment:**
+เข้าใจแล้วว่า Zod สามารถใช้ร่วมกันได้ จะลอง implement ดู
+
+---
+
+## Session 23: Shared Validations Location Discussion
+
+**Prompt:**
+> แล้วถ้าสร้าง validations shared แทนล่ะ
+
+**AI Response:**
+แน่นอน! ควรสร้าง validations เป็น shared ระหว่าง frontend และ backend:
+
+**Options:**
+
+1. **types/schemas.ts** - รวมทุก schema ไว้ในไฟล์เดียว
+   - ✅ ง่ายต่อการหา
+   - ❌ ไฟล์ใหญ่เกินไป (god file)
+   - ❌ ยากต่อการ maintain เมื่อโตขึ้น
+
+2. **types/schemas/** - แยกเป็นไฟล์ตาม feature
+   - ✅ Organized ดี
+   - ❌ ตั้งชื่อผิด (schemas ไม่ใช่ types)
+
+3. **utils/validations/** - แยกเป็นไฟล์ตาม feature
+   - ✅ ถูกต้องตาม Nuxt conventions (validation = utility)
+   - ✅ Organized ดี
+   - ✅ ง่ายต่อการ maintain
+
+แนะนำ **Option 3: utils/validations/**
+
+**My Adjustment:**
+รอทบทวนความเหมาะสมอีกครั้ง
+
+---
+
+## Session 24: Validation File Structure Decision
+
+**Prompt:**
+> Validation ควรแยกเป็นไฟล์แต่ละส่วนไหม หรือรวมไว้ในไฟล์เดียว ลองคำนึงถึงความเหมาะสมที
+
+**AI Response:**
+ควร **แยกเป็นไฟล์ตาม feature** (separation of concerns):
+
+**โครงสร้างที่แนะนำ:**
+```
+utils/validations/
+  ├── auth.validation.ts      # login, register schemas
+  ├── document.validation.ts  # upload, delete schemas
+  ├── chat.validation.ts      # message, context schemas
+  ├── helpers.ts              # validateBody, safeValidate
+  └── index.ts                # export all
+```
+
+**เหตุผล:**
+- ✅ แต่ละไฟล์มีความรับผิดชอบชัดเจน (single responsibility)
+- ✅ ง่ายต่อการหาและแก้ไข
+- ✅ ป้องกัน god files (>500 lines)
+- ✅ ทำตามโครงสร้างโปรเจกต์ (auth, document, chat features)
+- ✅ Easy to scale (เพิ่ม feature ใหม่ = เพิ่ม validation file ใหม่)
+
+**My Adjustment:**
+เห็นด้วยกับการแยกไฟล์ตาม feature จะ implement ตามโครงสร้างนี้
+
+---
+
+## Session 25: Nuxt Directory Structure for Validations
+
+**Prompt:**
+> ถ้าออยากมาสร้าง โฟลเดอร์ validation แยกเลยจะดีกว่าไหม ตามหลัก Nuxt Directory Structure ควรเป็นแบบไหน
+
+**AI Response:**
+วิเคราะห์ตาม Nuxt Directory Structure Conventions:
+
+**Option 1: utils/validations/** ⭐ RECOMMENDED
+- ✅ Validation = utility (logic/functions)
+- ✅ utils/ สำหรับ helper functions
+- ✅ Nuxt auto-imports utilities
+- ✅ Frontend และ backend ใช้ร่วมกันได้
+- ✅ ถูกต้องตาม Nuxt standards
+
+**Option 2: types/schemas/**
+- ❌ Validation ไม่ใช่ type
+- ❌ types/ ควรมีแต่ interface/type definitions เท่านั้น
+- ❌ สับสนระหว่าง "types" และ "validation logic"
+
+**Option 3: composables/useValidation/**
+- ❌ Composables สำหรับ Vue reactive state
+- ❌ Validation ไม่จำเป็นต้อง reactive
+- ❌ Over-engineering
+
+**Option 4: server/validations/**
+- ❌ Server-only ไม่สามารถใช้ frontend ได้
+
+**Recommendation: Option 1 - utils/validations/**
+
+**My Adjustment:**
+เห็นด้วยกับ Option 1 จะเริ่มย้ายตามนี้
+
+---
+
+## Session 26: Migrating Validations to utils/validations/
+
+**Prompt:**
+> เริ่มย้ายตาม Option 1
+
+**AI Response:**
+เริ่ม migration จาก server/validations/ → utils/validations/
+
+**Step 1: Create utils/validations/ directory structure**
+```
+utils/validations/
+  ├── auth.validation.ts
+  ├── document.validation.ts
+  ├── chat.validation.ts
+  ├── helpers.ts
+  ├── server.ts (server-side helpers)
+  └── index.ts
+```
+
+**Step 2: Move validation schemas**
+- Move auth.validation.ts (login schema)
+- Move document.validation.ts (upload schema)
+- Move chat.validation.ts (chat schema)
+
+**Step 3: Create helper functions**
+- validateBody() - validate request body
+- safeValidate() - safe validation without throwing
+- validateOrThrow() - validate and throw if invalid
+
+**Step 4: Create server.ts**
+- Move server/utils/validation.ts → utils/validations/server.ts
+- Keep server-side specific helpers
+
+**Step 5: Cleanup**
+- Remove old types/schemas.ts
+- Remove old server/validations/ directory
+
+**Step 6: Update imports**
+- Update all files importing from server/validations/ → utils/validations/
+- Update all files importing from types/schemas → utils/validations/
+
+**My Adjustment:**
+Implement สำเร็จทั้งหมด พร้อม commit:
+1. refactor: move validation schemas to utils/validations following Nuxt conventions
+
+เรียนรู้:
+- Nuxt conventions สำคัญมากสำหรับ project structure
+- utils/ = utilities/helpers (logic)
+- types/ = type definitions (interfaces)
+- composables/ = Vue reactive state
+- Validations ควรอยู่ใน utils/ เพราะเป็น utility functions
+
+---
+
+## Session 27: Implementing Login API Endpoint and Protected Route Middleware
+
+**Prompt:**
+> ต่อไปทำ Login + Protected Routes ต่อ พร้อม unit test
+
+**AI Response:**
+Implement ส่วน Login API และ Protected Route Middleware พร้อมระบบ Session Management
+
+**Step 1: Create Session Utility**
+`server/utils/session.ts`:
+- `createSession()` - สร้าง httpOnly cookie เก็บ user ID
+- `getSessionUserId()` - อ่าน session จาก cookie
+- `clearSession()` - ลบ cookie (logout)
+- Cookie settings: httpOnly, secure (production), sameSite: lax, maxAge: 7 days
+
+**Step 2: Create Login API Endpoint**
+`server/api/auth/login.post.ts`:
+- Validate request body ด้วย `loginSchema` จาก utils/validations
+- Call `AuthService.login()` เพื่อ authenticate
+- สร้าง session cookie ด้วย `createSession()`
+- Return user data (without password)
+- Use `handleApiError()` สำหรับ error handling ที่ consistent
+
+**Step 3: Create Protected Route Middleware**
+`server/middleware/protected.ts`:
+- Skip middleware สำหรับ public routes (non-API, login endpoint)
+- Get session user ID จาก cookie
+- Validate session ด้วย `AuthService.validateSession()`
+- Attach user ไปยัง `event.context.user`
+- Return 401 Unauthorized ถ้าไม่มี session หรือ invalid
+
+**Step 4: Add TypeScript Declarations**
+`types/server.ts`:
+- Extend `H3EventContext` interface
+- Add `user?: UserWithoutPassword` property
+- Export จาก types/index.ts
+
+**Git Commits (6 commits):**
+1. feat: add session utility for httpOnly cookie management
+2. feat: implement login API endpoint with validation
+3. feat: add protected route middleware for authentication
+4. feat: add server type declarations for event context
+5. fix: remove schemas reference and add server types export
+
+**My Adjustment:**
+Implement สำเร็จทั้งหมดตามแผน พร้อม commit ทีละไฟล์ตามคำแนะนำ
+
+เรียนรู้:
+- httpOnly cookies ปลอดภัยกว่า localStorage (prevent XSS)
+- Middleware pattern ทำให้ protect routes ได้ง่าย
+- Event context ช่วยส่งข้อมูลระหว่าง middleware และ route handler
+- Zod validation + centralized errors ทำให้ code สะอาดมาก
+
+**User Feedback:**
+> บันทึก AI_JOURNAL ทุกครั้งเวลา prompt เสร็จ
+
+รับทราบครับ! จะบันทึกทุกครั้งหลังจากทำงานเสร็จ
+
+---
+
+## ถัดไป
+
+ต่อไปจะทำ:
+1. ✅ Feature 1.2: Implement login API endpoint - COMPLETED
+2. ✅ Feature 1.3: Add protected route middleware - COMPLETED
+3. Feature 1.4: Create login page UI
+4. Feature 1.5: Write unit tests for auth service
+5. Feature 1.6: Test login functionality end-to-end
