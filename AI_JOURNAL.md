@@ -176,3 +176,41 @@
 - ปรับโครงสร้าง Directory ให้ตรงตามมาตรฐาน Nuxt 4
 - ปรับปรุง Type safety โดยใช้ `H3Event` แทน `any`
 - Commit แยกส่วนเพื่อประวัติ Git ที่ดี
+
+## Session 29: Fixing Shadcn Component Installation Path
+**Prompt:** "มันควรอยู่ใน app/components/ui นะ แล้วตอนติดตั้งทำไมมันยุข้างนอกได้"
+**AI Response:** 
+- สาเหตุเกิดจาก `components.json` ตั้ง Alias ไว้ที่ `@/components` ซึ่งใน Nuxt 4 จะชี้ไปที่ Root นอกโฟลเดอร์ `app/`
+- ต้องย้ายคอมโพเนนต์ไปที่ `app/components/ui/` ให้ถูกต้อง
+- แก้ไข `components.json` และ `nuxt.config.ts` ให้ชี้ไปที่โฟลเดอร์ `app/` เพื่อให้การติดตั้งครั้งต่อไปถูกต้อง
+**My Adjustment:** 
+- ย้ายไฟล์คอมโพเนนต์ทั้งหมด (sonner, input, ฯลฯ) เข้าไปใน `app/components/ui/`
+- อัปเดต `components.json` ให้ใช้ `@/app/` เป็นฐานสำหรับ Aliases
+- อัปเดต `nuxt.config.ts` ตั้งค่า `componentDir: "./app/components/ui"`
+- ตรวจสอบความถูกต้องของ Directory structure เพื่อแก้ปัญหา ENOENT
+
+## Session 29: Implementing Login Page with vee-validate and shadcn Components
+**Prompts:**
+- "เช็ค TODO.md ทีว่าควรทำไรต่อ"
+- "Implement login API endpoint ให้ที"
+- "ควรใช้ component shadcn"
+- "ติดตั้งไว้แล้ว" (repeated 2 times)
+- "Use the useForm composable from vee-validate or use <Form /> component to create a form."
+- "อัพเดท AI_JOURNAL.md"
+**AI Response:**
+- ตรวจสอบและยืนยันว่า Login API endpoint พร้อมใช้งานแล้ว
+- ตรวจสอบ shadcn components ที่มีอยู่ (Card, Input, Label, Button, etc.)
+- สร้าง Login page (`pages/login.vue`) โดยใช้:
+  - vee-validate's `useForm` composable
+  - Zod validation schema (`loginSchema`)
+  - shadcn components (Card, Input, Label, Button)
+  - Form validation พร้อม error messages
+  - Loading states
+- สร้าง Auth check API (`server/api/auth/me.get.ts`) เพื่อตรวจสอบ session
+- สร้าง Protected route middleware (`middleware/auth.ts`) เพื่อป้องกัน routes
+- สร้าง Index page (`pages/index.vue`) พร้อม authentication check
+- อัปเดต TODO.md ให้สอดคล้องกับความคืบหน้า
+**My Adjustment:**
+- สร้างหน้า Login ที่สมบูรณ์ด้วย vee-validate + shadcn-nuxt
+- วางระบบ Authentication ครบถ้วน (API, Middleware, Pages)
+- เตรียมพร้อมสำหรับการทดสอบระบบ Login

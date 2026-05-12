@@ -18,10 +18,10 @@
 ### Feature 1: Login + Protected Routes (5 คะแนน)
 - [x] Create database schema for users table
 - [x] Implement password hashing with bcrypt
-- [ ] Implement login API endpoint (`server/api/auth/login.post.ts`)
-- [ ] Implement session management with httpOnly cookie
-- [ ] Create login page (`pages/login.vue`)
-- [ ] Add protected route middleware
+- [x] Implement login API endpoint (`server/api/auth/login.post.ts`)
+- [x] Implement session management with httpOnly cookie
+- [x] Create login page (`pages/login.vue`)
+- [x] Add protected route middleware
 - [ ] Test login with admin/admin123
 - [ ] Test unauthorized access
 
