@@ -422,3 +422,12 @@
 - ใช้ shared types จาก `types/` directory เพื่อ Type safety
 - Error handling รวมอยู่ที่ apiFetch ส่ง friendlyMessage กลับมา
 
+## Session 51: Understanding $fetch vs useFetch
+**Prompt:** "$fetch กับ useFetch ต่างกันยังไง"
+**AI Response:**
+- `$fetch`: ใช้ได้ทุกที่ (composables, server), ไม่ reactive, ต้อง manage state เอง (isLoading, error), ไม่มี caching
+- `useFetch`: ใช้ได้เฉพาะใน `<script setup>`, reactive อัตโนมัติ, มี state ให้ (data, pending, error), มี caching, รองรับ SSR hydration
+- **Composables** → ใช้ `$fetch` (เพราะต้อง control state เอง)
+- **Pages/Components** → ใช้ `useFetch` (reactive, SSR-friendly)
+**My Adjustment:** เข้าใจความแตกต่างและยืนยันว่าการใช้ `$fetch` ใน composables ถูกต้องตามหลักการ
+
