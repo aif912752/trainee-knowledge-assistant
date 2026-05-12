@@ -539,3 +539,16 @@
 **Prompts:** ปรับ `handleApiError` ให้รับ `event` และจัดการ status เอง, เพิ่ม success response wrapper กลาง, และให้ `chat.service.ts` ใช้ฟังก์ชันกลาง
 **AI Response:** เพิ่ม `successResponse`, ปรับ `handleApiError(event, error)`, อัปเดต endpoints/frontend ให้ใช้ `{ success, data, message? }`, และแยก chat helper สำหรับ prompt/context/token usage
 **My Adjustment:** `vue-tsc --noEmit` ผ่านแล้ว แต่ test เฉพาะ `chat.service` ถูกขัดจังหวะก่อนจบ
+
+## Session 60: Chat Unit Testing & Robustness Improvements
+**Prompt:** "ทำ unit test ส่วน chat หน่อย"
+**AI Response:** 
+- เพิ่ม Unit Test สำหรับ `ChatService` ครอบคลุม case ปกติ, fallback, non-existent document และ large content truncation
+- เพิ่ม Unit Test สำหรับ `chatSchema` validation
+- แก้ไข Bug ใน `ChatService` เรื่อง Foreign Key constraint เมื่อระบุ `documentId` ผิด
+- Implement content truncation (10,000 chars) ใน `ChatService` เพื่อป้องกัน AI token overflow
+- Refactor error handling ใน `DocumentService` ให้ใช้ centralized `ValidationError`
+**My Adjustment:** 
+- ยืนยันความถูกต้องของระบบ Chat ผ่าน 14 unit tests (Passed 100%)
+- ปรับปรุงความเสถียรของระบบในการจัดการไฟล์ขนาดใหญ่และ ID ที่ไม่ถูกต้อง
+- อัปเดต TODO.md และบันทึกประวัติการพัฒนา
