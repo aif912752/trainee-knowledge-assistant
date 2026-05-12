@@ -137,9 +137,14 @@
 - **Day 5:** Testing + Deployment + Part 2-4
 
 ## Current Status
-📅 **Day:** 1/5
-⏱️ **Time:** Feature 1 Implementation
-🎯 **Focus:** Login + Protected Routes
-✅ **Completed:** Project Setup, Database Schema, Repositories, Auth Service
-🔄 **In Progress:** Login API Endpoint
-📋 **Next:** Create login page UI, Protected middleware
+📅 **Day:** 2/5
+⏱️ **Time:** Feature 3 Implementation
+🎯 **Focus:** Chat with AI
+✅ **Completed:** Project Setup, Database Schema, Repositories, Auth Service, Upload File, Unit Tests
+🔄 **In Progress:** Chat API Endpoint
+📋 **Next:** Create chat page UI
+
+## Progress Summary
+- **Required Features:** 10/30 points (Feature 1 ✅, Feature 2 ✅)
+- **Bonus Features:** 5/20 points (Unit Tests ✅)
+- **Total:** 15/50 points

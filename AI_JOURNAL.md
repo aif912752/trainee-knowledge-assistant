@@ -385,3 +385,10 @@
 - เพิ่ม `https://fonts.googleapis.com` ใน `style-src`
 - เพิ่ม `https://fonts.gstatic.com` ใน `font-src`
 **My Adjustment:** แก้ไขปัญหา Fonts ไม่โหลดเนื่องจากติด Security Policy (CSP)
+
+## Session 48: Switching to Noto Sans Thai
+**Prompt:** "เปลี่ยนมาใช้ noto san thai ได้ไหม"
+**AI Response:**
+- เปลี่ยน Google Fonts import ใน `app/assets/css/tailwind.css` เป็น `Noto Sans Thai`
+- อัปเดต CSS Variable `--font-sans` ให้ใช้ `'Noto Sans Thai', sans-serif` ทั้งในโหมดปกติและ Dark mode
+**My Adjustment:** เปลี่ยนฟอนต์หลักของระบบเป็น Noto Sans Thai เพื่อการแสดงผลภาษาไทยที่สวยงามและอ่านง่ายขึ้น
