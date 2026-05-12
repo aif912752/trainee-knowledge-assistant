@@ -1,23 +1,5 @@
 import type { Database } from 'better-sqlite3';
-
-export interface TokenUsage {
-  id: number;
-  user_id: number;
-  session_id: string;
-  tokens: number;
-  created_at: string;
-}
-
-export interface CreateTokenUsageInput {
-  user_id: number;
-  session_id: string;
-  tokens: number;
-}
-
-export interface SessionTokenSummary {
-  session_id: string;
-  total_tokens: number;
-}
+import type { TokenUsage, CreateTokenUsageInput, SessionTokenSummary } from '~/types/token';
 
 export class TokenRepository {
   constructor(private db: Database) {}
