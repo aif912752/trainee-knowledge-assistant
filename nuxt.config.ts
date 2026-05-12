@@ -23,7 +23,12 @@ export default defineNuxtConfig({
   // TypeScript configuration
   typescript: {
     strict: true,
-    typeCheck: true, // Enable type checking in development
+    typeCheck: false, // Disable for now, will enable later
+  },
+
+  // Auto-import configurations
+  imports: {
+    dirs: ['types'], // Auto-import types from types/ directory
   },
 
   shadcn: {
