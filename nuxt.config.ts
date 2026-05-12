@@ -65,6 +65,6 @@ export default defineNuxtConfig({
      * @link https://nuxt.com/docs/api/nuxt-config#alias
      * @default "@/components/ui"
      */
-    componentDir: "~/app/components/ui",
+    componentDir: "./app/components/ui",
   },
 });
