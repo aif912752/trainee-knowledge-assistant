@@ -1,16 +1,5 @@
 import type { Database } from 'better-sqlite3';
-
-export interface User {
-  id: number;
-  username: string;
-  password_hash: string;
-  created_at: string;
-}
-
-export interface CreateUserInput {
-  username: string;
-  password_hash: string;
-}
+import type { User, CreateUserInput } from '~/types/user';
 
 export class UserRepository {
   constructor(private db: Database) {}
