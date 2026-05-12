@@ -22,8 +22,8 @@
 - [x] Implement session management with httpOnly cookie
 - [x] Create login page (`pages/login.vue`)
 - [x] Add protected route middleware
-- [ ] Test login with admin/admin123
-- [ ] Test unauthorized access
+- [x] Test login with admin/admin123
+- [x] Test unauthorized access
 
 ### Feature 2: Upload File (5 คะแนน)
 - [x] Create documents table schema

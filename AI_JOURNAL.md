@@ -302,3 +302,37 @@
 - ยืนยันว่าการดึง Database instance มาใช้งานใน constructor ทำงานได้ถูกต้อง
 - ตรวจสอบความถูกต้องของ Path โดยใช้ Root Alias `~~/`
 
+## Session 38: Database Connection Setup
+**Prompt:** "ตอนนี้เชื่อม Database ยัง"
+**AI Response:**
+- ตรวจสอบและพบว่ามี Schema และ Connection code พร้อมแล้ว แต่ยังไม่มี Server plugin ที่จะ Initialize database
+- สร้าง `server/plugins/database.ts` เพื่อเรียก `getDatabase()` ตอนเริ่ม server
+- สร้าง `.env.example` สำหรับอ้างอิงค่า Environment variables
+**My Adjustment:** เชื่อมต่อ Database สำเร็จ - plugin จะสร้าง `data/` directory, initialize database, และ seed user `admin/admin123` อัตโนมัติ
+
+## Session 39: Fixing API Status Code for Unauthorized Response
+**Prompt:** "api มันขึ้น {...} แต่ทำไมมัน Status Code 200"
+**AI Response:**
+- พบปัญหา `handleApiError` แค่ return object แต่ไม่ได้ set status code
+- แก้ไขให้คืนค่าทั้ง `data` และ `status` จาก `handleApiError`
+- อัปเดต API endpoints ทั้งหมดให้ใช้ `setResponseStatus(event, status)`
+**My Adjustment:** แก้ไขให้ Unauthorized คืน 401, Validation error คืน 422, Internal error คืน 500 อย่างถูกต้อง
+
+## Session 40: Writing Unit Tests for Repositories and Services
+**Prompt:** "เขียน unit test"
+**AI Response:**
+- Setup Vitest + @nuxt/test-utils + happy-dom
+- สร้าง `vitest.config.ts` และ `test/setup.ts` พร้อม mock Nuxt globals
+- สร้าง `test/utils/database.ts` สำหรับ create in-memory test database
+- เขียน tests สำหรับ: UserRepository, DocumentRepository, MessageRepository, TokenRepository, AuthService
+**My Adjustment:** สร้าง Unit tests ครบ 59 tests ผ่านทั้งหมด (Bonus +5 คะแนน)
+
+## Session 41: Testing Unauthorized Access with Protected Middleware
+**Prompt:** "ต่อไป Test unauthorized access"
+**AI Response:**
+- ตรวจสอบ `server/middleware/protected.ts` และแก้ไขให้คืน status code ถูกต้อง
+- สร้าง test endpoint `server/api/test/protected.get.ts` สำหรับทดสอบ
+- เขียน unit test `server/middleware/protected.test.ts` สำหรับทดสอบ unauthorized access
+- Mock Nuxt/H3 globals ใน `test/setup.ts` ให้รองรับการทดสอบ middleware
+**My Adjustment:** เพิ่ม 6 tests สำหรับ protected middleware - รวมทั้งหมด **65 tests ผ่าน**
+
