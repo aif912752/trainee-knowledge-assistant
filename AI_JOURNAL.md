@@ -153,3 +153,26 @@
 - สร้าง Login API endpoint
 - สร้าง Middleware สำหรับป้องกัน Route ที่ต้อง Login
 **My Adjustment:** วางระบบ Authentication ที่ปลอดภัยด้วย httpOnly cookies และ Middleware
+
+---
+
+## Session 28: Fixing Nuxt 4 Directory Structure and Import Path Issues
+**Prompts:** 
+- "[20:03:20] WARN Duplicated import \"clearSession\", the one from \"h3\" has been ignored"
+- "ไม่ควรใช้ any ด้วย"
+- "[nitro 20:17:54] ERROR Error: Could not load D:/Github/trainee-knowledge-assistant/app//utils/validations"
+- "ตามหลัก Nuxtควรเป็นแบบนี้ [Nuxt 4 directory structure]"
+- "[nitro 20:25:52] ERROR Error: Could not load D:/Github/trainee-knowledge-assistant/app//shared/validations"
+- "WARN Component directory does not exist: D:/Github/trainee-knowledge-assistant/components/ui"
+- "บันทึก prompt ลง AI_JOURNAL ด้วย"
+**AI Response:** 
+- แก้ปัญหา Naming conflict ของ `clearSession` กับ h3 โดยเปลี่ยนเป็น `clearUserSession`
+- เปลี่ยนการใช้ `any` เป็น `H3Event` เพื่อ Type safety
+- ปรับโครงสร้างโปรเจกต์ตาม Nuxt 4 (ย้าย `utils/validations/` ไปที่ `shared/validations/`)
+- ตั้งค่า `srcDir: '.'` ใน `nuxt.config.ts` เพื่อให้ Alias `~` ชี้ไปที่ Project root
+- แก้ไขปัญหา Path resolution และตั้งค่า Component directory สำหรับ shadcn-nuxt
+**My Adjustment:** 
+- Rename ฟังก์ชันเพื่อเลี่ยงข้อผิดพลาด Naming conflict
+- ปรับโครงสร้าง Directory ให้ตรงตามมาตรฐาน Nuxt 4
+- ปรับปรุง Type safety โดยใช้ `H3Event` แทน `any`
+- Commit แยกส่วนเพื่อประวัติ Git ที่ดี
