@@ -514,3 +514,13 @@
 - ปรับปรุง `nuxt.config.ts` และ `DocumentService.ts` เพื่อแก้ปัญหาการอัปโหลดและย้ายไฟล์
 - เพิ่ม `storage/` ใน `.gitignore` และล้าง Debug logs ทั้งหมด
 - ผลลัพธ์: **ระบบอัปโหลดทำงานได้เสถียร รองรับการย้ายไฟล์ข้าม Drive และปลอดภัยตามมาตรฐาน** 🚀
+
+## Session 56: Fix Upload Hang & EXDEV Error
+**Prompt:** แก้ไขปัญหาอัปโหลดค้างและ Error `EXDEV: cross-device link not permitted`
+**AI Response:** Bypass `nuxt-security` สำหรับทางผ่านอัปโหลด, เพิ่ม `req.resume()`, และใช้ copy+unlink สำหรับย้ายไฟล์ข้าม Drive
+**My Adjustment:** ปรับ `nuxt.config.ts` และ `DocumentService.ts` แก้ปัญหาสำเร็จ 100% ✅
+
+## Session 57: Chat & Token Tracking Implementation
+**Prompt:** "เริ่มลุยระบบ Chat เลย"
+**AI Response:** สร้าง ChatService, API Endpoints (Chat, History, Usage), useChat composable และหน้า Chat UI รองรับบริบทไฟล์และนับ Token
+**My Adjustment:** เพิ่ม Auto-scroll, Optimistic Update และ Timeout 30s. ระบบ Chat และ Token Tracking ทำงานสมบูรณ์ ✅
