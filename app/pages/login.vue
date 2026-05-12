@@ -3,7 +3,6 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import { loginSchema } from '~~/shared/validations'
 import { toast } from 'vue-sonner'
-import { api } from '~~/app/utils/api'
 
 // Define form schema type
 type LoginFormValues = {

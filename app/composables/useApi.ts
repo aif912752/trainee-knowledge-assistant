@@ -1,15 +1,15 @@
 import { toast } from 'vue-sonner'
-import { getErrorMessage } from './error-handler'
+import { getErrorMessage } from '../utils/error-handler'
 
 /**
- * Unified API client utility for the frontend
+ * Unified API client composable for the frontend
  * Wraps Nuxt's $fetch with integrated error handling and toast notifications
+ * Nuxt 4 automatically imports files in the composables directory
  */
 export async function apiFetch<T>(url: string, options: any = {}): Promise<T> {
   try {
     const response = await $fetch(url, {
       ...options,
-      // You can add global headers or interceptors here
     })
     return response as T
   } catch (error: any) {
@@ -35,7 +35,7 @@ export async function apiFetch<T>(url: string, options: any = {}): Promise<T> {
 }
 
 /**
- * Convenience methods for common HTTP verbs
+ * The 'api' object will be auto-imported by Nuxt
  */
 export const api = {
   get: <T>(url: string, options: any = {}) => apiFetch<T>(url, { ...options, method: 'GET' }),
