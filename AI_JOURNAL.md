@@ -424,3 +424,14 @@
 - ปรับปรุง `nuxt.config.ts` ให้ CSP อนุญาตการโหลดจาก `gstatic.com` และปรับปรุง `style-src`
 - ยืนยันการใช้ชื่อฟอนต์ `"Noto Sans Thai", sans-serif` ใน Tailwind theme
 **My Adjustment:** ฟอนต์ Noto Sans Thai แสดงผลถูกต้องทั่วทั้งแอปพลิเคชัน
+
+## Session 52: Fixing Upload API 404 Error
+**Prompts:**
+- "Upload File api ขึ้น statusCode 404..."
+- "commit และ บันทึก prompt"
+**AI Response:**
+- วิเคราะห์สาเหตุ: Nitro route naming ผิด
+  - `server/api/upload/post.post.ts` → `/api/upload/post` (ผิด)
+  - `server/api/upload.post.ts` → `/api/upload` (ถูกต้อง)
+- ย้ายไฟล์จาก `server/api/upload/post.post.ts` ไปเป็น `server/api/upload.post.ts`
+**My Adjustment:** แก้ไขปัญหา 404 บน upload API endpoint โดยใช้ Nitro route naming convention ที่ถูกต้อง
