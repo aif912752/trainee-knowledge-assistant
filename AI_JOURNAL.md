@@ -1,7 +1,5 @@
 # AI Usage Journal
 
-> **IMPORTANT:** Record every prompt and conversation in this journal to maintain a complete history of development decisions and context.
-
 ## Session 1: Planning Assessment Strategy
 **Prompt:** "ถ้าจะทำข้อแรกก่อน นายว่าดีไหม"
 **AI Response:** 
@@ -57,7 +55,7 @@
 
 ## Session 9: Cloning to New Location
 **Prompt:** "เรา clone project มาแล้วที่ \"D:\\Github\\trainee-knowledge-assistant\" ช่วยไปยังโฟลเดอร์นั้นแทนที พร้อมบันทึก AI_JOURNAL ตลอดทุกครั้งที่ prompt"
-**AI Response:** ยืนยันการย้าย Directoryทำงานและรับปากบันทึก Log ทุก Prompt
+**AI Response:** ยืนยันการย้าย Directory ทำงานและรับปากบันทึก Log ทุก Prompt
 **My Adjustment:** ย้ายมาทำงานที่ Directory ใหม่ถาวร
 
 ## Session 10: Installing Dependencies
@@ -395,41 +393,34 @@
 - อัปเดต CSS Variable `--font-sans` ให้ใช้ `'Noto Sans Thai', sans-serif` ทั้งในโหมดปกติและ Dark mode
 **My Adjustment:** เปลี่ยนฟอนต์หลักของระบบเป็น Noto Sans Thai เพื่อการแสดงผลภาษาไทยที่สวยงามและอ่านง่ายขึ้น
 
-## Session 49: Fixing Login Redirect Issue
-**Prompt:** "เมื่อ login สำเร็จ ตอนนี้ยังไม่สามารถเข้าหน้าต่างๆได้", "มันขึ้น เข้าสู่ระบบสำเร็จ แล้วมันเด้งไปหน้าแชทสักพัก มันก็กลับมาหน้า login"
-**AI Response:**
-- วิเคราะห์ปัญหา: `navigateTo(/)` ไม่ทำงานหลัง login
-- แก้ไขโดยใช้ `window.location.href = /` แทน `navigateTo(/)` ใน login.vue
-- วิเคราะห์ปัญหา middleware: middleware/auth.ts เช็ค `document.cookie` แต่ session cookie เป็น httpOnly อ่านไม่ได้
-- แก้ไข middleware ให้เช็ค session ผ่าน API `/api/auth/me` แทนการอ่าน cookie โดยตรง
-**My Adjustment:** แก้ไขปัญหา redirect loop หลัง login สำเร็จ โดยใช้ window.location.href และเช็ค session ผ่าน API
-
-## Session 50: Refactoring to Feature-Based Composables
+## Session 49: Implementing Logout & Dashboard UI Refactor
 **Prompts:**
-- "เอา api ไปเขียนไว้ใน composables แทนแล้วค่อยเรียกใช้แทน"
-- "useAuth ไม่จำเป็นต้อง export type เพราะมี shared types แล้ว"
-- "แล้ว useAuth ก็ต้องเรียกใช้ useApi ด้วยไหม เพื่อจัดการ try catch"
+- "หลังจาก เข้าสู่ระบบสำเร็จ เช็ค ui หน้าที่เข้าไปให้ทีว่า ui มีเมนู เนื้อหาต่างๆครบไหม และอยากให้เพิ่มปุ่มออกจากระบบให้ด้วย และปรับแต่ง ui ให้สวยงามเข้ากับธีม"
+- "โอเครติดตั้งได้ละ ต่อไปแก้ไขตามที่บอกไว้ที"
 **AI Response:**
-- สร้าง `useAuth.ts` composable สำหรับ login, logout, checkAuth
-- สร้าง `useUpload.ts` composable สำหรับ uploadFile, validateFile
-- ใช้ shared types จาก `~/types/` แทนการประกาศใหม่ (LoginInput, LoginResult, UserWithoutPassword, Document)
-- แก้ไข Nuxt 4 alias: `~/` ชี้ไป `app/`, `~~/` ชี้ไป root
-- Refactor `useApi.ts` ให้ export `apiFetch` function และ `api` object
-- Composables เรียกใช้ `apiFetch` เพื่อ centralized error handling
-- Pages เรียกใช้ Composables (ไม่เรียก API โดยตรง)
-**My Adjustment:**
-- Layer 1: `useApi` - centralized error handling ด้วย apiFetch
-- Layer 2: Composables (useAuth, useUpload) - feature logic
-- Layer 3: Pages - UI เรียกใช้ composables
-- ใช้ shared types จาก `types/` directory เพื่อ Type safety
-- Error handling รวมอยู่ที่ apiFetch ส่ง friendlyMessage กลับมา
+- สร้าง Logout API (`server/api/auth/logout.post.ts`) เพื่อเคลียร์ session cookie
+- ปรับปรุงโครงสร้าง `components.json` ให้ถูกต้องตามมาตรฐาน Nuxt 4 (ป้องกันโฟลเดอร์ทับซ้อน)
+- ติดตั้งคอมโพเนนต์ `DropdownMenu` สำหรับเมนูผู้ใช้
+- ปรับปรุงหน้า `app/pages/index.vue` ใหม่ทั้งหมด:
+  - เพิ่ม Sticky Header พร้อม Glassmorphism effect
+  - เพิ่ม User Dropdown Menu พร้อมปุ่มออกจากระบบ
+  - ปรับปรุง Feature Cards (Chat, Upload, ฯลฯ) ให้สวยงามและมีแอนิเมชัน
+  - เพิ่มส่วนการเริ่มต้นใช้งาน (Quick Start Guide)
+  - ปรับปรุงสไตล์ให้เข้ากับฟอนต์ Noto Sans Thai และโทนสีหลักของแอป
+**My Adjustment:** หน้า Dashboard มี UI ที่ครบถ้วน สวยงาม และใช้งานได้จริง พร้อมระบบออกจากระบบที่สมบูรณ์
 
-## Session 51: Understanding $fetch vs useFetch
-**Prompt:** "$fetch กับ useFetch ต่างกันยังไง"
+## Session 50: Fixing DropdownMenu Resolution
+**Prompt:** "Vue warn]: Failed to resolve component: DropdownMenuTrigger..."
 **AI Response:**
-- `$fetch`: ใช้ได้ทุกที่ (composables, server), ไม่ reactive, ต้อง manage state เอง (isLoading, error), ไม่มี caching
-- `useFetch`: ใช้ได้เฉพาะใน `<script setup>`, reactive อัตโนมัติ, มี state ให้ (data, pending, error), มี caching, รองรับ SSR hydration
-- **Composables** → ใช้ `$fetch` (เพราะต้อง control state เอง)
-- **Pages/Components** → ใช้ `useFetch` (reactive, SSR-friendly)
-**My Adjustment:** เข้าใจความแตกต่างและยืนยันว่าการใช้ `$fetch` ใน composables ถูกต้องตามหลักการ
+- วิเคราะห์ปัญหา: Nuxt auto-import ไม่สามารถดึงคอมโพเนนต์ย่อยจาก `DropdownMenu` มาใช้ในหน้า Page ได้อัตโนมัติ
+- แก้ไขโดยการเพิ่ม explicit import สำหรับ `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, ฯลฯ ใน `index.vue`
+**My Adjustment:** แก้ไขปัญหาการหาคอมโพเนนต์ไม่เจอ ทำให้เมนูออกจากระบบแสดงผลและทำงานได้ถูกต้อง
 
+## Session 51: Finalizing Noto Sans Thai Font and CSP
+**Prompt:** "font ไม่เข้า"
+**AI Response:**
+- วิเคราะห์สาเหตุ: ชื่อฟอนต์ใน `@import` และ CSS variable ไม่ตรงกับ Google Fonts
+- แก้ไข `@import` URL ใน `tailwind.css` ให้เป็น `Noto Sans Thai`
+- ปรับปรุง `nuxt.config.ts` ให้ CSP อนุญาตการโหลดจาก `gstatic.com` และปรับปรุง `style-src`
+- ยืนยันการใช้ชื่อฟอนต์ `"Noto Sans Thai", sans-serif` ใน Tailwind theme
+**My Adjustment:** ฟอนต์ Noto Sans Thai แสดงผลถูกต้องทั่วทั้งแอปพลิเคชัน
