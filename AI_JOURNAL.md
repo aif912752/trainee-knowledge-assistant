@@ -55,7 +55,7 @@
 
 ## Session 9: Cloning to New Location
 **Prompt:** "เรา clone project มาแล้วที่ \"D:\\Github\\trainee-knowledge-assistant\" ช่วยไปยังโฟลเดอร์นั้นแทนที พร้อมบันทึก AI_JOURNAL ตลอดทุกครั้งที่ prompt"
-**AI Response:** ยืนยันการย้าย Directory ทำงานและรับปากบันทึก Log ทุก Prompt
+**AI Response:** ยืนยันการย้าย Directoryทำงานและรับปากบันทึก Log ทุก Prompt
 **My Adjustment:** ย้ายมาทำงานที่ Directory ใหม่ถาวร
 
 ## Session 10: Installing Dependencies
@@ -189,7 +189,7 @@
 - อัปเดต `nuxt.config.ts` ตั้งค่า `componentDir: "./app/components/ui"`
 - ตรวจสอบความถูกต้องของ Directory structure เพื่อแก้ปัญหา ENOENT
 
-## Session 29: Implementing Login Page with vee-validate and shadcn Components
+## Session 30: Implementing Login Page with vee-validate and shadcn Components
 **Prompts:**
 - "เช็ค TODO.md ทีว่าควรทำไรต่อ"
 - "Implement login API endpoint ให้ที"
@@ -215,7 +215,7 @@
 - วางระบบ Authentication ครบถ้วน (API, Middleware, Pages)
 - เตรียมพร้อมสำหรับการทดสอบระบบ Login
 
-## Session 30: Fixing CSS Loading and Nuxt 4 Structure Alignment
+## Session 31: Fixing CSS Loading and Nuxt 4 Structure Alignment
 **Prompt:** "เหมือน css จะไม่เข้านะ ดูจากหน้า login ทั้งๆที่มีการตั้งค่าธีมสีไว้แล้ว แต่ไม่มีสีไรเลย"
 **AI Response:** 
 - ปัญหาเกิดจาก `app.vue` ยังเป็นค่าเริ่มต้น (`<NuxtWelcome />`) และไม่ได้โหลดไฟล์ CSS
@@ -228,7 +228,7 @@
 - อัปเดต `app/app.vue` ให้รองรับ Routing (`<NuxtPage />`) และติดตั้ง `<Toaster />` สำหรับการแจ้งเตือน
 - ปรับปรุง Import paths ให้ใช้ Alias `~/` ที่ชี้ไปยังโฟลเดอร์ `app/` โดยตรง
 
-## Session 31: Fixing Nitro Import Path Resolution for Nuxt 4
+## Session 32: Fixing Nitro Import Path Resolution for Nuxt 4
 **Prompt:** "[nitro 21:51:17] ERROR Error: Could not load .../app//shared/validations"
 **AI Response:** 
 - ใน Nuxt 4 โฟลเดอร์ `shared`, `types`, และ `server` อยู่ที่ Root นอก `app/` ทำให้ Alias `~/` เริ่มต้นชี้ไปผิดที่
@@ -238,7 +238,7 @@
 - ตั้งค่า `alias` แบบ Absolute Path สำหรับ `~/types`, `~/shared`, และ `~/server`
 - แก้ปัญหา ENOENT ใน Nitro สำเร็จ
 
-## Session 32: Standardizing Root Aliases with ~~
+## Session 33: Standardizing Root Aliases with ~~
 **Prompt:** "ทำตามมาตรฐานของ nuxt"
 **AI Response:** 
 - ตามมาตรฐาน Nuxt 4: `~/` ชี้ไปที่ `srcDir` (โฟลเดอร์ `app/`), ส่วน `~~/` ชี้ไปที่ `rootDir` (Root ของโปรเจกต์)
@@ -250,7 +250,37 @@
 - ปรับปรุง `imports.dirs` ให้ใช้ Absolute Path เพื่อความแม่นยำในการ Auto-import จาก Root
 - แก้ไขปัญหา Warning ใน Nitro ได้อย่างถาวรและถูกต้องตามมาตรฐาน
 
-## Session 36: Centralizing Frontend Error Handling
+## Session 34: Fixing CommonJS require error in ESM environment
+**Prompt:** "require is not defined in ES module scope, you can use import instead"
+**AI Response:** 
+- โปรเจกต์ถูกตั้งค่าเป็น ES Module (`"type": "module"` ใน `package.json`) ทำให้ไม่สามารถใช้ `require()` ได้
+- ต้องเปลี่ยนการเรียกใช้ `require('fs')` เป็นการใช้ `import` แบบมาตรฐาน
+**My Adjustment:** 
+- แก้ไขไฟล์ `server/db/init.ts` โดยการเพิ่ม `mkdirSync` เข้าไปในส่วนของ `import { ... } from 'fs'`
+- เปลี่ยนการเรียก `require('fs').mkdirSync` เป็น `mkdirSync` โดยตรง
+- ตรวจสอบไฟล์อื่นๆ ในโปรเจกต์เพื่อให้แน่ใจว่าไม่มีการใช้ `require()` หลงเหลืออยู่
+
+## Session 35: Fixing Schema File Path Resolution in Nitro Dev
+**Prompt:** "ENOENT: no such file or directory, open '.../.nuxt/dev/schema.sql'"
+**AI Response:** 
+- ปัญหานี้เกิดจากในโหมด Development ของ Nuxt/Nitro ตัวแปร `import.meta.url` จะชี้ไปยังโฟลเดอร์ build (`.nuxt/dev`) แทนที่จะเป็นโฟลเดอร์ source จริงๆ
+- ทำให้ระบบหาไฟล์ `schema.sql` ไม่เจอเพราะมันไม่ได้ถูก copy ไปไว้ในโฟลเดอร์ build ด้วย
+**My Adjustment:** 
+- แก้ไข `server/db/init.ts` ให้ใช้ `process.cwd()` ในการหาตำแหน่งไฟล์ `schema.sql` เมื่อรันในโหมด development
+- การใช้ `join(process.cwd(), 'server/db/schema.sql')` ช่วยให้ระบบอ้างอิงตำแหน่งไฟล์จาก Root ของโปรเจกต์ได้อย่างถูกต้องเสมอไม่ว่าจะรันจากที่ไหน
+- เพิ่ม logic ตรวจสอบสภาพแวดล้อม (`process.env.NODE_ENV`) เพื่อให้ยังคงทำงานได้ถูกต้องทั้งในโหมด Dev และ Production
+
+## Session 36: Fixing Missing getDatabase Import in Auth Service
+**Prompt:** "ERROR API Error: getDatabase is not defined"
+**AI Response:** 
+- ปัญหานี้เกิดจากลืม Import ฟังก์ชัน `getDatabase` ในไฟล์ `server/services/auth.service.ts`
+- ถึงแม้ Nuxt จะมีระบบ Auto-import แต่สำหรับไฟล์ในชั้น Service ที่อยู่นอกโครงสร้างมาตรฐานของ Nitro บางครั้งจำเป็นต้องระบุ Import ให้ชัดเจนเพื่อให้ TypeScript และ Runtime ทำงานได้ถูกต้อง
+**My Adjustment:** 
+- เพิ่ม `import { getDatabase } from '~~/server/db'` ใน `AuthService`
+- ยืนยันว่าการดึง Database instance มาใช้งานใน constructor ทำงานได้ถูกต้อง
+- ตรวจสอบความถูกต้องของ Path โดยใช้ Root Alias `~~/`
+
+## Session 37: Centralizing Frontend Error Handling
 **Prompt:** "ในหน้า login การจัดการ error errorMessage ไม่ควรทำในหน้า front ควรทำฟังช่นจัดการ error code ให้ดีกว่านี้ อาจจะเขียนฟังชั่นกลางในการแสดง error ตาม code"
 **AI Response:** 
 - เห็นด้วยอย่างยิ่ง การแยก Logic ของ Error message ออกมาช่วยให้โค้ดสะอาดและแก้ไขง่ายขึ้น
@@ -260,7 +290,7 @@
 - สร้างไฟล์ `app/utils/error-handler.ts`
 - Refactor หน้า Login ให้เรียกใช้ `getErrorMessage(error)` แทนการเขียนเงื่อนไขเอง
 
-## Session 37: Centralizing API Request Handling
+## Session 38: Centralizing API Request Handling
 **Prompt:** "แล้ว api ของ front ก็ควรทำฟังชั่น Utility Function api กลางไว้ด้วย เพื่อที่ลดความซ้ำซ้อนและจัดการได้ในไฟล์เดียว"
 **AI Response:** 
 - การสร้าง API Utility ช่วยลดความซ้ำซ้อนและควบคุมพฤติกรรมของ Network requests ได้จากที่เดียว
@@ -271,38 +301,7 @@
 - ปรับหน้า Login ให้ใช้ `api.post` ซึ่งจะส่ง `friendlyMessage` กลับมาให้อัตโนมัติเมื่อเกิด Error
 - ใช้ `toast.success` เพื่อแจ้งเตือนการทำงานที่สำเร็จ
 
-
-## Session 33: Fixing CommonJS require error in ESM environment
-**Prompt:** "require is not defined in ES module scope, you can use import instead"
-**AI Response:** 
-- โปรเจกต์ถูกตั้งค่าเป็น ES Module (`"type": "module"` ใน `package.json`) ทำให้ไม่สามารถใช้ `require()` ได้
-- ต้องเปลี่ยนการเรียกใช้ `require('fs')` เป็นการใช้ `import` แบบมาตรฐาน
-**My Adjustment:** 
-- แก้ไขไฟล์ `server/db/init.ts` โดยการเพิ่ม `mkdirSync` เข้าไปในส่วนของ `import { ... } from 'fs'`
-- เปลี่ยนการเรียก `require('fs').mkdirSync` เป็น `mkdirSync` โดยตรง
-- ตรวจสอบไฟล์อื่นๆ ในโปรเจกต์เพื่อให้แน่ใจว่าไม่มีการใช้ `require()` หลงเหลืออยู่
-
-## Session 34: Fixing Schema File Path Resolution in Nitro Dev
-**Prompt:** "ENOENT: no such file or directory, open '.../.nuxt/dev/schema.sql'"
-**AI Response:** 
-- ปัญหานี้เกิดจากในโหมด Development ของ Nuxt/Nitro ตัวแปร `import.meta.url` จะชี้ไปยังโฟลเดอร์ build (`.nuxt/dev`) แทนที่จะเป็นโฟลเดอร์ source จริงๆ
-- ทำให้ระบบหาไฟล์ `schema.sql` ไม่เจอเพราะมันไม่ได้ถูก copy ไปไว้ในโฟลเดอร์ build ด้วย
-**My Adjustment:** 
-- แก้ไข `server/db/init.ts` ให้ใช้ `process.cwd()` ในการหาตำแหน่งไฟล์ `schema.sql` เมื่อรันในโหมด development
-- การใช้ `join(process.cwd(), 'server/db/schema.sql')` ช่วยให้ระบบอ้างอิงตำแหน่งไฟล์จาก Root ของโปรเจกต์ได้อย่างถูกต้องเสมอไม่ว่าจะรันจากที่ไหน
-- เพิ่ม logic ตรวจสอบสภาพแวดล้อม (`process.env.NODE_ENV`) เพื่อให้ยังคงทำงานได้ถูกต้องทั้งในโหมด Dev และ Production
-
-## Session 35: Fixing Missing getDatabase Import in Auth Service
-**Prompt:** "ERROR API Error: getDatabase is not defined"
-**AI Response:** 
-- ปัญหานี้เกิดจากลืม Import ฟังก์ชัน `getDatabase` ในไฟล์ `server/services/auth.service.ts`
-- ถึงแม้ Nuxt จะมีระบบ Auto-import แต่สำหรับไฟล์ในชั้น Service ที่อยู่นอกโครงสร้างมาตรฐานของ Nitro บางครั้งจำเป็นต้องระบุ Import ให้ชัดเจนเพื่อให้ TypeScript และ Runtime ทำงานได้ถูกต้อง
-**My Adjustment:** 
-- เพิ่ม `import { getDatabase } from '~~/server/db'` ใน `AuthService`
-- ยืนยันว่าการดึง Database instance มาใช้งานใน constructor ทำงานได้ถูกต้อง
-- ตรวจสอบความถูกต้องของ Path โดยใช้ Root Alias `~~/`
-
-## Session 38: Database Connection Setup
+## Session 39: Database Connection Setup
 **Prompt:** "ตอนนี้เชื่อม Database ยัง"
 **AI Response:**
 - ตรวจสอบและพบว่ามี Schema และ Connection code พร้อมแล้ว แต่ยังไม่มี Server plugin ที่จะ Initialize database
@@ -310,7 +309,7 @@
 - สร้าง `.env.example` สำหรับอ้างอิงค่า Environment variables
 **My Adjustment:** เชื่อมต่อ Database สำเร็จ - plugin จะสร้าง `data/` directory, initialize database, และ seed user `admin/admin123` อัตโนมัติ
 
-## Session 39: Fixing API Status Code for Unauthorized Response
+## Session 40: Fixing API Status Code for Unauthorized Response
 **Prompt:** "api มันขึ้น {...} แต่ทำไมมัน Status Code 200"
 **AI Response:**
 - พบปัญหา `handleApiError` แค่ return object แต่ไม่ได้ set status code
@@ -318,7 +317,7 @@
 - อัปเดต API endpoints ทั้งหมดให้ใช้ `setResponseStatus(event, status)`
 **My Adjustment:** แก้ไขให้ Unauthorized คืน 401, Validation error คืน 422, Internal error คืน 500 อย่างถูกต้อง
 
-## Session 40: Writing Unit Tests for Repositories and Services
+## Session 41: Writing Unit Tests for Repositories and Services
 **Prompt:** "เขียน unit test"
 **AI Response:**
 - Setup Vitest + @nuxt/test-utils + happy-dom
@@ -327,7 +326,7 @@
 - เขียน tests สำหรับ: UserRepository, DocumentRepository, MessageRepository, TokenRepository, AuthService
 **My Adjustment:** สร้าง Unit tests ครบ 59 tests ผ่านทั้งหมด (Bonus +5 คะแนน)
 
-## Session 41: Testing Unauthorized Access with Protected Middleware
+## Session 42: Testing Unauthorized Access with Protected Middleware
 **Prompt:** "ต่อไป Test unauthorized access"
 **AI Response:**
 - ตรวจสอบ `server/middleware/protected.ts` และแก้ไขให้คืน status code ถูกต้อง
@@ -336,7 +335,7 @@
 - Mock Nuxt/H3 globals ใน `test/setup.ts` ให้รองรับการทดสอบ middleware
 **My Adjustment:** เพิ่ม 6 tests สำหรับ protected middleware - รวมทั้งหมด **65 tests ผ่าน**
 
-## Session 42: Localizing Validation and Error Messages to Thai
+## Session 43: Localizing Validation and Error Messages to Thai
 **Prompt:** "แก้ไข validations ให้ใช้ภาษาไทยแทนได้ไหม"
 **AI Response:**
 - แก้ไข Zod Schemas ใน `shared/validations/` ทั้งหมด (auth, chat, document) ให้ใช้ข้อความภาษาไทย
@@ -345,7 +344,7 @@
 - ปรับปรุงข้อความตอบกลับใน Middleware (`protected.ts`) และ Auth API (`login.post.ts`)
 **My Adjustment:** ระบบแสดงข้อความ Error และ Validation เป็นภาษาไทยทั้งหมดเพื่อความง่ายต่อการใช้งาน
 
-## Session 43: Refactoring API Utility to Nuxt Composable
+## Session 44: Refactoring API Utility to Nuxt Composable
 **Prompt:** "api ควรย้ายไปอยู่ใน composables ไหม", "มดำเนินการย้ายให้เลย"
 **AI Response:**
 - สร้างโฟลเดอร์ `app/composables/`
@@ -355,7 +354,7 @@
 - อัปเดต `app/pages/login.vue` ให้ใช้ `api` แบบ Auto-import
 **My Adjustment:** ปรับปรุงโครงสร้างให้เป็นมาตรฐาน Nuxt 4 มากขึ้น และลดความซ้ำซ้อนในการเขียนโค้ด (Clean Code)
 
-## Session 44: Implementing Feature 2 - Upload File
+## Session 45: Implementing Feature 2 - Upload File
 **Prompt:** "งั้นทำ Feature 2"
 **AI Response:**
 - สร้าง `DocumentService` สำหรับจัดการเอกสาร (validation, sanitization, text extraction)
@@ -369,3 +368,11 @@
 - TXT file reading ด้วย UTF-8
 **My Adjustment:** Feature 2 (Upload File) สำเร็จครบถ้วน (5 คะแนน)
 
+## Session 46: Fixing Hydration Mismatch and Directory Cleanup
+**Prompt:** "[Vue warn]: Hydration node mismatch...", "commit ใหม่"
+**AI Response:**
+- วิเคราะห์สาเหตุ Hydration mismatch: เกิดจาก Lucide icons ไม่ได้ถูก import อย่างชัดเจน ทำให้ฝั่ง Server เรนเดอร์เป็น comment node ขณะที่ Client คาดหวัง component
+- แก้ไขโดยการเพิ่ม explicit import สำหรับ Lucide icons ใน `app/pages/login.vue`
+- แก้ไขโครงสร้างโฟลเดอร์ที่ทับซ้อน (`app/app/components` ย้ายไป `app/components`)
+- ทำความสะอาด Workspace และ Commit ใหม่ให้ถูกต้อง
+**My Adjustment:** แก้ไขปัญหา SSR mismatch และจัดระเบียบโครงสร้างไฟล์ให้ถูกต้องตามมาตรฐาน
