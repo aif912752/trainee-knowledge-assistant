@@ -1,0 +1,8 @@
+ignoredBuiltDependencies:
+  - vue-demi
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - bcrypt
+  - better-sqlite3
+  - esbuild
