@@ -1,0 +1,35 @@
+import { AuthService } from '~/server/services/auth.service';
+import { validateBody } from '~/utils/validations/helpers';
+import { loginSchema } from '~/utils/validations';
+import { createSession } from '~/server/utils/session';
+import { UnauthorizedError, handleApiError } from '~/server/utils/errors';
+import type { LoginInput } from '~/types/auth';
+
+export default defineEventHandler(async (event) => {
+  try {
+    // Validate request body
+    const body = await readBody(event);
+    const input = validateBody<LoginInput>(loginSchema, body);
+
+    // Authenticate user
+    const authService = new AuthService();
+    const result = await authService.login(input);
+
+    // Check if authentication failed
+    if (!result.success) {
+      throw new UnauthorizedError(result.error || 'Authentication failed');
+    }
+
+    // Create session cookie
+    createSession(event, result.user!);
+
+    // Return user data
+    return {
+      success: true,
+      user: result.user
+    };
+
+  } catch (error) {
+    return handleApiError(error);
+  }
+});
