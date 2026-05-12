@@ -336,3 +336,12 @@
 - Mock Nuxt/H3 globals ใน `test/setup.ts` ให้รองรับการทดสอบ middleware
 **My Adjustment:** เพิ่ม 6 tests สำหรับ protected middleware - รวมทั้งหมด **65 tests ผ่าน**
 
+## Session 42: Localizing Validation and Error Messages to Thai
+**Prompt:** "แก้ไข validations ให้ใช้ภาษาไทยแทนได้ไหม"
+**AI Response:**
+- แก้ไข Zod Schemas ใน `shared/validations/` ทั้งหมด (auth, chat, document) ให้ใช้ข้อความภาษาไทย
+- แปลข้อความใน Validation Helpers (`helpers.ts`, `server.ts`)
+- แปลข้อความพื้นฐานใน `server/utils/errors.ts` (Unauthorized, Not Found, Internal Error)
+- ปรับปรุงข้อความตอบกลับใน Middleware (`protected.ts`) และ Auth API (`login.post.ts`)
+**My Adjustment:** ระบบแสดงข้อความ Error และ Validation เป็นภาษาไทยทั้งหมดเพื่อความง่ายต่อการใช้งาน
+
