@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { getDatabase } from '~~/server/db';
 import { UserRepository } from '~~/server/repositories/user.repository';
 import type { LoginInput, LoginResult } from '~~/types/auth';
 import type { UserWithoutPassword } from '~~/types/user';
