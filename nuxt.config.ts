@@ -62,7 +62,21 @@ export default defineNuxtConfig({
         'img-src': ["'self'", 'data:', 'https:'],
         'connect-src': ["'self'"],
       }
-    }
+    },
+    // Add route rules to bypass security features that consume the request body for uploads
+    requestSizeLimiter: {
+      throwError: true,
+    },
+    rateLimiter: false, // Disable rate limiter for now if needed, or configure
+  },
+
+  routeRules: {
+    '/api/upload': {
+      security: {
+        requestSizeLimiter: false,
+        xssValidator: false,
+      },
+    },
   },
 
   shadcn: {

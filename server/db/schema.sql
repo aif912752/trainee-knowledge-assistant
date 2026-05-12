@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS documents (
     original_name TEXT NOT NULL,
     file_type TEXT NOT NULL,
     file_size INTEGER NOT NULL,
+    file_path TEXT,
     content TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

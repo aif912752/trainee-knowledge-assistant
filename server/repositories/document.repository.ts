@@ -39,8 +39,8 @@ export class DocumentRepository {
    */
   create(input: CreateDocumentInput): Document {
     const stmt = this.db.prepare(
-      `INSERT INTO documents (user_id, filename, original_name, file_type, file_size, content)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO documents (user_id, filename, original_name, file_type, file_size, file_path, content)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     );
 
     const result = stmt.run(
@@ -49,6 +49,7 @@ export class DocumentRepository {
       input.original_name,
       input.file_type,
       input.file_size,
+      input.file_path || null,
       input.content || null
     );
 

@@ -1,6 +1,14 @@
 import { DocumentRepository } from '~~/server/repositories/document.repository';
 import { getDatabase } from '~~/server/db';
 import type { CreateDocumentInput } from '~~/types/document';
+import type { H3Event } from 'h3';
+import formidable from 'formidable';
+import { renameSync, readFileSync, mkdirSync, existsSync, copyFileSync, unlinkSync } from 'fs';
+import { join } from 'path';
+import { createRequire } from 'module';
+import { pathToFileURL } from 'url';
+
+const require = createRequire(import.meta.url);
 
 // Allowed file types
 const ALLOWED_FILE_TYPES = [
@@ -12,9 +20,8 @@ const ALLOWED_FILE_TYPES = [
 // Max file size: 5MB
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
-import { createRequire } from 'module';
-import { pathToFileURL } from 'url';
-const require = createRequire(import.meta.url);
+// Uploads directory
+const UPLOAD_DIR = join(process.cwd(), 'storage/uploads');
 
 export class FileValidationError extends Error {
   constructor(message: string, public code: string) {
@@ -29,19 +36,55 @@ export class DocumentService {
   constructor() {
     const db = getDatabase();
     this.documentRepository = new DocumentRepository(db);
+    
+    // Ensure upload directory exists
+    if (!existsSync(UPLOAD_DIR)) {
+      mkdirSync(UPLOAD_DIR, { recursive: true });
+    }
+  }
+
+  /**
+   * Parse multipart request using formidable
+   */
+  async parseMultipartRequest(event: H3Event): Promise<{ fields: formidable.Fields, files: formidable.Files }> {
+    const form = formidable({
+      maxFileSize: MAX_FILE_SIZE,
+      multiples: false,
+    });
+
+    return new Promise((resolve, reject) => {
+      form.parse(event.node.req, (err, fields, files) => {
+        if (err) {
+          if (err.message.includes('maxFileSize exceeded')) {
+            reject(new FileValidationError('ขนาดไฟล์ต้องไม่เกิน 5MB', 'FILE_TOO_LARGE'));
+          } else {
+            reject(err);
+          }
+          return;
+        }
+        resolve({ fields, files });
+      });
+
+      // In some environments (like Nuxt/Nitro), we might need to resume the request stream
+      // if it was paused by some middleware (like nuxt-security).
+      event.node.req.resume();
+    });
   }
 
   /**
    * Validate file type
    */
-  private validateFileType(fileType: string, originalName: string): void {
+  private validateFileType(fileType: string | null, originalName: string | null): void {
+    const name = originalName || '';
+    const type = fileType || '';
+
     // Check by MIME type
-    if (ALLOWED_FILE_TYPES.includes(fileType)) {
+    if (ALLOWED_FILE_TYPES.includes(type)) {
       return;
     }
 
     // Also check by file extension for better compatibility
-    const ext = originalName.toLowerCase().split('.').pop();
+    const ext = name.toLowerCase().split('.').pop();
     if (ext === 'pdf' || ext === 'txt') {
       return;
     }
@@ -53,36 +96,18 @@ export class DocumentService {
   }
 
   /**
-   * Validate file size
-   */
-  private validateFileSize(fileSize: number): void {
-    if (fileSize > MAX_FILE_SIZE) {
-      throw new FileValidationError(
-        `ขนาดไฟล์ต้องไม่เกิน 5MB (ไฟล์ของคุณ: ${(fileSize / 1024 / 1024).toFixed(2)}MB)`,
-        'FILE_TOO_LARGE'
-      );
-    }
-  }
-
-  /**
    * Sanitize filename
-   * - Remove special characters
-   * - Replace spaces with underscores
-   * - Add timestamp to prevent conflicts
    */
   sanitizeFilename(originalName: string): string {
-    // Get file extension
     const parts = originalName.split('.');
     const ext = parts.length > 1 ? parts.pop() : '';
     const nameWithoutExt = parts.join('.');
 
-    // Remove special characters, keep only alphanumeric, spaces, hyphens, underscores (Thai, Chinese, etc.)
     const sanitized = nameWithoutExt
       .replace(/[^a-zA-Z0-9\u0E00-\u0E7F\u4E00-\u9FFF\s\-_]/g, '')
       .trim()
       .replace(/\s+/g, '_');
 
-    // Add timestamp
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 8);
 
@@ -91,18 +116,14 @@ export class DocumentService {
 
   /**
    * Extract text from PDF buffer using pdfjs-dist directly
-   * This is more stable than pdf-parse in ESM environments
    */
   private async extractPDFText(buffer: Buffer): Promise<string> {
+    const startTime = Date.now();
     try {
-      /**
-       * In Node.js environment, we must use the legacy build of pdfjs-dist.
-       * The modern ESM build requires browser-only globals like DOMMatrix.
-       */
+      console.log('📄 Starting PDF text extraction...');
       const pdfjsPath = require.resolve('pdfjs-dist/legacy/build/pdf.mjs');
       const pdfjs = await import(pathToFileURL(pdfjsPath).href);
       
-      // Configure worker using a valid file:// URL for Windows compatibility
       const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
       pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
       
@@ -111,25 +132,27 @@ export class DocumentService {
         data: uint8Array,
         useSystemFonts: true,
         disableFontFace: true,
-        // Critical for Node.js: disable features that require a browser DOM
         isEvalSupported: false,
         useWorkerFetch: false,
       });
       
       const pdf = await loadingTask.promise;
+      console.log(`📄 PDF loaded: ${pdf.numPages} pages found.`);
       let fullText = '';
       
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        
         const pageText = textContent.items
           .map((item: any) => item.str)
           .join(' ');
-          
         fullText += pageText + '\n';
+        
+        if (i % 10 === 0) console.log(`📄 Extracted ${i}/${pdf.numPages} pages...`);
       }
       
+      const duration = Date.now() - startTime;
+      console.log(`✅ PDF extraction completed in ${duration}ms`);
       return fullText.trim();
     } catch (error) {
       console.error('PDF extraction error (pdfjs):', error);
@@ -144,8 +167,11 @@ export class DocumentService {
    * Read text from TXT buffer
    */
   private async readTXTText(buffer: Buffer): Promise<string> {
+    const startTime = Date.now();
     try {
-      return buffer.toString('utf-8');
+      const text = buffer.toString('utf-8');
+      console.log(`✅ TXT extraction completed in ${Date.now() - startTime}ms`);
+      return text;
     } catch (error) {
       throw new FileValidationError(
         'ไม่สามารถอ่านไฟล์ TXT ได้',
@@ -155,20 +181,18 @@ export class DocumentService {
   }
 
   /**
-   * Extract content from file based on type
+   * Extract content from file path based on extension
    */
-  async extractContent(file: File, buffer: Buffer): Promise<string> {
-    const fileType = file.type;
-    const originalName = file.name;
-
-    // Determine file type by extension if MIME type is generic
+  async extractContent(filePath: string, mimeType: string, originalName: string): Promise<string> {
+    console.log(`🔍 Extracting content from: ${originalName} (${mimeType})`);
+    const buffer = readFileSync(filePath);
     const ext = originalName.toLowerCase().split('.').pop();
 
-    if (fileType === 'application/pdf' || ext === 'pdf') {
+    if (mimeType === 'application/pdf' || ext === 'pdf') {
       return await this.extractPDFText(buffer);
     }
 
-    if (fileType === 'text/plain' || ext === 'txt') {
+    if (mimeType === 'text/plain' || ext === 'txt') {
       return await this.readTXTText(buffer);
     }
 
@@ -183,30 +207,54 @@ export class DocumentService {
    */
   async uploadDocument(
     userId: number,
-    file: File,
-    buffer: Buffer
-  ): Promise<{ id: number; filename: string; originalName: string; fileType: string; fileSize: number; content?: string }> {
+    formidableFile: formidable.File
+  ): Promise<any> {
+    const overallStartTime = Date.now();
+    const originalName = formidableFile.originalFilename || 'unknown';
+    const mimeType = formidableFile.mimetype || 'application/octet-stream';
+    const fileSize = formidableFile.size;
+    const tempPath = formidableFile.filepath;
+
+    console.log(`🚀 Starting upload process for: ${originalName}`);
+
     // Validate file type
-    this.validateFileType(file.type, file.name);
+    this.validateFileType(mimeType, originalName);
 
-    // Validate file size
-    this.validateFileSize(file.size);
+    // Sanitize filename for storage
+    const sanitizedFilename = this.sanitizeFilename(originalName);
+    const targetPath = join(UPLOAD_DIR, sanitizedFilename);
 
-    // Sanitize filename
-    const sanitizedFilename = this.sanitizeFilename(file.name);
+    // Move file from temp to uploads directory
+    console.log('📁 Moving file to storage...');
+    try {
+      renameSync(tempPath, targetPath);
+    } catch (err: any) {
+      if (err.code === 'EXDEV') {
+        console.log('🔄 Cross-device link detected, using copy + unlink instead');
+        copyFileSync(tempPath, targetPath);
+        unlinkSync(tempPath);
+      } else {
+        throw err;
+      }
+    }
 
-    // Extract content
-    const content = await this.extractContent(file, buffer);
+    // Extract content from the saved file
+    const content = await this.extractContent(targetPath, mimeType, originalName);
 
-    // Create document record
+    // Create document record in database
+    console.log('💾 Saving record to database...');
     const document = this.documentRepository.create({
       user_id: userId,
       filename: sanitizedFilename,
-      original_name: file.name,
-      file_type: file.type || this.getMimeTypeFromExtension(file.name),
-      file_size: file.size,
+      original_name: originalName,
+      file_type: mimeType,
+      file_size: fileSize,
+      file_path: targetPath,
       content: content,
     });
+
+    const totalDuration = Date.now() - overallStartTime;
+    console.log(`✨ Total upload and processing completed in ${totalDuration}ms`);
 
     return {
       id: document.id,
@@ -214,20 +262,9 @@ export class DocumentService {
       originalName: document.original_name,
       fileType: document.file_type,
       fileSize: document.file_size,
+      filePath: document.file_path,
       content: document.content || undefined,
     };
-  }
-
-  /**
-   * Get MIME type from file extension
-   */
-  private getMimeTypeFromExtension(filename: string): string {
-    const ext = filename.toLowerCase().split('.').pop();
-    const mimeTypes: Record<string, string> = {
-      'pdf': 'application/pdf',
-      'txt': 'text/plain',
-    };
-    return mimeTypes[ext || ''] || 'application/octet-stream';
   }
 
   /**

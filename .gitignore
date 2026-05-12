@@ -29,3 +29,6 @@ data/
 *.db-shm
 *.db-wal
 nul
+
+# Storage
+storage/
