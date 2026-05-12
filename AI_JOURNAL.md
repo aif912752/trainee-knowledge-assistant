@@ -371,6 +371,81 @@ Commit แยกเป็น 3 commits:
 
 ---
 
+## Session 16: Centralized Types Directory & Better-sqlite3 Decision
+
+**Prompt:**
+> ในโปรเจ็กได้ใช้ Prisma และ Type Safety ด้วยไหม
+
+**AI Response:**
+อธิบายสิ่งที่ใช้อยู่:
+- **Database:** better-sqlite3 (raw SQL, not Prisma)
+- **Type Safety:** TypeScript interfaces ที่ define เอง
+- **ไม่ได้ใช้ Prisma** - เขียน SQL เปล่าๆ
+
+ถามกลับว่าต้องการเปลี่ยนไป Prisma หรือไม่
+
+**My Adjustment:**
+ตัดสินใจ **ใช้ better-sqlite3 ต่อ** แต่อยากได้ type safety ที่ดีขึ้น
+เลือกสร้าง `types/` directory แทนการใช้ Prisma:
+- เบากว่า (น้อย dependencies)
+- เร็วกว่าในการ query
+- แต่ได้ type safety เต็มรูปแบบ
+
+---
+
+## Session 17: Refactor to Centralized Types
+
+**Prompt:**
+> ใช้ better-sqlite3 ต่อไป แต่ควรสร้างโฟลเดอร์ชื่อ types/ ไว้ที่ Root ของโปรเจกต์ เพื่อเก็บ Interface เหล่านี้แยกออกมา เพื่อให้ทั้ง Frontend และ Backend มองเห็น Type เดียวกันโดยไม่ต้อง import ซ้ำซ้อน และ ตั้งค่าใน nuxt.config.ts ให้มัน Auto-import โฟลเดอร์ types ได้
+
+**AI Response:**
+เห็นด้วยกับแนวคิดนี้มาก จะช่วย:
+- Single source of truth สำหรับ types
+- ใช้ type เดียวกันทั้ง Frontend + Backend
+- Auto-import ไม่ต้อง import ซ้ำ
+- Code quality +5 คะแนน (layering + type safety)
+
+Implement ทีละขั้น:
+
+**Step 1: Create types/ directory**
+- `types/user.ts` - User, CreateUserInput, UserWithoutPassword
+- `types/document.ts` - Document, CreateDocumentInput
+- `types/message.ts` - Message, CreateMessageInput
+- `types/token.ts` - TokenUsage, CreateTokenUsageInput, SessionTokenSummary
+- `types/auth.ts` - LoginInput, LoginResult
+- `types/index.ts` - export all types
+
+**Step 2: Setup TypeScript configuration**
+- Create `tsconfig.app.json` with path mapping
+- Update `nuxt.config.ts` with strict TypeScript checking
+
+**Step 3: Refactor all repositories**
+- Update each repository to import from `~/types/*`
+- Remove duplicate interface definitions
+- Commit ทีละไฟล์ (6 commits):
+  1. types/ directory setup
+  2. user.repository.ts
+  3. document.repository.ts
+  4. message.repository.ts
+  5. token.repository.ts
+  6. auth.service.ts
+
+**My Adjustment:**
+Implement สำเร็จทั้งหมด พร้อม commit ทีละไฟล์ตามที่ต้องการ
+ตอนนี้มี:
+- ✅ Centralized types directory
+- ✅ TypeScript path mapping
+- ✅ All repositories use shared types
+- ✅ Auto-import types support
+- ✅ Better type safety across project
+
+เรียนรู้:
+- วิธี organize types ให้ดี
+- การใช้ TypeScript path mapping
+- การ refactor ทีละขั้น (commit บ่อยๆ)
+
+---
+
 ## เริ่ม Implement
 
 ต่อไปจะเริ่ม implement Required Features (30 คะแนน):
