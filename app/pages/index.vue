@@ -12,6 +12,14 @@ import {
   History
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '~~/app/components/ui/dropdown-menu'
 
 // Define middleware for authentication
 definePageMeta({
