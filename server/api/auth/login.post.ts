@@ -1,7 +1,7 @@
 import { AuthService } from '~/server/services/auth.service';
-import { validateBody } from '~/utils/validations/helpers';
-import { loginSchema } from '~/utils/validations';
-import { createSession } from '~/server/utils/session';
+import { validateBody } from '~/shared/validations/helpers';
+import { loginSchema } from '~/shared/validations';
+import { createUserSession } from '~/server/utils/session';
 import { UnauthorizedError, handleApiError } from '~/server/utils/errors';
 import type { LoginInput } from '~/types/auth';
 
@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Create session cookie
-    createSession(event, result.user!);
+    createUserSession(event, result.user!);
 
     // Return user data
     return {
