@@ -2,23 +2,23 @@
 
 ## Project Setup
 - [x] Create Nuxt project with pnpm (minimal template)
-- [ ] Install dependencies
-  - [ ] shadcn-nuxt
-  - [ ] better-sqlite3
-  - [ ] pdf-parse
-  - [ ] bcryptjs
-  - [ ] @anthropic-ai/sdk
-  - [ ] @nuxtjs/dotenv
-- [ ] Setup .env file
-- [ ] Initialize database schema
-- [ ] Test database connection
+- [x] Install dependencies
+  - [x] shadcn-nuxt
+  - [x] better-sqlite3
+  - [x] pdf-parse
+  - [x] bcrypt (not bcryptjs)
+  - [x] @types/bcrypt
+  - [x] @types/better-sqlite3
+- [x] Setup .env file
+- [x] Initialize database schema
+- [x] Test database connection
 
 ## Required Features (30 คะแนน)
 
 ### Feature 1: Login + Protected Routes (5 คะแนน)
-- [ ] Create database schema for users table
+- [x] Create database schema for users table
+- [x] Implement password hashing with bcrypt
 - [ ] Implement login API endpoint (`server/api/auth/login.post.ts`)
-- [ ] Implement password hashing with bcrypt
 - [ ] Implement session management with httpOnly cookie
 - [ ] Create login page (`pages/login.vue`)
 - [ ] Add protected route middleware
@@ -26,7 +26,7 @@
 - [ ] Test unauthorized access
 
 ### Feature 2: Upload File (5 คะแนน)
-- [ ] Create documents table schema
+- [x] Create documents table schema
 - [ ] Implement upload API endpoint (`server/api/upload/post.post.ts`)
 - [ ] Add file type validation (PDF/TXT only)
 - [ ] Add file size validation (max 5MB)
@@ -41,9 +41,9 @@
 - [ ] Test upload with oversized file
 
 ### Feature 3: Chat with AI (5 คะแนน)
-- [ ] Create messages table schema
+- [x] Create messages table schema
 - [ ] Implement chat API endpoint (`server/api/chat/post.post.ts`)
-- [ ] Integrate z.ai API (Claude Haiku)
+- [ ] Integrate z.ai API (Claude Haiku) using $fetch
 - [ ] Add error handling for API failures
 - [ ] Add timeout handling (30s)
 - [ ] Save messages to database
@@ -63,7 +63,7 @@
 - [ ] Test with non-existent document
 
 ### Feature 5: Token Usage Counter (5 คะแนน)
-- [ ] Create token_usage table schema
+- [x] Create token_usage table schema
 - [ ] Extract token usage from z.ai API response
 - [ ] Save token usage to database
 - [ ] Implement session tracking
@@ -102,10 +102,10 @@
 - [ ] Run tests
 
 ## Code Quality (15 คะแนน)
+- [x] Implement repository layer (user.repository.ts, etc.)
+- [x] Remove hardcoded values (use .env)
 - [ ] Implement service layer (auth.service.ts, chat.service.ts, etc.)
-- [ ] Implement repository layer (user.repository.ts, etc.)
 - [ ] Add input validation to all API endpoints
-- [ ] Remove hardcoded values (use .env)
 - [ ] Add CORS configuration
 - [ ] Add path sanitization
 - [ ] Refactor large files (>500 lines)
@@ -138,8 +138,8 @@
 
 ## Current Status
 📅 **Day:** 1/5
-⏱️ **Time:** Setup phase
-🎯 **Focus:** Installing dependencies + Setup config
-✅ **Completed:** Create Nuxt project, AI_JOURNAL.md
-🔄 **In Progress:** Installing dependencies
-📋 **Next:** Initialize database schema
+⏱️ **Time:** Feature 1 Implementation
+🎯 **Focus:** Login + Protected Routes
+✅ **Completed:** Project Setup, Database Schema, Repositories, Auth Service
+🔄 **In Progress:** Login API Endpoint
+📋 **Next:** Create login page UI, Protected middleware
