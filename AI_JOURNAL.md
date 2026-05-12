@@ -499,3 +499,18 @@
 - แก้ไขปัญหา Windows Path: ใช้ `pathToFileURL` แปลง path เป็น `file://` URL เพื่อให้ ESM loader บน Windows ทำงานได้ถูกต้อง
 - ผลลัพธ์: **การอัปโหลดและดึงข้อความจากไฟล์ PDF ทำงานได้สมบูรณ์ 100%** ✅
 **My Adjustment:** แก้ไขปัญหาทางเทคนิคที่ซับซ้อน (ESM/CJS Interop) ได้สำเร็จ เตรียมพร้อมสำหรับการ Refactor ระบบ Upload ให้เป็นแบบ Hybrid (Database + File System) ด้วย `formidable`
+
+## Session 56: Resolving Upload Hang and Cross-Device Move Errors
+**Prompts:**
+- "ตอนอัพโหลดเอกสาร มันขึ้น 📥 Received upload request ... แล้วก็ค้างไปเลย หาสาเหตุให้ที"
+- "{ \"success\": false, \"error\": \"EXDEV: cross-device link not permitted...\" }"
+**AI Response:**
+- วิเคราะห์ว่า `nuxt-security` consume request stream ทำให้ `formidable` ค้าง
+- แนะนำให้เพิ่ม `routeRules` ใน `nuxt.config.ts` เพื่อ bypass security สำหรับ upload path
+- เพิ่ม `event.node.req.resume()` เพื่อให้ข้อมูลไหลเข้า `formidable` ได้อย่างสมบูรณ์
+- แก้ไข Error `EXDEV` โดยใช้การ Copy + Unlink แทนการ Rename เมื่อต้องย้ายไฟล์ข้าม Partition (Drive C: ไป D:)
+- แนะนำการเก็บไฟล์ใน `storage/` เพื่อรองรับ Docker Volume Binding
+**My Adjustment:**
+- ปรับปรุง `nuxt.config.ts` และ `DocumentService.ts` เพื่อแก้ปัญหาการอัปโหลดและย้ายไฟล์
+- เพิ่ม `storage/` ใน `.gitignore` และล้าง Debug logs ทั้งหมด
+- ผลลัพธ์: **ระบบอัปโหลดทำงานได้เสถียร รองรับการย้ายไฟล์ข้าม Drive และปลอดภัยตามมาตรฐาน** 🚀
