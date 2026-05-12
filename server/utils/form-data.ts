@@ -90,6 +90,8 @@ async function parseMultipartFormData(
   for (let i = 1; i < parts.length - 1; i++) {
     const part = parts[i];
 
+    if (!part) continue;
+
     // Split headers from body
     const headerEnd = part.indexOf('\r\n\r\n');
 
@@ -99,19 +101,18 @@ async function parseMultipartFormData(
     const body = part.substring(headerEnd + 4);
 
     // Parse headers
-    const contentDisposition = headers.match(/Content-Disposition:([^;]*)/i);
     const nameMatch = headers.match(/name="([^"]+)"/i);
     const filenameMatch = headers.match(/filename="([^"]*)"/i);
     const contentTypeMatch = headers.match(/Content-Type: ([^\r\n]+)/i);
 
-    if (!nameMatch) continue;
+    if (!nameMatch || !nameMatch[1]) continue;
 
     const name = nameMatch[1];
     const filename = filenameMatch ? filenameMatch[1] : null;
 
     if (filename) {
       // This is a file upload
-      const fileContentType = contentTypeMatch ? contentTypeMatch[1].trim() : 'application/octet-stream';
+      const fileContentType = (contentTypeMatch && contentTypeMatch[1]) ? contentTypeMatch[1].trim() : 'application/octet-stream';
 
       // Convert body back to buffer (remove trailing CRLF)
       const fileBuffer = Buffer.from(body.substring(0, body.length - 2), 'binary');

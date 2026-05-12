@@ -1,7 +1,6 @@
 import { DocumentRepository } from '~~/server/repositories/document.repository';
 import { getDatabase } from '~~/server/db';
 import type { CreateDocumentInput } from '~~/types/document';
-import pdfParse from 'pdf-parse';
 
 // Allowed file types
 const ALLOWED_FILE_TYPES = [
@@ -91,7 +90,10 @@ export class DocumentService {
    */
   private async extractPDFText(buffer: Buffer): Promise<string> {
     try {
-      const data = await pdfParse(buffer);
+      // Use dynamic import and handle default export manually for pdf-parse compatibility
+      const pdf = await import('pdf-parse');
+      const parse = (pdf.default || pdf) as any;
+      const data = await parse(buffer);
       return data.text;
     } catch (error) {
       throw new FileValidationError(
