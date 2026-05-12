@@ -7,7 +7,7 @@ import { renameSync, readFileSync, mkdirSync, existsSync, copyFileSync, unlinkSy
 import { join } from 'path';
 import { createRequire } from 'module';
 import { pathToFileURL } from 'url';
-import { ValidationError } from '~~/shared/errors';
+import { ValidationError, InternalServerError } from '~~/shared/errors';
 
 const require = createRequire(import.meta.url);
 
@@ -52,7 +52,10 @@ export class DocumentService {
           if (err.message.includes('maxFileSize exceeded')) {
             reject(new ValidationError('ขนาดไฟล์ต้องไม่เกิน 5MB', 'FILE_TOO_LARGE'));
           } else {
-            reject(err);
+            reject(new InternalServerError(
+              'เกิดข้อผิดพลาดในการประมวลผลไฟล์อัปโหลด',
+              'UPLOAD_PARSE_ERROR'
+            ));
           }
           return;
         }
@@ -225,10 +228,14 @@ export class DocumentService {
     } catch (err: any) {
       if (err.code === 'EXDEV') {
         console.log('🔄 Cross-device link detected, using copy + unlink instead');
-        copyFileSync(tempPath, targetPath);
-        unlinkSync(tempPath);
+        try {
+          copyFileSync(tempPath, targetPath);
+          unlinkSync(tempPath);
+        } catch (copyErr) {
+          throw new InternalServerError('ไม่สามารถคัดลอกไฟล์ไปยังพื้นที่จัดเก็บได้', 'FILE_COPY_ERROR');
+        }
       } else {
-        throw err;
+        throw new InternalServerError('ไม่สามารถบันทึกไฟล์ได้', 'FILE_SAVE_ERROR');
       }
     }
 
