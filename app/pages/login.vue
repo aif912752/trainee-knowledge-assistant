@@ -3,6 +3,7 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import { loginSchema } from '~~/shared/validations'
 import { toast } from 'vue-sonner'
+import { LogIn as LucideLogIn, AlertCircle as LucideAlertCircle, Loader2 as LucideLoader2, Info as LucideInfo } from 'lucide-vue-next'
 
 // Define form schema type
 type LoginFormValues = {
