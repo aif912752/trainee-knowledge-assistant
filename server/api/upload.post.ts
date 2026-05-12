@@ -4,9 +4,6 @@ import { UnauthorizedError, ValidationError, handleApiError } from '~~/server/ut
 import { uploadDocumentSchema } from '~~/shared/validations';
 import { validateOrThrow } from '~~/shared/validations/helpers';
 
-// Max file size: 5MB
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-
 /**
  * Upload file API endpoint
  * POST /api/upload
@@ -26,9 +23,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Read form data with file using H3's built-in readFormData
-    const formData = await readFormData(event, {
-      maxFileSize: MAX_FILE_SIZE,
-    });
+    const formData = await readFormData(event);
 
     const fileEntry = formData.get('file');
 

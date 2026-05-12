@@ -20,7 +20,7 @@ export interface ReadFormDataOptions {
  * Read multipart form data from request
  * Parses form fields and extracts uploaded files
  */
-export async function readFormData(
+export async function readMultipartRequest(
   event: H3Event,
   options: ReadFormDataOptions = {}
 ): Promise<FormDataResult> {

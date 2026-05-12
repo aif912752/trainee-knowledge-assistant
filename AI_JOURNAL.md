@@ -483,3 +483,19 @@
 - ระบบ Validation มีมาตรฐานเดียวกันทั้งโครงการ (Single Source of Truth)
 - โครงสร้าง Shared Assets ปลอดภัยต่อการใช้งานใน Frontend (ไม่มี Server dependency leak)
 - แก้ไข Bug ทางเทคนิค (ESM compatibility) และปรับปรุง Type safety ในส่วนของ Multipart parsing ให้สมบูรณ์
+
+## Session 55: Resolving PDF Extraction & ESM Compatibility Issues
+**Prompts:**
+- "The requested module 'pdf-parse' does not provide an export named 'default'"
+- "ERROR pdf-parse: resolved module is not a function"
+- "ERROR PDF extraction error: Class constructor AbortException cannot be invoked without 'new'"
+- "ERROR PDF extraction error (pdfjs): DOMMatrix is not defined"
+- "ERROR PDF extraction error (pdfjs): Setting up fake worker failed... Received protocol 'd:'"
+- "อัปโหลดสำเร็จ! นายใช้วิธีไหน"
+**AI Response:**
+- วิเคราะห์ปัญหาเชิงลึกของ `pdf-parse`: พบว่าเป็นไลบรารีเก่าที่ไม่รองรับ ESM และมีโครงสร้างภายในที่ขัดกับ Node.js runtime รุ่นใหม่ (AbortException error)
+- ตัดสินใจเปลี่ยนไปใช้ **`pdfjs-dist`** (Library มาตรฐาน) แทนเพื่อความเสถียร
+- แก้ไขปัญหา Node.js compatibility: บังคับใช้ **Legacy Build** ของ PDF.js เพื่อเลี่ยงการเรียกใช้ Browser DOM (DOMMatrix error)
+- แก้ไขปัญหา Windows Path: ใช้ `pathToFileURL` แปลง path เป็น `file://` URL เพื่อให้ ESM loader บน Windows ทำงานได้ถูกต้อง
+- ผลลัพธ์: **การอัปโหลดและดึงข้อความจากไฟล์ PDF ทำงานได้สมบูรณ์ 100%** ✅
+**My Adjustment:** แก้ไขปัญหาทางเทคนิคที่ซับซ้อน (ESM/CJS Interop) ได้สำเร็จ เตรียมพร้อมสำหรับการ Refactor ระบบ Upload ให้เป็นแบบ Hybrid (Database + File System) ด้วย `formidable`
