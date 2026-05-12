@@ -64,13 +64,15 @@ export default defineEventHandler(async (event) => {
     };
 
   } catch (error) {
-    // Handle custom FileValidationError
-    if (error instanceof (await import('~/server/services/document.service')).FileValidationError) {
-      const { data, status } = handleApiError(new ValidationError((error as Error).message));
+    // FileValidationError has a 'code' property - treat as ValidationError
+    if (error instanceof Error && 'code' in error) {
+      const { data, status } = handleApiError(new ValidationError(error.message));
       setResponseStatus(event, status);
       return data;
     }
 
-    return handleApiError(error);
+    const { data, status } = handleApiError(error);
+    setResponseStatus(event, status);
+    return data;
   }
 });

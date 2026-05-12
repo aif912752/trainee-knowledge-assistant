@@ -1,5 +1,5 @@
-import { DocumentRepository } from '~/server/repositories/document.repository';
-import type { CreateDocumentInput } from '~/types/document';
+import { DocumentRepository } from '~~/server/repositories/document.repository';
+import type { CreateDocumentInput } from '~~/types/document';
 
 // Allowed file types
 const ALLOWED_FILE_TYPES = [
@@ -90,7 +90,8 @@ export class DocumentService {
    */
   private async extractPDFText(buffer: Buffer): Promise<string> {
     try {
-      const pdfParse = (await import('pdf-parse')).default;
+      // pdf-parse is a CommonJS module, use require
+      const pdfParse = require('pdf-parse');
       const data = await pdfParse(buffer);
       return data.text;
     } catch (error) {

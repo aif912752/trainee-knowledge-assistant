@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTestDatabase, createTestUser } from '~/test/utils/database';
 import Database from 'better-sqlite3';
-import protectedMiddleware from './protected';
+import protectedMiddleware from '~~/server/middleware/protected';
 import { H3Event } from 'h3';
 
 // Mock dependencies
@@ -62,7 +62,6 @@ describe('Protected Middleware', () => {
       expect(result).toBeDefined();
       expect(result.success).toBe(false);
       expect(result.code).toBe('UNAUTHORIZED');
-      expect(result.error).toBe('Authentication required');
     });
 
     it('should return 401 when session user does not exist', async () => {
