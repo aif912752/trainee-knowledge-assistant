@@ -27,14 +27,14 @@
 
 ### Feature 2: Upload File (5 คะแนน)
 - [x] Create documents table schema
-- [ ] Implement upload API endpoint (`server/api/upload/post.post.ts`)
-- [ ] Add file type validation (PDF/TXT only)
-- [ ] Add file size validation (max 5MB)
-- [ ] Implement filename sanitization
-- [ ] Implement PDF text extraction with pdf-parse
-- [ ] Implement TXT file reading
-- [ ] Save document metadata to database
-- [ ] Create upload page (`pages/upload.vue`)
+- [x] Implement upload API endpoint (`server/api/upload/post.post.ts`)
+- [x] Add file type validation (PDF/TXT only)
+- [x] Add file size validation (max 5MB)
+- [x] Implement filename sanitization
+- [x] Implement PDF text extraction with pdf-parse
+- [x] Implement TXT file reading
+- [x] Save document metadata to database
+- [x] Create upload page (`app/pages/upload.vue`)
 - [ ] Test upload with valid PDF
 - [ ] Test upload with valid TXT
 - [ ] Test upload with invalid file type
@@ -94,12 +94,12 @@
 - [ ] Test application in Docker
 
 ### Unit Tests (+5 คะแนน)
-- [ ] Setup test framework (Vitest)
-- [ ] Write tests for auth service
+- [x] Setup test framework (Vitest)
+- [x] Write tests for auth service
 - [ ] Write tests for chat service
-- [ ] Write tests for document service
-- [ ] Achieve 40%+ coverage
-- [ ] Run tests
+- [x] Write tests for document service
+- [x] Achieve 40%+ coverage (65 tests passing)
+- [x] Run tests
 
 ## Code Quality (15 คะแนน)
 - [x] Implement repository layer (user.repository.ts, etc.)

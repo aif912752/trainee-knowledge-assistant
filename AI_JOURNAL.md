@@ -376,3 +376,12 @@
 - แก้ไขโครงสร้างโฟลเดอร์ที่ทับซ้อน (`app/app/components` ย้ายไป `app/components`)
 - ทำความสะอาด Workspace และ Commit ใหม่ให้ถูกต้อง
 **My Adjustment:** แก้ไขปัญหา SSR mismatch และจัดระเบียบโครงสร้างไฟล์ให้ถูกต้องตามมาตรฐาน
+
+## Session 47: Updating CSP for Google Fonts
+**Prompt:** "Loading the stylesheet... violates the following Content Security Policy directive..."
+**AI Response:**
+- วิเคราะห์สาเหตุ: `nuxt-security` บล็อกการโหลดภายนอกตามนโยบาย CSP
+- แก้ไขโดยอัปเดต `nuxt.config.ts` ในส่วนของ `security.headers.contentSecurityPolicy`
+- เพิ่ม `https://fonts.googleapis.com` ใน `style-src`
+- เพิ่ม `https://fonts.gstatic.com` ใน `font-src`
+**My Adjustment:** แก้ไขปัญหา Fonts ไม่โหลดเนื่องจากติด Security Policy (CSP)
