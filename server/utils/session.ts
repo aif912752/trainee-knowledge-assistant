@@ -1,12 +1,13 @@
+import type { H3Event } from 'h3';
 import type { UserWithoutPassword } from '~/types/user';
 
 const SESSION_COOKIE_NAME = 'session_id';
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days in seconds
 
 /**
- * Create session cookie for authenticated user
+ * Create user session cookie for authenticated user
  */
-export function createSession(event: any, user: UserWithoutPassword) {
+export function createUserSession(event: H3Event, user: UserWithoutPassword) {
   // Store user ID in session cookie
   setCookie(event, SESSION_COOKIE_NAME, user.id.toString(), {
     httpOnly: true,
@@ -20,7 +21,7 @@ export function createSession(event: any, user: UserWithoutPassword) {
 /**
  * Get current session user ID from cookie
  */
-export function getSessionUserId(event: any): number | null {
+export function getSessionUserId(event: H3Event): number | null {
   const sessionId = getCookie(event, SESSION_COOKIE_NAME);
 
   if (!sessionId) {
@@ -37,9 +38,9 @@ export function getSessionUserId(event: any): number | null {
 }
 
 /**
- * Clear session cookie (logout)
+ * Clear user session cookie (logout)
  */
-export function clearSession(event: any) {
+export function clearUserSession(event: H3Event) {
   deleteCookie(event, SESSION_COOKIE_NAME, {
     path: '/'
   });
