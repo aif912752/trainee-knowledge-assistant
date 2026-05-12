@@ -2,14 +2,9 @@ import { toast } from 'vue-sonner'
 import { apiFetch } from './useApi'
 import type { LoginInput } from '~~/types/auth'
 import type { UserWithoutPassword } from '~~/types/user'
+import type { ApiSuccessResponse } from '~~/shared/api-response'
 
-interface ApiResponse<T> {
-  success: boolean
-  data: T
-  message?: string
-}
-
-type LoginResponse = ApiResponse<{ user?: UserWithoutPassword }>
+type LoginResponse = ApiSuccessResponse<{ user?: UserWithoutPassword }>
 
 /**
  * Authentication composable
@@ -65,7 +60,7 @@ export function useAuth() {
    */
   async function checkAuth(): Promise<boolean> {
     try {
-      const response = await apiFetch<ApiResponse<{ authenticated: boolean; user?: UserWithoutPassword | null }>>('/api/auth/me')
+      const response = await apiFetch<ApiSuccessResponse<{ authenticated: boolean; user?: UserWithoutPassword | null }>>('/api/auth/me')
       return response.success && response.data.authenticated
     } catch (err) {
       return false

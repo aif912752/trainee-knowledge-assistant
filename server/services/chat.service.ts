@@ -5,30 +5,36 @@ import { getDatabase } from '~~/server/db';
 import {
   buildChatPrompt,
   buildDocumentContext,
-  CHAT_SYSTEM_PROMPT,
-  normalizeOpenRouterUsage,
-  normalizeZaiUsage,
   type TokenUsageSummary,
 } from '~~/server/utils/chat';
+import { ChatProviderService } from '~~/server/services/chat-provider.service';
 import type { ChatInput } from '~~/shared/validations/chat.validation';
 
 export class ChatService {
   private messageRepository: MessageRepository;
   private tokenRepository: TokenRepository;
   private documentRepository: DocumentRepository;
+  private aiProvider: ChatProviderService;
 
   constructor() {
     const db = getDatabase();
     this.messageRepository = new MessageRepository(db);
     this.tokenRepository = new TokenRepository(db);
     this.documentRepository = new DocumentRepository(db);
+    const config = useRuntimeConfig();
+    this.aiProvider = new ChatProviderService({
+      zaiApiKey: config.zaiApiKey,
+      zaiApiBase: config.zaiApiBase,
+      openrouterApiKey: config.openrouterApiKey,
+      openrouterApiBase: config.openrouterApiBase,
+      fallbackModel: config.fallbackModel,
+    });
   }
 
   /**
    * Send message to AI and get response
    */
   async sendMessage(userId: number, input: ChatInput, sessionId: string) {
-    const config = useRuntimeConfig();
     const { message, documentId } = input;
 
     // 1. Get document context if provided
@@ -59,73 +65,19 @@ export class ChatService {
 
     try {
       console.log('🤖 Sending request to Primary AI (z.ai)...');
-      return await this.callZaiApi(config, fullPrompt, userId, validatedDocumentId, sessionId);
+      const primary = await this.aiProvider.callPrimary(fullPrompt);
+      return this.processAiResponse(primary.content, primary.usage, userId, validatedDocumentId, sessionId);
     } catch (error: any) {
       console.error('⚠️ Primary AI (z.ai) failed, attempting fallback to OpenRouter...', error.message);
       
       try {
-        return await this.callOpenRouterApi(config, fullPrompt, userId, validatedDocumentId, sessionId);
+        const fallback = await this.aiProvider.callFallback(fullPrompt);
+        return this.processAiResponse(fallback.content, fallback.usage, userId, validatedDocumentId, sessionId);
       } catch (fallbackError: any) {
         console.error('❌ Fallback AI (OpenRouter) also failed:', fallbackError.message);
         throw fallbackError;
       }
     }
-  }
-
-  /**
-   * Call Primary AI (z.ai/Claude)
-   */
-  private async callZaiApi(config: any, fullPrompt: string, userId: number, documentId: number | undefined, sessionId: string) {
-    const response = await $fetch<any>(config.zaiApiBase, {
-      method: 'POST',
-      headers: {
-        'x-api-key': config.zaiApiKey,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json'
-      },
-      body: {
-        model: 'claude-3-haiku-20240307',
-        max_tokens: 1024,
-        system: CHAT_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: fullPrompt }]
-      },
-      timeout: 30000
-    });
-
-    const assistantContent = response.content[0].text;
-    const usage = normalizeZaiUsage(response.usage);
-
-    return this.processAiResponse(assistantContent, usage, userId, documentId, sessionId);
-  }
-
-  /**
-   * Call Fallback AI (OpenRouter/Gemini)
-   */
-  private async callOpenRouterApi(config: any, fullPrompt: string, userId: number, documentId: number | undefined, sessionId: string) {
-    if (!config.openrouterApiKey) {
-      throw new Error('OpenRouter API key is not configured');
-    }
-
-    const response = await $fetch<any>(config.openrouterApiBase, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${config.openrouterApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: {
-        model: config.fallbackModel,
-        messages: [
-          { role: 'system', content: CHAT_SYSTEM_PROMPT },
-          { role: 'user', content: fullPrompt }
-        ]
-      },
-      timeout: 30000
-    });
-
-    const assistantContent = response.choices[0].message.content;
-    const usage = normalizeOpenRouterUsage(response.usage);
-
-    return this.processAiResponse(assistantContent, usage, userId, documentId, sessionId);
   }
 
   /**

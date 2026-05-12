@@ -1,35 +1,26 @@
 import { toast } from 'vue-sonner'
 import type { Message } from '~~/types/message'
-import type { ChatInput } from '~~/shared/validations/chat.validation'
+import type { ApiSuccessResponse } from '~~/shared/api-response'
 
-interface ChatResponse {
-  success: boolean
-  data: {
-    message: Message
-    usage: {
-      input: number
-      output: number
-      total: number
-    }
+type ChatResponse = ApiSuccessResponse<{
+  message: Message
+  usage: {
+    input: number
+    output: number
+    total: number
   }
-}
+}>
 
-interface HistoryResponse {
-  success: boolean
-  data: {
-    messages: Message[]
-  }
-}
+type HistoryResponse = ApiSuccessResponse<{
+  messages: Message[]
+}>
 
-interface UsageResponse {
-  success: boolean
-  data: {
-    usage: {
-      total: number
-      sessions: any[]
-    }
+type UsageResponse = ApiSuccessResponse<{
+  usage: {
+    total: number
+    sessions: any[]
   }
-}
+}>
 
 /**
  * Chat composable

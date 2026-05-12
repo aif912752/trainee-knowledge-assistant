@@ -552,3 +552,16 @@
 - ยืนยันความถูกต้องของระบบ Chat ผ่าน 14 unit tests (Passed 100%)
 - ปรับปรุงความเสถียรของระบบในการจัดการไฟล์ขนาดใหญ่และ ID ที่ไม่ถูกต้อง
 - อัปเดต TODO.md และบันทึกประวัติการพัฒนา
+
+## Session 61: Unified BaseApiService & Frontend apiFetch Alignment
+**Prompts:** "แล้ว chat-provider.service ทำไมยังต้องเขียน fetch เองอีก ควรสร้างฟังก์ชันกลาง Base API Service ไว้ดีไหม", "หน้าอื่นๆด้วย", "เพิ่ม Green Flag ด้วย useRuntimeConfig ด้วยแล้วทำไมฝั่ง front ไม่ใช้ apiFetch เหมือนเดิม"
+**AI Response:** 
+- ออกแบบ `BaseApiService` (Server) ให้สืบทอดและจัดการ `$fetch` กลาง พร้อมรองรับการรวม Headers และ Timeout
+- ปรับปรุง `apiFetch` (Frontend) ให้เป็นศูนย์กลางการเรียก API ฝั่ง Client โดยใช้ `useRuntimeConfig` ตามมาตรฐาน Nuxt
+- ปรับปรุง `ChatProviderService` ให้ใช้ `BaseApiService` ในการเรียก AI APIs โดยไม่ต้องจัดการ headers พื้นฐานเอง
+- คืนค่าการใช้งาน `apiFetch` ใน composables ทั้งหมด (`useChat`, `useAuth`, `useUpload`) ตามความสะดวกเดิมของผู้ใช้
+**My Adjustment:** 
+- นำ `useRuntimeConfig` มาใช้ในชั้น Service ทั้ง Frontend และ Backend เพื่อดึงค่าคอนฟิกตามมาตรฐาน "Green Flag" ของ Nuxt
+- ลดความซ้ำซ้อนในการเขียน Headers (เช่น Content-Type) โดยย้ายไปจัดการใน Base class/function
+- รักษาความสม่ำเสมอของ API Interface ทั้งโครงการเพื่อให้ดูแลรักษาง่าย
+

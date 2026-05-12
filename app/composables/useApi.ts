@@ -4,6 +4,7 @@ import { getErrorMessage } from '../utils/error-handler'
 /**
  * Unified API fetch function
  * Wraps Nuxt's $fetch with integrated error handling
+ * Uses useRuntimeConfig for global settings
  *
  * @example
  * const response = await apiFetch<LoginResult>('/api/auth/login', {
@@ -12,9 +13,18 @@ import { getErrorMessage } from '../utils/error-handler'
  * })
  */
 export async function apiFetch<T>(url: string, options: any = {}): Promise<T> {
+  const config = useRuntimeConfig()
+  
+  // Merge headers: Default -> Method
+  const headers = {
+    ...options.headers,
+  }
+
   try {
     const response = await $fetch(url, {
       ...options,
+      headers,
+      // You can add global interceptors or defaults here
     })
     return response as T
   } catch (error: any) {
@@ -40,8 +50,7 @@ export async function apiFetch<T>(url: string, options: any = {}): Promise<T> {
 }
 
 /**
- * API client object with HTTP methods
- * Auto-imported by Nuxt
+ * Convenience methods for common HTTP verbs
  */
 export const api = {
   get: <T>(url: string, options: any = {}) => apiFetch<T>(url, { ...options, method: 'GET' }),

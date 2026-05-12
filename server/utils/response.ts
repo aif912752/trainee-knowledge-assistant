@@ -1,10 +1,5 @@
 import type { H3Event } from 'h3';
-
-export interface ApiSuccessResponse<T> {
-  success: true;
-  data: T;
-  message?: string;
-}
+import type { ApiSuccessResponse } from '~~/shared/api-response';
 
 export function successResponse<T>(
   event: H3Event,

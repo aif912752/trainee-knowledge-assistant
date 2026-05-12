@@ -112,9 +112,70 @@
 
 ---
 
+## Decision 4: Centralized Validations (Zod) & Shared Types
+
+### Context
+ต้องการทำ Validation สำหรับข้อมูลจากผู้ใช้งาน (เช่น Auth, Document Upload) ทั้งในฝั่ง Frontend (Form) และ Backend (API) โดยไม่อยากเขียนโค้ดซ้ำซ้อน
+
+### Alternatives Considered
+1. **แยก Validation ขาดจากกัน** - เขียน Frontend ใช้ Rules ทั่วไป และ Backend เช็ค Manual (if/else)
+2. **Shared Zod Schemas** - สร้าง Zod schema ไว้ตรงกลางแล้วเรียกใช้ทั้งสองฝั่ง
+
+### Why Shared Zod
+1. **Single Source of Truth** - แก้ไขกฎการตรวจสอบที่เดียว อัปเดตทั้งหน้าบ้านและหลังบ้าน ทำให้การทำงานสม่ำเสมอ
+2. **Security** - ฝั่ง API ไม่จำเป็นต้องเชื่อใจข้อมูลจาก Client เสมอไป เพราะมี Schema ตรวจสอบซ้ำ
+3. **Clean Code** - ลดความซ้ำซ้อน (DRY) โดยแยกโฟลเดอร์ `shared/validations/` ทำให้ Nuxt Auto-import ได้ง่าย และสามารถประยุกต์ใช้เป็น Type/Interface (ผ่าน `z.infer`) ได้เลย
+
+---
+
+## Decision 5: Switching from `pdf-parse` to `pdfjs-dist`
+
+### Context
+ฟีเจอร์ Upload Document ต้องดึงข้อความจากไฟล์ PDF ในช่วงแรกเลือกใช้ `pdf-parse` แต่พบปัญหาเมื่อทำงานในสภาพแวดล้อม Nuxt 4 (ESM)
+
+### Alternatives Considered
+1. **pdf-parse** - เป็นไลบรารีที่ใช้งานง่าย แต่เก่าและไม่รองรับ ESM ได้ดีนัก (พบปัญหา `AbortException` และ Missing Default Export)
+2. **pdfjs-dist** - ไลบรารีมาตรฐานจาก Mozilla อัปเดตสม่ำเสมอ รองรับโครงสร้างสมัยใหม่
+
+### Why `pdfjs-dist`
+1. **ESM Compatibility** - แก้ปัญหา Import error และสามารถทำงานร่วมกับระบบ Module สมัยใหม่ของ Nuxt/Nitro ได้ดีกว่า
+2. **Stability** - บังคับใช้ Legacy Build เพื่อเลี่ยงปัญหา Browser DOM (`DOMMatrix` error) ในฝั่ง Node.js Server ทำให้ระบบสามารถแกะข้อความภาษาไทยจาก PDF ได้อย่างเสถียร 100%
+
+---
+
+## Decision 6: AI Fallback Strategy & Centralized BaseApiService
+
+### Context
+ระบบ Chat ต้องเรียก API ของ AI Providers ซึ่งอาจมีอาการค้างหรือไม่เสถียร และพบว่าการเขียน Logic เชื่อมต่อ API ใน Service หลาย ๆ ตัวทำให้โค้ดซ้ำซ้อน
+
+### Alternatives Considered
+1. **ใช้ Provider เดียว (z.ai) และยิงตรงผ่าน `$fetch`** - ง่ายแต่เสี่ยงเรื่องระบบล่ม และดูแลโค้ดยากเมื่อต้องการขยายระบบ
+2. **สร้าง Base API และระบบ Fallback** - หากตัวแรกพัง ให้สลับไปใช้อีกตัวอัตโนมัติ โดยรวมศูนย์ Logic ไว้ที่คลาสหลัก
+
+### Why Fallback & BaseApiService
+1. **High Availability** - สร้างระบบ Fallback ไปยัง OpenRouter (Gemini 2.0) หาก z.ai (Claude) ไม่ตอบสนอง (เช่น Timeout หรือ Error 5xx)
+2. **Scalability & DRY** - สร้าง `BaseApiService` เป็นคลาสแม่ เพื่อจัดการเรื่อง `$fetch`, การทำ Timeout (30 วินาที), และ Centralized Error Mapping ทำให้การเพิ่ม AI Provider ใหม่ในอนาคตทำได้ทันที
+
+---
+
+## Decision 7: File Upload Storage & EXDEV Error Handling
+
+### Context
+เมื่อผู้ใช้อัปโหลดไฟล์จากหน้าบ้าน ระบบเจอปัญหา `EXDEV: cross-device link not permitted` เมื่อพยายามย้ายไฟล์ (rename) ข้าม Drive หรือ Partition
+
+### Alternatives Considered
+1. **ใช้ `fs.renameSync` ตามปกติ** - ไม่สามารถแก้ปัญหา Error บนระบบที่มีหลาย Partition (เช่น การอัปโหลดผ่าน Temp file ของ OS)
+2. **Copy + Unlink** - คัดลอกข้อมูลไปที่เป้าหมายแล้วลบไฟล์ต้นฉบับทิ้ง
+
+### Why Copy + Unlink & Local Storage
+1. **Robustness** - แก้ปัญหา EXDEV ได้เด็ดขาด ทำให้การอัปโหลดไฟล์เสถียร ไม่ว่าจะรันใน Local (ย้ายข้าม Drive C: ไป D:) หรือบน Server
+2. **Container-Ready** - ตัดสินใจเก็บเอกสารจริงไว้ในโฟลเดอร์ `storage/` ที่ Root Directory เพื่อให้ง่ายต่อการ Mount Volume หากต้องนำระบบไปรันบน Docker
+
+---
+
 ## Summary
 
-ทั้ง 3 decisions นี้แสดงแนวคิดในการพัฒนา:
+ทั้ง 7 decisions นี้แสดงแนวคิดในการพัฒนา:
 
 1. **Pragmatic over Perfect** - เลือกเครื่องมือที่เหมาะกับ context ไม่ใช่ที่ดีที่สุดเสมอไป
 2. **Leverage Existing Skills** - ใช้สิ่งที่คุ้นเคย (Vue, SQL) เพื่อลด learning curve

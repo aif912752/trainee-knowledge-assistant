@@ -1,6 +1,8 @@
 import { toast } from 'vue-sonner'
 import { apiFetch } from './useApi'
 import { uploadDocumentSchema } from '~~/shared/validations'
+import type { ApiSuccessResponse } from '~~/shared/api-response'
+
 interface UploadedDocument {
   id: number
   filename: string
@@ -10,13 +12,9 @@ interface UploadedDocument {
   contentLength: number
 }
 
-export interface UploadResponse {
-  success: boolean
-  data: {
-    document: UploadedDocument
-  }
-  message?: string
-}
+export type UploadResponse = ApiSuccessResponse<{
+  document: UploadedDocument
+}>
 
 /**
  * File upload composable
