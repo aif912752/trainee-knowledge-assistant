@@ -446,6 +446,50 @@ Implement สำเร็จทั้งหมด พร้อม commit ที�
 
 ---
 
+## Session 18: TypeScript Configuration Issues
+
+**Prompt:**
+> ERROR Cannot find module 'vue-tsc/package.json'
+
+**AI Response:**
+ติดตั้ง vue-tsc เพื่อแก้ปัญหา TypeScript checking:
+```bash
+pnpm install -D vue-tsc
+```
+
+**My Adjustment:**
+ติดตั้ง vue-tsc v3.2.8 สำเร็จ แต่ยังมี error ต่อ
+
+---
+
+## Session 19: TypeScript Path Resolution Errors
+
+**Prompts:**
+> [vue-tsc] Cannot find module '~/types/document' or its corresponding type declarations.
+> เหมือนเดิม (ยัง error เหมือนเดิม)
+
+**AI Response:**
+ปัญหา TypeScript ใน server/ directory ไม่รู้จัก Nuxt path aliases (`~/types/*`)
+
+ลองหลายวิธี:
+1. สร้าง `tsconfig.app.json` - ไม่สำเร็จ
+2. สร้าง `tsconfig.server.json` - ไม่สำเร็จ
+3. สร้าง `types/global.d.ts` - ไม่สำเร็จ
+4. สุดท้าย: ลบ custom tsconfig และปิด `typeCheck: false` ชั่วคราว
+
+**My Adjustment:**
+แก้ปัญหาด้วยวิธี:
+1. ลบ `tsconfig.app.json` และ `tsconfig.server.json`
+2. ปิด `typeCheck: false` ใน nuxt.config.ts ชั่วคราว
+3. เพิ่ม `imports.dirs: ['types']` สำหรับ auto-import
+
+เรียนรู้:
+- Nuxt 4 ใช้ TypeScript project references
+- Custom tsconfig อาจ conflict กับ Nuxt's generated tsconfig
+- บางที disable typeCheck ชั่วคราวแล้วแก้ทีหลังได้
+
+---
+
 ## เริ่ม Implement
 
 ต่อไปจะเริ่ม implement Required Features (30 คะแนน):
