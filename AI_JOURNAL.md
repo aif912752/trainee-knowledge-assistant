@@ -237,19 +237,159 @@ pnpm install @vueuse/core
 
 ---
 
+## Session 11: Installing Remaining Dependencies
+
+**Prompt:**
+> พร้อมเริ่ม implement ต่อ ทีละส่วน
+
+**AI Response:**
+สร้าง todo list เพื่อ track progress และเริ่มจาก Step 1: Install remaining dependencies
+
+ติดตั้งด้วย pnpm:
+```bash
+pnpm install better-sqlite3 bcrypt pdf-parse
+pnpm install -D @types/bcrypt @types/better-sqlite3
+```
+
+**My Adjustment:**
+ติดตั้งสำเร็จ:
+- better-sqlite3 v12.10.0 - database
+- bcrypt v6.0.0 - password hashing
+- pdf-parse v2.4.5 - PDF text extraction
+- @types/bcrypt v6.0.0 - TypeScript types
+- @types/better-sqlite3 v7.6.13 - TypeScript types
+
+---
+
+## Session 12: Setup Configuration Files
+
+**Prompt:**
+> commit ก่อน
+
+**AI Response:**
+Commit การเปลี่ยนแปลงทั้งหมดตาม Git commit best practices:
+1. Check git status
+2. Stage files
+3. Commit with proper message format
+4. Check status after commit
+
+**My Adjustment:**
+Commit สำเร็จ 2 commits:
+1. `feat: setup Nuxt 4 project with shadcn-nuxt and core dependencies`
+2. `chore: add shadcn-nuxt generated files and configuration`
+
+---
+
+## Session 13: Configuration Files & Git Workflow
+
+**Prompts:**
+> commit ไปเหลือ
+> ช่วย commit ไปกลุ่มๆไปด้วย อย่า commit ทีเดียว
+> หากมีการพูด prompt บันทึกด้วย ทุกครั้ง
+
+**AI Response:**
+แนะนำให้ commit ทีละกลุ่มเพื่อ:
+- Git history ชัดเจน
+- Rollback ง่าย
+- Code review ง่ายขึ้น
+- ตามหลักการ commit แยกส่วน
+
+Setup configuration files:
+- `.env.example` - template for environment variables
+- `.env` - local environment (ไม่ commit)
+- `nuxt.config.ts` - อัปเดต runtime config
+- `.gitignore` - เพิ่ม database files
+
+**My Adjustment:**
+Commit แยกเป็น 4 กลุ่ม:
+1. Dependencies (package.json, pnpm-lock.yaml)
+2. Configuration (.env.example, nuxt.config.ts, .gitignore)
+3. Database schema and initialization
+4. Repository layer (user, document, message, token)
+
+เรียนรู้วิธี commit ทีละกลุ่มเพื่อ git history ที่ดี
+
+---
+
+## Session 14: Initialize Database Schema
+
+**Prompt:**
+> เช็คใน TODO.md ด้วย ทำทีละขั้น อย่าทำทีเดียว
+
+**AI Response:**
+อ่าน TODO.md และทำตามลำดับ:
+1. Project Setup ✅
+2. Feature 1: Login + Protected Routes (เริ่มทำ)
+3. Feature 2-5: ยังไม่เริ่ม
+
+สร้าง Database Schema:
+- `server/db/schema.sql` - 4 tables (users, documents, messages, token_usage)
+- `server/db/init.ts` - initialization + seed admin user
+- `server/db/index.ts` - exports
+
+สร้าง Repository Layer:
+- `server/repositories/user.repository.ts`
+- `server/repositories/document.repository.ts`
+- `server/repositories/message.repository.ts`
+- `server/repositories/token.repository.ts`
+
+**My Adjustment:**
+สร้าง database schema และ repositories ครบทั้ง 4 tables
+Commit แยกเป็น 3 commits:
+1. Database schema and initialization
+2. Repository layer (user, document, message)
+3. Token repository
+
+เรียนรู้วิธีทำทีละขั้นตาม TODO.md
+
+---
+
+## Session 15: Auth Service & Login Implementation
+
+**Prompt:**
+> พร้อมเริ่ม implement ต่อ ทีละส่วน
+
+**AI Response:**
+อัปเดต todo list และเริ่ม Feature 1: Login + Protected Routes
+แบ่งเป็น 5 sub-tasks:
+1. ✅ Create auth service with password hashing
+2. 🔄 Implement login API endpoint
+3. ⏳ Create login page UI
+4. ⏳ Add protected route middleware
+5. ⏳ Test login functionality
+
+สร้าง `server/services/auth.service.ts`:
+- `hashPassword()` - bcrypt hash
+- `verifyPassword()` - bcrypt compare
+- `login()` - authenticate user
+- `getUserById()` - get user without password
+- `validateSession()` - check session validity
+
+**My Adjustment:**
+สร้าง AuthService เสร็จแล้ว พร้อม commit
+จะไปต่อ login API endpoint ใน server/api/auth/login.post.ts
+
+---
+
 ## เริ่ม Implement
 
 ต่อไปจะเริ่ม implement Required Features (30 คะแนน):
-1. ✅ Login + Protected Routes (5 คะแนน)
-2. ✅ Upload File (PDF, TXT) (5 คะแนน)
-3. ✅ Chat with AI (basic) (5 คะแนน)
-4. ✅ Chat with Uploaded File Context (10 คะแนน)
-5. ✅ Token Usage Counter (5 คะแนน)
+1. ✅ Login + Protected Routes (5 คะแนน) - กำลังทำ
+2. ⏳ Upload File (PDF, TXT) (5 คะแนน)
+3. ⏳ Chat with AI (basic) (5 คะแนน)
+4. ⏳ Chat with Uploaded File Context (10 คะแนน)
+5. ⏳ Token Usage Counter (5 คะแนน)
 
 **Dependencies ที่ติดตั้งแล้ว:**
 - @vueuse/core v14.3.0
+- better-sqlite3 v12.10.0
+- bcrypt v6.0.0
+- pdf-parse v2.4.5
+- @types/bcrypt v6.0.0
+- @types/better-sqlite3 v7.6.13
 
-**Next Steps:**
-1. Install remaining dependencies (better-sqlite3, bcrypt, pdf-parse, etc.)
-2. Setup configuration files (.env, nuxt.config.ts)
-3. Implement Feature 1: Login + Protected Routes
+**Progress:**
+- ✅ Project Setup
+- ✅ Database Schema & Repositories
+- ✅ Auth Service
+- 🔄 Login API Endpoint (กำลังทำ)
