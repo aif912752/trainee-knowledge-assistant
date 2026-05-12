@@ -16,7 +16,7 @@ export function validateBody<T>(schema: any, data: unknown): T {
     }));
 
     throw new BadRequestError(
-      `Validation failed: ${errors.map(e => `${e.field}: ${e.message}`).join(', ')}`
+      `การตรวจสอบข้อมูลล้มเหลว: ${errors.map(e => `${e.field}: ${e.message}`).join(', ')}`
     );
   }
 

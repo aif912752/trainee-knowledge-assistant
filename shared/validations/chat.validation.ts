@@ -5,8 +5,8 @@ import { z } from 'zod';
  */
 export const chatSchema = z.object({
   message: z.string()
-    .min(1, 'Message is required')
-    .max(5000, 'Message must be less than 5000 characters'),
+    .min(1, 'กรุณากรอกข้อความ')
+    .max(5000, 'ข้อความต้องมีความยาวไม่เกิน 5000 ตัวอักษร'),
   documentId: z.number().int().positive().optional()
 });
 

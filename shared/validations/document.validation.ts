@@ -5,15 +5,15 @@ import { z } from 'zod';
  */
 export const uploadDocumentSchema = z.object({
   file: z.any()
-    .refine((file) => file, 'File is required')
+    .refine((file) => file, 'กรุณาเลือกไฟล์')
     .refine((file) => {
       const allowedTypes = ['application/pdf', 'text/plain'];
       return allowedTypes.includes(file?.type);
-    }, 'Only PDF and TXT files are allowed')
+    }, 'อนุญาตเฉพาะไฟล์ PDF และ TXT เท่านั้น')
     .refine((file) => {
       const maxSize = 5 * 1024 * 1024; // 5MB
       return file?.size && file.size <= maxSize;
-    }, 'File size must be less than 5MB')
+    }, 'ขนาดไฟล์ต้องไม่เกิน 5MB')
 });
 
 export type UploadDocumentInput = z.infer<typeof uploadDocumentSchema>;
