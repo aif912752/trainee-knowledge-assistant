@@ -20,6 +20,12 @@ export default defineNuxtConfig({
 
   ssr: true,
 
+  // TypeScript configuration
+  typescript: {
+    strict: true,
+    typeCheck: true, // Enable type checking in development
+  },
+
   shadcn: {
     /**
      * Prefix for all the imported component.
