@@ -1,11 +1,13 @@
 import Database from 'better-sqlite3';
-import { readFileSync } from 'fs';
+import { readFileSync, mkdirSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcrypt';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const schemaPath = join(__dirname, 'schema.sql');
+// Resolve schema path relative to project root in dev, or bundled location in prod
+const schemaPath = process.env.NODE_ENV === 'development'
+  ? join(process.cwd(), 'server/db/schema.sql')
+  : join(dirname(fileURLToPath(import.meta.url)), 'schema.sql');
 
 export interface DatabaseContext {
   db: Database.Database;
@@ -17,7 +19,7 @@ export interface DatabaseContext {
 export function initDatabase(databasePath: string): Database.Database {
   // Ensure database directory exists
   const dbDir = dirname(databasePath);
-  require('fs').mkdirSync(dbDir, { recursive: true });
+  mkdirSync(dbDir, { recursive: true });
 
   // Open database connection
   const db = new Database(databasePath);
