@@ -3,6 +3,9 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
 
+  // Configure directory structure
+  srcDir: '.',
+
   modules: ["@nuxtjs/tailwindcss", "shadcn-nuxt", "nuxt-security"],
 
   runtimeConfig: {
@@ -28,7 +31,7 @@ export default defineNuxtConfig({
 
   // Auto-import configurations
   imports: {
-    dirs: ['types'], // Auto-import types from types/ directory
+    dirs: ['types', 'shared'], // Auto-import types and shared utilities
   },
 
   // Security headers configuration
@@ -62,6 +65,6 @@ export default defineNuxtConfig({
      * @link https://nuxt.com/docs/api/nuxt-config#alias
      * @default "@/components/ui"
      */
-    componentDir: "@/components/ui",
+    componentDir: "~/app/components/ui",
   },
 });
