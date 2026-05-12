@@ -524,3 +524,8 @@
 **Prompt:** "เริ่มลุยระบบ Chat เลย"
 **AI Response:** สร้าง ChatService, API Endpoints (Chat, History, Usage), useChat composable และหน้า Chat UI รองรับบริบทไฟล์และนับ Token
 **My Adjustment:** เพิ่ม Auto-scroll, Optimistic Update และ Timeout 30s. ระบบ Chat และ Token Tracking ทำงานสมบูรณ์ ✅
+
+## Session 58: UI Refresh Across Main Pages
+**Prompt:** "ปรับปรุง ui ทุกหน้าให้สวยขึ้นที สามารถดู ธีมได้ที่ tailwind.css"
+**AI Response:** ปรับ UI หน้า Dashboard, Login, Chat และ Upload ให้ใช้ theme tokens จาก `tailwind.css` สม่ำเสมอขึ้น พร้อมปรับ layout, cards, empty state, chat bubbles, upload drop zone และ responsive spacing
+**My Adjustment:** แก้ route หลังอัปโหลดให้ส่ง `documentId` ตรงกับหน้า Chat, เปลี่ยน font เป็น `Noto Sans Thai`, และตรวจ `vue-tsc --noEmit` ผ่านแล้ว ส่วน `pnpm build` ยังไม่จบเพราะถูกขัดจังหวะ

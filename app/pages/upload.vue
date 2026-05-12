@@ -1,247 +1,232 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { Upload, FileText, X, Check, AlertCircle } from 'lucide-vue-next';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { AlertCircle, Check, FileText, Loader2, MessageSquare, Upload, X } from 'lucide-vue-next'
 
-const router = useRouter();
+const router = useRouter()
 
-// Use upload composable
-const { isLoading: isUploading, validateFile, uploadFile: uploadDocument, formatFileSize, getFileIcon } = useUpload();
+const { isLoading: isUploading, validateFile, uploadFile: uploadDocument, formatFileSize, getFileIcon } = useUpload()
 
-// State
-const selectedFile = ref<File | null>(null);
-const uploadResult = ref<{ id: number; filename: string; originalName: string } | null>(null);
-const dragOver = ref(false);
+const selectedFile = ref<File | null>(null)
+const uploadResult = ref<{ id: number; filename: string; originalName: string } | null>(null)
+const dragOver = ref(false)
+const fileInputRef = ref<HTMLInputElement | null>(null)
 
-// File input ref
-const fileInputRef = ref<HTMLInputElement | null>(null);
-
-/**
- * Handle file selection from input
- */
 function handleFileSelect(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
 
   if (file) {
-    validateAndSetFile(file);
+    validateAndSetFile(file)
   }
 }
 
-/**
- * Validate and set file
- */
 function validateAndSetFile(file: File) {
-  // Reset result
-  uploadResult.value = null;
+  uploadResult.value = null
 
-  // Validate using composable
-  const validation = validateFile(file);
+  const validation = validateFile(file)
   if (!validation.valid) {
-    // Composable already handles toast
-    return;
+    return
   }
 
-  selectedFile.value = file;
+  selectedFile.value = file
 }
 
-/**
- * Handle drag and drop events
- */
 function handleDragOver(event: DragEvent) {
-  event.preventDefault();
-  dragOver.value = true;
+  event.preventDefault()
+  dragOver.value = true
 }
 
 function handleDragLeave(event: DragEvent) {
-  event.preventDefault();
-  dragOver.value = false;
+  event.preventDefault()
+  dragOver.value = false
 }
 
 function handleDrop(event: DragEvent) {
-  event.preventDefault();
-  dragOver.value = false;
+  event.preventDefault()
+  dragOver.value = false
 
-  const file = event.dataTransfer?.files[0];
+  const file = event.dataTransfer?.files[0]
   if (file) {
-    validateAndSetFile(file);
+    validateAndSetFile(file)
   }
 }
 
-/**
- * Remove selected file
- */
 function removeFile() {
-  selectedFile.value = null;
-  uploadResult.value = null;
+  selectedFile.value = null
+  uploadResult.value = null
   if (fileInputRef.value) {
-    fileInputRef.value.value = '';
+    fileInputRef.value.value = ''
   }
 }
 
-/**
- * Upload file
- */
 async function uploadFile() {
-  if (!selectedFile.value) return;
+  if (!selectedFile.value) return
 
   try {
-    const response = await uploadDocument(selectedFile.value);
+    const response = await uploadDocument(selectedFile.value)
 
     if (response.success) {
       uploadResult.value = {
         id: response.document.id,
         filename: response.document.filename,
         originalName: response.document.original_name,
-      };
+      }
     }
   } catch (error) {
     // Error is already handled by composable
   }
 }
 
-/**
- * Go to chat page
- */
 function goToChat() {
   if (uploadResult.value) {
-    router.push(`/chat?doc=${uploadResult.value.id}`);
+    router.push(`/chat?documentId=${uploadResult.value.id}`)
   } else {
-    router.push('/chat');
+    router.push('/chat')
   }
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center p-4">
-    <div class="w-full max-w-2xl">
-      <!-- Header -->
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-50 mb-2">
-          อัปโหลดเอกสาร
-        </h1>
-        <p class="text-slate-600 dark:text-slate-400">
-          อัปโหลดไฟล์ PDF หรือ TXT เพื่อเริ่มคุยกับ AI
-        </p>
+  <div class="min-h-screen bg-background text-foreground">
+    <AppHeader active="upload" />
+
+    <section class="border-b bg-background/90">
+      <div class="mx-auto flex min-h-16 w-full max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <div>
+          <h1 class="text-lg font-bold">อัปโหลดเอกสาร</h1>
+          <p class="text-xs text-muted-foreground">เพิ่มไฟล์เพื่อใช้เป็นบริบทให้ AI</p>
+        </div>
+        <Button variant="outline" class="gap-2" @click="router.push('/chat')">
+          <MessageSquare class="size-4" />
+          แชท
+        </Button>
       </div>
+    </section>
 
-      <!-- Upload Card -->
-      <Card>
-        <CardHeader>
-          <CardTitle>เลือกไฟล์</CardTitle>
-          <CardDescription>
-            รองรับไฟล์ PDF และ TXT (สูงสุด 5MB)
-          </CardDescription>
-        </CardHeader>
+    <main class="mx-auto grid w-full max-w-5xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_320px] lg:py-10">
+      <section>
+        <Card class="rounded-xl shadow-sm">
+          <CardHeader>
+            <div class="mb-2 flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Upload class="size-5" />
+            </div>
+            <CardTitle class="text-2xl">เลือกไฟล์สำหรับฐานความรู้</CardTitle>
+            <CardDescription>
+              รองรับไฟล์ PDF และ TXT ขนาดสูงสุด 5MB
+            </CardDescription>
+          </CardHeader>
 
-        <CardContent class="space-y-6">
-          <!-- Upload Area -->
-          <div
-            v-if="!selectedFile"
-            class="border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer"
-            :class="dragOver ? 'border-primary bg-primary/5' : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600'"
-            @click="() => fileInputRef?.click()"
-            @dragover="handleDragOver"
-            @dragleave="handleDragLeave"
-            @drop="handleDrop"
-          >
-            <Upload class="w-12 h-12 mx-auto mb-4 text-slate-400" />
-            <p class="text-slate-700 dark:text-slate-300 mb-2">
-              ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์
-            </p>
-            <p class="text-sm text-slate-500 dark:text-slate-500">
-              PDF หรือ TXT สูงสุด 5MB
-            </p>
-            <input
-              ref="fileInputRef"
-              type="file"
-              accept=".pdf,.txt,application/pdf,text/plain"
-              class="hidden"
-              @change="handleFileSelect"
-            />
-          </div>
-
-          <!-- Selected File -->
-          <div v-else class="space-y-4">
-            <!-- File Info -->
-            <div class="flex items-center gap-4 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg">
-              <div class="text-3xl">{{ getFileIcon(selectedFile.name) }}</div>
-              <div class="flex-1 min-w-0">
-                <p class="font-medium text-slate-900 dark:text-slate-100 truncate">
-                  {{ selectedFile.name }}
-                </p>
-                <p class="text-sm text-slate-500 dark:text-slate-500">
-                  {{ formatFileSize(selectedFile.size) }}
-                </p>
+          <CardContent class="space-y-6">
+            <div
+              v-if="!selectedFile"
+              class="flex min-h-[300px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition-all"
+              :class="dragOver ? 'border-primary bg-primary/5 shadow-sm' : 'border-border bg-secondary/35 hover:border-primary/45 hover:bg-secondary/60'"
+              @click="() => fileInputRef?.click()"
+              @dragover="handleDragOver"
+              @dragleave="handleDragLeave"
+              @drop="handleDrop"
+            >
+              <div class="mb-5 flex size-16 items-center justify-center rounded-xl bg-card text-primary ring-1 ring-border">
+                <Upload class="size-8" />
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                @click="removeFile"
-              >
-                <X class="w-4 h-4" />
-              </Button>
+              <p class="font-semibold">
+                ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์
+              </p>
+              <p class="mt-2 text-sm text-muted-foreground">
+                PDF หรือ TXT สูงสุด 5MB
+              </p>
+              <input
+                ref="fileInputRef"
+                type="file"
+                accept=".pdf,.txt,application/pdf,text/plain"
+                class="hidden"
+                @change="handleFileSelect"
+              />
             </div>
 
-            <!-- Upload Result -->
-            <div v-if="uploadResult" class="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-              <Check class="w-5 h-5 text-green-600 dark:text-green-400" />
-              <div class="flex-1">
-                <p class="font-medium text-green-800 dark:text-green-300">
-                  อัปโหลดสำเร็จ!
-                </p>
-                <p class="text-sm text-green-600 dark:text-green-400">
-                  {{ uploadResult.originalName }}
-                </p>
+            <div v-else class="space-y-4">
+              <div class="flex items-center gap-4 rounded-xl border bg-secondary/45 p-4">
+                <div class="flex size-12 shrink-0 items-center justify-center rounded-lg bg-card text-2xl ring-1 ring-border">
+                  {{ getFileIcon(selectedFile.name) }}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="truncate font-semibold">{{ selectedFile.name }}</p>
+                  <p class="text-sm text-muted-foreground">{{ formatFileSize(selectedFile.size) }}</p>
+                </div>
+                <Button variant="ghost" size="icon" @click="removeFile">
+                  <X class="size-4" />
+                </Button>
               </div>
-            </div>
 
-            <!-- Actions -->
-            <div class="flex gap-3">
-              <Button
-                variant="outline"
-                class="flex-1"
-                @click="removeFile"
-              >
-                เลือกไฟล์ใหม่
-              </Button>
-              <Button
-                class="flex-1"
-                :disabled="isUploading"
-                @click="uploadFile"
-              >
-                <Upload v-if="!isUploading" class="w-4 h-4 mr-2" />
-                {{ isUploading ? 'กำลังอัปโหลด...' : 'อัปโหลด' }}
-              </Button>
-            </div>
+              <div v-if="uploadResult" class="flex items-start gap-3 rounded-xl border border-chart-1/35 bg-chart-1/10 p-4">
+                <span class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-card text-chart-4 ring-1 ring-chart-1/25">
+                  <Check class="size-4" />
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="font-semibold text-chart-4">อัปโหลดสำเร็จ</p>
+                  <p class="truncate text-sm text-muted-foreground">{{ uploadResult.originalName }}</p>
+                </div>
+              </div>
 
-            <!-- Go to Chat -->
-            <div v-if="uploadResult" class="pt-4 border-t border-slate-200 dark:border-slate-700">
-              <Button
-                variant="default"
-                class="w-full"
-                @click="goToChat"
-              >
-                <FileText class="w-4 h-4 mr-2" />
+              <div class="grid gap-3 sm:grid-cols-2">
+                <Button variant="outline" class="h-11" @click="removeFile">
+                  เลือกไฟล์ใหม่
+                </Button>
+                <Button class="h-11" :disabled="isUploading || !!uploadResult" @click="uploadFile">
+                  <Loader2 v-if="isUploading" class="size-4 animate-spin" />
+                  <Upload v-else class="size-4" />
+                  {{ isUploading ? 'กำลังอัปโหลด...' : uploadResult ? 'อัปโหลดแล้ว' : 'อัปโหลด' }}
+                </Button>
+              </div>
+
+              <Button v-if="uploadResult" variant="default" class="h-11 w-full gap-2" @click="goToChat">
+                <MessageSquare class="size-4" />
                 ไปที่หน้าแชท
               </Button>
             </div>
-          </div>
+          </CardContent>
+        </Card>
+      </section>
 
-          <!-- Requirements -->
-          <div class="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <AlertCircle class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-            <div class="text-sm text-blue-800 dark:text-blue-300">
-              <p class="font-medium mb-1">ข้อกำหนดไฟล์:</p>
-              <ul class="list-disc list-inside space-y-1 text-blue-700 dark:text-blue-400">
-                <li>รองรับไฟล์ PDF และ TXT เท่านั้น</li>
-                <li>ขนาดไฟล์สูงสุด 5MB</li>
-                <li>ชื่อไฟล์จะถูกจัดเก็บเป็นชื่อสุ่มเพื่อความปลอดภัย</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+      <aside class="space-y-4">
+        <Card class="rounded-xl">
+          <CardHeader>
+            <CardTitle class="flex items-center gap-2 text-lg">
+              <AlertCircle class="size-5 text-primary" />
+              ข้อกำหนดไฟล์
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul class="space-y-3 text-sm text-muted-foreground">
+              <li class="flex gap-2">
+                <Check class="mt-0.5 size-4 shrink-0 text-primary" />
+                รองรับไฟล์ PDF และ TXT เท่านั้น
+              </li>
+              <li class="flex gap-2">
+                <Check class="mt-0.5 size-4 shrink-0 text-primary" />
+                ขนาดไฟล์สูงสุด 5MB
+              </li>
+              <li class="flex gap-2">
+                <Check class="mt-0.5 size-4 shrink-0 text-primary" />
+                ชื่อไฟล์จะถูกจัดเก็บเป็นชื่อสุ่มเพื่อความปลอดภัย
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card class="rounded-xl border-primary/20 bg-primary text-primary-foreground">
+          <CardHeader>
+            <CardTitle class="flex items-center gap-2 text-lg">
+              <FileText class="size-5" />
+              หลังอัปโหลด
+            </CardTitle>
+            <CardDescription class="text-primary-foreground/80">
+              ระบบจะนำเนื้อหาไฟล์ไปใช้เป็นบริบทสำหรับตอบคำถามในหน้าแชท
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </aside>
+    </main>
   </div>
 </template>

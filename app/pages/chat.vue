@@ -1,52 +1,51 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch } from 'vue'
-import { Send, Bot, User, Trash2, ArrowLeft, Loader2, Sparkles, FileText } from 'lucide-vue-next'
+import { nextTick, onMounted, ref, watch } from 'vue'
+import { Bot, FileText, Loader2, Send, Sparkles, Trash2, User } from 'lucide-vue-next'
+import { useRoute } from 'vue-router'
 import { useChat } from '~/composables/useChat'
-import { useUpload } from '~/composables/useUpload'
-import { useRoute, useRouter } from 'vue-router'
 
 definePageMeta({
-  middleware: 'auth'
+  middleware: 'auth',
 })
 
 const route = useRoute()
-const router = useRouter()
 const { messages, isLoading, isFetchingHistory, totalTokens, fetchHistory, fetchUsage, sendMessage, clearChat } = useChat()
-const { formatFileSize } = useUpload()
 
 const inputMessage = ref('')
 const scrollContainer = ref<HTMLElement | null>(null)
 const selectedDocumentId = ref<number | undefined>(
-  route.query.documentId ? parseInt(route.query.documentId as string, 10) : undefined
+  route.query.documentId ? parseInt(route.query.documentId as string, 10) : undefined,
 )
 
-// Auto-scroll to bottom when messages change
-watch(messages, () => {
-  nextTick(() => {
-    if (scrollContainer.value) {
-      scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight
-    }
-  })
-}, { deep: true })
+watch(
+  messages,
+  () => {
+    nextTick(() => {
+      if (scrollContainer.value) {
+        scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight
+      }
+    })
+  },
+  { deep: true },
+)
 
 onMounted(async () => {
   await Promise.all([
     fetchHistory(selectedDocumentId.value),
-    fetchUsage()
+    fetchUsage(),
   ])
 })
 
 const handleSend = async () => {
   if (!inputMessage.value.trim() || isLoading.value) return
-  
+
   const text = inputMessage.value
   inputMessage.value = ''
-  
+
   try {
     await sendMessage(text, selectedDocumentId.value)
   } catch (err) {
-    // Error is handled in composable with toast
-    inputMessage.value = text // Restore input on failure
+    inputMessage.value = text
   }
 }
 
@@ -59,174 +58,163 @@ const handleClear = async () => {
 const formatTime = (dateStr: string) => {
   return new Date(dateStr).toLocaleTimeString('th-TH', {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 </script>
 
 <template>
-  <div class="flex flex-col h-screen bg-slate-50 dark:bg-slate-950">
-    <!-- Header -->
-    <header class="flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b shadow-sm shrink-0">
-      <div class="flex items-center gap-4">
-        <Button variant="ghost" size="icon" @click="router.push('/')">
-          <ArrowLeft class="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 class="text-xl font-bold flex items-center gap-2">
-            <Sparkles class="w-5 h-5 text-indigo-500" />
+  <div class="flex h-screen flex-col bg-background text-foreground">
+    <AppHeader active="chat" />
+
+    <section class="shrink-0 border-b bg-background/90">
+      <div class="mx-auto flex min-h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <div class="min-w-0">
+          <h1 class="flex items-center gap-2 truncate text-lg font-bold">
+            <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Sparkles class="size-4" />
+            </span>
             แชทกับผู้ช่วย AI
           </h1>
-          <p v-if="selectedDocumentId" class="text-xs text-slate-500 flex items-center gap-1">
-            <FileText class="w-3 h-3" />
-            กำลังสนทนาโดยใช้บริบทจากไฟล์
+          <p v-if="selectedDocumentId" class="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+            <FileText class="size-3.5" />
+            ใช้บริบทจากเอกสารที่เลือก
           </p>
         </div>
-      </div>
-      
-      <div class="flex items-center gap-4">
-        <div class="hidden md:flex flex-col items-end">
-          <span class="text-xs text-slate-500 uppercase font-bold tracking-wider">Token ที่ใช้ไป</span>
-          <span class="text-sm font-mono font-bold text-indigo-600">{{ totalTokens.toLocaleString() }}</span>
-        </div>
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button variant="outline" size="icon" class="text-slate-500 hover:text-red-500 hover:border-red-200" @click="handleClear">
-                <Trash2 class="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>ล้างการสนทนา</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-    </header>
+        <div class="flex items-center gap-2">
+          <div class="hidden rounded-lg border bg-card px-3 py-2 text-right md:block">
+            <span class="block text-[11px] font-medium uppercase text-muted-foreground">Token ที่ใช้ไป</span>
+            <span class="block font-mono text-sm font-bold text-primary">{{ totalTokens.toLocaleString() }}</span>
+          </div>
 
-    <!-- Chat Area -->
-    <main 
-      ref="scrollContainer"
-      class="flex-1 overflow-y-auto p-6 space-y-6"
-    >
-      <!-- Empty State -->
-      <div v-if="messages.length === 0 && !isFetchingHistory" class="h-full flex flex-col items-center justify-center text-center space-y-4">
-        <div class="w-20 h-20 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
-          <Bot class="w-10 h-10 text-indigo-600" />
-        </div>
-        <div class="max-w-md">
-          <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-200">เริ่มการสนทนาใหม่</h2>
-          <p class="text-slate-500 mt-2">
-            สวัสดีครับ! ผมคือผู้ช่วยอัจฉริยะ คุณสามารถถามคำถามทั่วไป หรือถามเกี่ยวกับไฟล์ที่อัปโหลดไว้ก็ได้ครับ
-          </p>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button variant="outline" size="icon" class="text-muted-foreground hover:text-destructive" @click="handleClear">
+                  <Trash2 class="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>ล้างการสนทนา</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
+    </section>
 
-      <!-- Loading State -->
-      <div v-if="isFetchingHistory" class="flex justify-center py-10">
-        <Loader2 class="w-8 h-8 text-indigo-500 animate-spin" />
-      </div>
+    <main ref="scrollContainer" class="min-h-0 flex-1 overflow-y-auto">
+      <div class="mx-auto flex min-h-full w-full max-w-4xl flex-col px-4 py-6 sm:px-6">
+        <div v-if="messages.length === 0 && !isFetchingHistory" class="flex flex-1 items-center justify-center py-12 text-center">
+          <div class="max-w-lg">
+            <div class="mx-auto mb-5 flex size-16 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
+              <Bot class="size-8" />
+            </div>
+            <h2 class="text-2xl font-bold">เริ่มการสนทนาใหม่</h2>
+            <p class="mt-3 leading-7 text-muted-foreground">
+              ถามคำถามทั่วไป หรือถามจากไฟล์ที่อัปโหลดไว้ ระบบจะตอบโดยอ้างอิงบริบทที่เกี่ยวข้อง
+            </p>
+          </div>
+        </div>
 
-      <!-- Message List -->
-      <div 
-        v-for="msg in messages" 
-        :key="msg.id"
-        class="flex w-full"
-        :class="[msg.role === 'user' ? 'justify-end' : 'justify-start']"
-      >
-        <div 
-          class="flex max-w-[85%] md:max-w-[70%] group"
-          :class="[msg.role === 'user' ? 'flex-row-reverse' : 'flex-row']"
-        >
-          <!-- Avatar -->
-          <div 
-            class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-1"
-            :class="[msg.role === 'user' ? 'ml-3 bg-slate-200' : 'mr-3 bg-indigo-600']"
+        <div v-if="isFetchingHistory" class="flex flex-1 items-center justify-center py-12">
+          <Loader2 class="size-8 animate-spin text-primary" />
+        </div>
+
+        <div v-if="messages.length > 0" class="space-y-6">
+          <div
+            v-for="msg in messages"
+            :key="msg.id"
+            class="flex w-full"
+            :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
           >
-            <User v-if="msg.role === 'user'" class="w-4 h-4 text-slate-600" />
-            <Bot v-else class="w-4 h-4 text-white" />
+            <div class="group flex max-w-[92%] gap-3 sm:max-w-[78%]" :class="msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'">
+              <div
+                class="mt-1 flex size-8 shrink-0 items-center justify-center rounded-lg"
+                :class="msg.role === 'user' ? 'bg-secondary text-secondary-foreground' : 'bg-primary text-primary-foreground'"
+              >
+                <User v-if="msg.role === 'user'" class="size-4" />
+                <Bot v-else class="size-4" />
+              </div>
+
+              <div class="min-w-0 space-y-1">
+                <div
+                  class="rounded-xl px-4 py-3 text-sm shadow-sm"
+                  :class="[
+                    msg.role === 'user'
+                      ? 'rounded-tr-sm bg-primary text-primary-foreground'
+                      : 'rounded-tl-sm border bg-card text-card-foreground',
+                  ]"
+                >
+                  <div class="whitespace-pre-wrap break-words leading-7">{{ msg.content }}</div>
+                </div>
+
+                <div
+                  class="flex items-center gap-2 text-[11px] text-muted-foreground"
+                  :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
+                >
+                  <span>{{ formatTime(msg.created_at) }}</span>
+                  <span v-if="msg.tokens > 0" class="opacity-0 transition-opacity group-hover:opacity-100">
+                    {{ msg.tokens }} tokens
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- Content -->
-          <div class="space-y-1">
-            <div 
-              class="px-4 py-3 rounded-2xl shadow-sm text-sm"
-              :class="[
-                msg.role === 'user' 
-                  ? 'bg-indigo-600 text-white rounded-tr-none' 
-                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none'
-              ]"
-            >
-              <div class="whitespace-pre-wrap leading-relaxed">{{ msg.content }}</div>
-            </div>
-            
-            <div 
-              class="flex items-center gap-2 text-[10px] text-slate-400"
-              :class="[msg.role === 'user' ? 'justify-end' : 'justify-start']"
-            >
-              <span>{{ formatTime(msg.created_at) }}</span>
-              <span v-if="msg.tokens > 0" class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                • {{ msg.tokens }} tokens
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Assistant Typing -->
-      <div v-if="isLoading" class="flex justify-start">
-        <div class="flex flex-row mr-3">
-          <div class="shrink-0 w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center mr-3 mt-1">
-            <Bot class="w-4 h-4 text-white" />
-          </div>
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm">
-            <div class="flex gap-1.5 h-4 items-center">
-              <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-              <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-              <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
+          <div v-if="isLoading" class="flex justify-start">
+            <div class="flex gap-3">
+              <div class="mt-1 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Bot class="size-4" />
+              </div>
+              <div class="rounded-xl rounded-tl-sm border bg-card px-4 py-3 shadow-sm">
+                <div class="flex h-5 items-center gap-1.5">
+                  <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:-0.3s]"></span>
+                  <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:-0.15s]"></span>
+                  <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce"></span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </main>
 
-    <!-- Footer Input -->
-    <footer class="p-6 bg-white dark:bg-slate-900 border-t shrink-0">
-      <div class="max-w-4xl mx-auto relative">
-        <textarea
-          v-model="inputMessage"
-          placeholder="พิมพ์ข้อความของคุณที่นี่..."
-          class="w-full pl-4 pr-14 py-3 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none transition-all shadow-inner min-h-[54px] max-h-32 text-sm"
-          rows="1"
-          @keydown.enter.prevent="handleSend"
-        ></textarea>
-        <Button 
-          class="absolute right-2 bottom-2 rounded-xl h-9 w-9 p-0 bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all active:scale-95"
-          :disabled="!inputMessage.trim() || isLoading"
-          @click="handleSend"
-        >
-          <Send class="w-4 h-4" />
-        </Button>
+    <footer class="shrink-0 border-t bg-background/95 px-4 py-4 backdrop-blur-xl sm:px-6">
+      <div class="mx-auto w-full max-w-4xl">
+        <div class="relative rounded-xl border bg-card p-2 shadow-sm">
+          <textarea
+            v-model="inputMessage"
+            placeholder="พิมพ์ข้อความของคุณที่นี่..."
+            class="block max-h-32 min-h-[48px] w-full resize-none rounded-lg bg-transparent py-3 pl-3 pr-14 text-sm leading-6 outline-none placeholder:text-muted-foreground focus:ring-0"
+            rows="1"
+            @keydown.enter.prevent="handleSend"
+          ></textarea>
+          <Button
+            class="absolute bottom-2 right-2 size-10 rounded-lg p-0"
+            :disabled="!inputMessage.trim() || isLoading"
+            @click="handleSend"
+          >
+            <Send class="size-4" />
+          </Button>
+        </div>
+        <p class="mt-3 text-center text-[11px] text-muted-foreground">
+          AI อาจให้ข้อมูลคลาดเคลื่อน โปรดตรวจสอบข้อมูลสำคัญเสมอ
+        </p>
       </div>
-      <p class="text-[10px] text-center text-slate-400 mt-3">
-        AI อาจให้ข้อมูลที่คลาดเคลื่อน โปรดตรวจสอบข้อมูลที่สำคัญเสมอ
-      </p>
     </footer>
   </div>
 </template>
 
 <style scoped>
-/* Custom scrollbar for chat area */
 main::-webkit-scrollbar {
   width: 6px;
 }
+
 main::-webkit-scrollbar-track {
   background: transparent;
 }
+
 main::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
-}
-.dark main::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: color-mix(in srgb, var(--muted-foreground) 35%, transparent);
+  border-radius: 999px;
 }
 </style>

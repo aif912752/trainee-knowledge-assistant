@@ -1,29 +1,24 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
+import { AlertCircle, Info, Loader2, LockKeyhole, LogIn, Sparkles } from 'lucide-vue-next'
 import { loginSchema } from '~~/shared/validations'
-import { LogIn as LucideLogIn, AlertCircle as LucideAlertCircle, Loader2 as LucideLoader2, Info as LucideInfo } from 'lucide-vue-next'
 
-// Use auth composable
 const { login, isLoading: isAuthLoading } = useAuth()
 
-// State for error display
 const errorMessage = ref('')
 
-// Initialize vee-validate form
 const { defineField, handleSubmit, errors } = useForm({
   validationSchema: toTypedSchema(loginSchema),
   initialValues: {
     username: '',
-    password: ''
-  }
+    password: '',
+  },
 })
 
-// Define form fields
 const [username, usernameAttrs] = defineField('username')
 const [password, passwordAttrs] = defineField('password')
 
-// Handle form submission
 const onSubmit = handleSubmit(async (values) => {
   errorMessage.value = ''
 
@@ -31,113 +26,156 @@ const onSubmit = handleSubmit(async (values) => {
     const response = await login(values)
 
     if (response.success) {
-      // Redirect to home page on success
       window.location.href = '/'
     }
   } catch (error: any) {
-    // Error is already processed by apiFetch, just display message
     errorMessage.value = error.friendlyMessage || error.data?.error || 'เข้าสู่ระบบไม่สำเร็จ'
   }
 })
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-    <div class="w-full max-w-[400px]">
-      <Card class="border-none shadow-xl">
-        <CardHeader class="space-y-1 pb-6 text-center">
-          <div class="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-2">
-            <LucideLogIn class="w-6 h-6 text-primary" />
-          </div>
-          <CardTitle class="text-2xl font-bold tracking-tight">
-            ยินดีต้อนรับ
-          </CardTitle>
-          <CardDescription>
-            กรุณาเข้าสู่ระบบเพื่อใช้งาน Assistant
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <!-- Error Alert -->
-          <div v-if="errorMessage" class="mb-4 rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
-            <LucideAlertCircle class="w-4 h-4" />
-            {{ errorMessage }}
+  <div class="min-h-screen bg-background">
+    <main class="grid min-h-screen lg:grid-cols-[1fr_480px]">
+      <section class="hidden border-r bg-card lg:flex">
+        <div class="flex w-full flex-col justify-between p-10">
+          <div class="flex items-center gap-3">
+            <span class="flex size-11 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm shadow-primary/20">
+              <Sparkles class="size-5" />
+            </span>
+            <div>
+              <p class="font-bold">Knowledge Assistant</p>
+              <p class="text-sm text-muted-foreground">Trainee knowledge workspace</p>
+            </div>
           </div>
 
-          <!-- Login Form -->
-          <form @submit="onSubmit" class="space-y-5">
-            <!-- Username Field -->
-            <div class="space-y-2">
-              <Label for="username">ชื่อผู้ใช้</Label>
-              <Input
-                id="username"
-                v-model="username"
-                v-bind="usernameAttrs"
-                type="text"
-                placeholder="ระบุชื่อผู้ใช้ของคุณ"
-                :disabled="isAuthLoading"
-                autocomplete="username"
-                :class="{ 'border-destructive focus-visible:ring-destructive': errors.username }"
-              />
-              <p v-if="errors.username" class="text-xs text-destructive">
-                {{ errors.username }}
-              </p>
+          <div class="max-w-xl">
+            <div class="mb-5 inline-flex items-center gap-2 rounded-md bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
+              <LockKeyhole class="size-3.5" />
+              Secure internal access
             </div>
-
-            <!-- Password Field -->
-            <div class="space-y-2">
-              <Label for="password">รหัสผ่าน</Label>
-              <Input
-                id="password"
-                v-model="password"
-                v-bind="passwordAttrs"
-                type="password"
-                placeholder="ระบุรหัสผ่านของคุณ"
-                :disabled="isAuthLoading"
-                autocomplete="current-password"
-                :class="{ 'border-destructive focus-visible:ring-destructive': errors.password }"
-              />
-              <p v-if="errors.password" class="text-xs text-destructive">
-                {{ errors.password }}
-              </p>
-            </div>
-
-            <!-- Submit Button -->
-            <Button
-              type="submit"
-              class="w-full h-11 text-base font-semibold transition-all"
-              :disabled="isAuthLoading"
-            >
-              <LucideLoader2 v-if="isAuthLoading" class="mr-2 h-4 w-4 animate-spin" />
-              <span v-if="!isAuthLoading">เข้าสู่ระบบ</span>
-              <span v-else>กำลังตรวจสอบข้อมูล...</span>
-            </Button>
-          </form>
-
-          <!-- Demo Credentials Hint -->
-          <div class="mt-6 p-4 rounded-lg bg-secondary/50 border border-border/50 text-xs">
-            <p class="font-bold text-secondary-foreground mb-1 flex items-center gap-1">
-              <LucideInfo class="w-3 h-3 text-primary" />
-              Demo Credentials:
+            <h1 class="text-4xl font-bold tracking-normal">
+              เข้าถึงเอกสารและผู้ช่วย AI ของทีมได้ในที่เดียว
+            </h1>
+            <p class="mt-4 text-base leading-7 text-muted-foreground">
+              ระบบนี้ช่วยให้ผู้ใช้ค้นหาคำตอบจากเอกสารที่อัปโหลดและสนทนากับ AI ผ่านหน้าจอที่ออกแบบสำหรับการทำงานประจำวัน
             </p>
-            <div class="grid grid-cols-2 gap-2 mt-2">
-              <div class="bg-background p-2 rounded border border-border/40">
-                <span class="text-muted-foreground block">User:</span>
-                <code class="font-mono text-primary font-bold">admin</code>
-              </div>
-              <div class="bg-background p-2 rounded border border-border/40">
-                <span class="text-muted-foreground block">Pass:</span>
-                <code class="font-mono text-primary font-bold">admin123</code>
-              </div>
+          </div>
+
+          <div class="grid max-w-xl grid-cols-3 gap-3 text-sm">
+            <div class="rounded-lg border bg-background p-4">
+              <span class="block text-muted-foreground">รองรับ</span>
+              <span class="mt-1 block font-semibold">PDF/TXT</span>
+            </div>
+            <div class="rounded-lg border bg-background p-4">
+              <span class="block text-muted-foreground">ขนาดไฟล์</span>
+              <span class="mt-1 block font-semibold">สูงสุด 5MB</span>
+            </div>
+            <div class="rounded-lg border bg-background p-4">
+              <span class="block text-muted-foreground">สถานะ</span>
+              <span class="mt-1 block font-semibold text-primary">พร้อมใช้งาน</span>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <!-- Footer -->
-      <p class="mt-6 text-center text-xs text-muted-foreground">
-        Mini Knowledge Assistant © 2025
-      </p>
-    </div>
+      <section class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
+        <div class="w-full max-w-[420px]">
+          <div class="mb-8 text-center lg:hidden">
+            <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm shadow-primary/20">
+              <Sparkles class="size-6" />
+            </div>
+            <h1 class="text-2xl font-bold">Knowledge Assistant</h1>
+            <p class="mt-1 text-sm text-muted-foreground">เข้าสู่ระบบเพื่อใช้งานพื้นที่ความรู้ของทีม</p>
+          </div>
+
+          <Card class="rounded-xl shadow-md">
+            <CardHeader class="pb-5">
+              <div class="mb-2 flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <LogIn class="size-5" />
+              </div>
+              <CardTitle class="text-2xl">ยินดีต้อนรับ</CardTitle>
+              <CardDescription>
+                กรุณาเข้าสู่ระบบเพื่อใช้งาน Assistant
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              <div
+                v-if="errorMessage"
+                class="mb-4 flex items-start gap-2 rounded-lg border border-destructive/25 bg-destructive/10 p-3 text-sm text-destructive"
+              >
+                <AlertCircle class="mt-0.5 size-4 shrink-0" />
+                <span>{{ errorMessage }}</span>
+              </div>
+
+              <form class="space-y-5" @submit="onSubmit">
+                <div class="space-y-2">
+                  <Label for="username">ชื่อผู้ใช้</Label>
+                  <Input
+                    id="username"
+                    v-model="username"
+                    v-bind="usernameAttrs"
+                    type="text"
+                    placeholder="ระบุชื่อผู้ใช้ของคุณ"
+                    :disabled="isAuthLoading"
+                    autocomplete="username"
+                    class="h-11 bg-background"
+                    :class="{ 'border-destructive focus-visible:ring-destructive/30': errors.username }"
+                  />
+                  <p v-if="errors.username" class="text-xs text-destructive">
+                    {{ errors.username }}
+                  </p>
+                </div>
+
+                <div class="space-y-2">
+                  <Label for="password">รหัสผ่าน</Label>
+                  <Input
+                    id="password"
+                    v-model="password"
+                    v-bind="passwordAttrs"
+                    type="password"
+                    placeholder="ระบุรหัสผ่านของคุณ"
+                    :disabled="isAuthLoading"
+                    autocomplete="current-password"
+                    class="h-11 bg-background"
+                    :class="{ 'border-destructive focus-visible:ring-destructive/30': errors.password }"
+                  />
+                  <p v-if="errors.password" class="text-xs text-destructive">
+                    {{ errors.password }}
+                  </p>
+                </div>
+
+                <Button type="submit" class="h-11 w-full font-semibold" :disabled="isAuthLoading">
+                  <Loader2 v-if="isAuthLoading" class="size-4 animate-spin" />
+                  <span>{{ isAuthLoading ? 'กำลังตรวจสอบข้อมูล...' : 'เข้าสู่ระบบ' }}</span>
+                </Button>
+              </form>
+
+              <div class="mt-6 rounded-lg border bg-secondary/60 p-4 text-xs">
+                <p class="mb-3 flex items-center gap-2 font-semibold text-secondary-foreground">
+                  <Info class="size-3.5 text-primary" />
+                  Demo Credentials
+                </p>
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="rounded-md border bg-background p-3">
+                    <span class="block text-muted-foreground">User</span>
+                    <code class="font-mono font-bold text-primary">admin</code>
+                  </div>
+                  <div class="rounded-md border bg-background p-3">
+                    <span class="block text-muted-foreground">Pass</span>
+                    <code class="font-mono font-bold text-primary">admin123</code>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <p class="mt-6 text-center text-xs text-muted-foreground">
+            Mini Knowledge Assistant © 2025
+          </p>
+        </div>
+      </section>
+    </main>
   </div>
 </template>
