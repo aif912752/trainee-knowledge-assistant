@@ -56,11 +56,11 @@
 - [x] Modify chat API to accept document_id
 - [x] Load document content from database
 - [x] Append document context to AI prompt
-- [ ] Handle large file content (truncate if needed)
+- [x] Handle large file content (truncate if needed)
 - [x] Test chat with document context
 - [x] Test with PDF document
 - [x] Test with TXT document
-- [ ] Test with non-existent document
+- [x] Test with non-existent document
 
 ### Feature 5: Token Usage Counter (5 คะแนน)
 - [x] Create token_usage table schema
@@ -96,7 +96,7 @@
 ### Unit Tests (+5 คะแนน)
 - [x] Setup test framework (Vitest)
 - [x] Write tests for auth service
-- [ ] Write tests for chat service
+- [x] Write tests for chat service
 - [x] Write tests for document service
 - [x] Achieve 40%+ coverage (65 tests passing)
 - [x] Run tests

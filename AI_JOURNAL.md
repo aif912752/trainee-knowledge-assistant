@@ -534,3 +534,8 @@
 **Prompt:** "ปรับปรุง ui ทุกหน้าให้สวยขึ้นที สามารถดู ธีมได้ที่ tailwind.css"
 **AI Response:** ปรับ UI หน้า Dashboard, Login, Chat และ Upload ให้ใช้ theme tokens จาก `tailwind.css` สม่ำเสมอขึ้น พร้อมปรับ layout, cards, empty state, chat bubbles, upload drop zone และ responsive spacing
 **My Adjustment:** แก้ route หลังอัปโหลดให้ส่ง `documentId` ตรงกับหน้า Chat, เปลี่ยน font เป็น `Noto Sans Thai`, และตรวจ `vue-tsc --noEmit` ผ่านแล้ว ส่วน `pnpm build` ยังไม่จบเพราะถูกขัดจังหวะ
+
+## Session 59: Centralized API Responses & Chat Helpers
+**Prompts:** ปรับ `handleApiError` ให้รับ `event` และจัดการ status เอง, เพิ่ม success response wrapper กลาง, และให้ `chat.service.ts` ใช้ฟังก์ชันกลาง
+**AI Response:** เพิ่ม `successResponse`, ปรับ `handleApiError(event, error)`, อัปเดต endpoints/frontend ให้ใช้ `{ success, data, message? }`, และแยก chat helper สำหรับ prompt/context/token usage
+**My Adjustment:** `vue-tsc --noEmit` ผ่านแล้ว แต่ test เฉพาะ `chat.service` ถูกขัดจังหวะก่อนจบ

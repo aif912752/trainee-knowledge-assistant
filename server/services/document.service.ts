@@ -7,6 +7,7 @@ import { renameSync, readFileSync, mkdirSync, existsSync, copyFileSync, unlinkSy
 import { join } from 'path';
 import { createRequire } from 'module';
 import { pathToFileURL } from 'url';
+import { ValidationError } from '~~/shared/errors';
 
 const require = createRequire(import.meta.url);
 
@@ -22,13 +23,6 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
 // Uploads directory
 const UPLOAD_DIR = join(process.cwd(), 'storage/uploads');
-
-export class FileValidationError extends Error {
-  constructor(message: string, public code: string) {
-    super(message);
-    this.name = 'FileValidationError';
-  }
-}
 
 export class DocumentService {
   private documentRepository: DocumentRepository;
@@ -56,7 +50,7 @@ export class DocumentService {
       form.parse(event.node.req, (err, fields, files) => {
         if (err) {
           if (err.message.includes('maxFileSize exceeded')) {
-            reject(new FileValidationError('ขนาดไฟล์ต้องไม่เกิน 5MB', 'FILE_TOO_LARGE'));
+            reject(new ValidationError('ขนาดไฟล์ต้องไม่เกิน 5MB', 'FILE_TOO_LARGE'));
           } else {
             reject(err);
           }
@@ -89,7 +83,7 @@ export class DocumentService {
       return;
     }
 
-    throw new FileValidationError(
+    throw new ValidationError(
       'อนุญาตเฉพาะไฟล์ PDF และ TXT เท่านั้น',
       'INVALID_FILE_TYPE'
     );
@@ -156,7 +150,7 @@ export class DocumentService {
       return fullText.trim();
     } catch (error) {
       console.error('PDF extraction error (pdfjs):', error);
-      throw new FileValidationError(
+      throw new ValidationError(
         'ไม่สามารถอ่านไฟล์ PDF ได้ กรุณาลองไฟล์อื่น',
         'PDF_PARSE_ERROR'
       );
@@ -173,7 +167,7 @@ export class DocumentService {
       console.log(`✅ TXT extraction completed in ${Date.now() - startTime}ms`);
       return text;
     } catch (error) {
-      throw new FileValidationError(
+      throw new ValidationError(
         'ไม่สามารถอ่านไฟล์ TXT ได้',
         'TXT_READ_ERROR'
       );
@@ -196,7 +190,7 @@ export class DocumentService {
       return await this.readTXTText(buffer);
     }
 
-    throw new FileValidationError(
+    throw new ValidationError(
       'ไม่รองรับประเภทไฟล์นี้สำหรับการดึงเนื้อหา',
       'UNSUPPORTED_CONTENT_TYPE'
     );

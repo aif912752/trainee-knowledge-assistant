@@ -1,11 +1,11 @@
-import { ZodError } from 'zod';
+import { ZodError, ZodSchema } from 'zod';
 import { BadRequestError, ValidationError } from '../errors';
 
 /**
  * Validate request body against schema
  * @throws BadRequestError if validation fails
  */
-export function validateBody<T>(schema: any, data: unknown): T {
+export function validateBody<T>(schema: ZodSchema<T>, data: unknown): T {
   const result = schema.safeParse(data);
 
   if (!result.success) {
@@ -26,18 +26,18 @@ export function validateBody<T>(schema: any, data: unknown): T {
 /**
  * Safe validation - returns result without throwing
  */
-export function safeValidate<T>(schema: any, data: unknown) {
+export function safeValidate<T>(schema: ZodSchema<T>, data: unknown) {
   return schema.safeParse(data);
 }
 
 /**
  * Validate and throw if invalid
  */
-export function validateOrThrow<T>(schema: any, data: unknown): T {
+export function validateOrThrow<T>(schema: ZodSchema<T>, data: unknown): T {
   const result = schema.safeParse(data);
 
   if (!result.success) {
-    throw new ValidationError(result.error.errors[0].message);
+    throw new ValidationError(result.error.errors[0]?.message || 'Validation failed');
   }
 
   return result.data as T;
