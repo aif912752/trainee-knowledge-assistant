@@ -1,5 +1,6 @@
 import { toast } from 'vue-sonner'
 import { apiFetch } from './useApi'
+import { uploadDocumentSchema } from '~~/shared/validations'
 import type { Document } from '~~/types/document'
 
 export interface UploadResponse {
@@ -16,27 +17,15 @@ export function useUpload() {
   const error = ref<string>('')
 
   /**
-   * Validate file type and size
+   * Validate file type and size using shared schema
    */
   function validateFile(file: File): { valid: boolean; error?: string } {
-    // Check file type
-    const validTypes = ['application/pdf', 'text/plain']
-    const validExtensions = ['.pdf', '.txt']
-    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
+    const result = uploadDocumentSchema.safeParse({ file })
 
-    if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+    if (!result.success) {
       return {
         valid: false,
-        error: 'อนุญาตเฉพาะไฟล์ PDF และ TXT เท่านั้น',
-      }
-    }
-
-    // Check file size (5MB)
-    const maxSize = 5 * 1024 * 1024
-    if (file.size > maxSize) {
-      return {
-        valid: false,
-        error: `ขนาดไฟล์ต้องไม่เกิน 5MB (ไฟล์ของคุณ: ${(file.size / 1024 / 1024).toFixed(2)}MB)`,
+        error: result.error.errors[0].message,
       }
     }
 

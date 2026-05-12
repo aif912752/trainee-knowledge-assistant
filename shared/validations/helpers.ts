@@ -1,5 +1,5 @@
 import { ZodError } from 'zod';
-import { BadRequestError, ValidationError } from '~~/server/utils/errors';
+import { BadRequestError, ValidationError } from '../errors';
 
 /**
  * Validate request body against schema

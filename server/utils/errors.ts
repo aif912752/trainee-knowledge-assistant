@@ -1,61 +1,22 @@
-/**
- * Custom API Error class
- */
-export class ApiError extends Error {
-  constructor(
-    public statusCode: number,
-    public message: string,
-    public code?: string
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
+import { 
+  ApiError, 
+  BadRequestError, 
+  UnauthorizedError, 
+  ForbiddenError, 
+  NotFoundError, 
+  ValidationError, 
+  InternalServerError 
+} from '~~/shared/errors';
 
-/**
- * Error types
- */
-export class BadRequestError extends ApiError {
-  constructor(message: string, code?: string) {
-    super(400, message, code);
-    this.name = 'BadRequestError';
-  }
-}
-
-export class UnauthorizedError extends ApiError {
-  constructor(message: string = 'ไม่มีสิทธิ์เข้าถึง') {
-    super(401, message, 'UNAUTHORIZED');
-    this.name = 'UnauthorizedError';
-  }
-}
-
-export class ForbiddenError extends ApiError {
-  constructor(message: string = 'ถูกปฏิเสธการเข้าถึง') {
-    super(403, message, 'FORBIDDEN');
-    this.name = 'ForbiddenError';
-  }
-}
-
-export class NotFoundError extends ApiError {
-  constructor(message: string = 'ไม่พบข้อมูล') {
-    super(404, message, 'NOT_FOUND');
-    this.name = 'NotFoundError';
-  }
-}
-
-export class ValidationError extends ApiError {
-  constructor(message: string) {
-    super(422, message, 'VALIDATION_ERROR');
-    this.name = 'ValidationError';
-  }
-}
-
-export class InternalServerError extends ApiError {
-  constructor(message: string = 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์') {
-    super(500, message, 'INTERNAL_ERROR');
-    this.name = 'InternalServerError';
-  }
-}
+export { 
+  ApiError, 
+  BadRequestError, 
+  UnauthorizedError, 
+  ForbiddenError, 
+  NotFoundError, 
+  ValidationError, 
+  InternalServerError 
+};
 
 /**
  * Error handler for API routes

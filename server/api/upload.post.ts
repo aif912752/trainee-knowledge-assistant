@@ -1,8 +1,8 @@
 import { DocumentService } from '~~/server/services/document.service';
 import { readFormData } from '~~/server/utils/form-data';
 import { UnauthorizedError, ValidationError, handleApiError } from '~~/server/utils/errors';
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+import { uploadDocumentSchema } from '~~/shared/validations';
+import { validateOrThrow } from '~~/shared/validations/helpers';
 
 /**
  * Upload file API endpoint
@@ -23,24 +23,14 @@ export default defineEventHandler(async (event) => {
     }
 
     // Read form data with file
-    const formData = await readFormData(event, {
-      maxFileSize: MAX_FILE_SIZE,
-    });
+    // Note: readFormData still uses a default max size for the raw stream parsing
+    const formData = await readFormData(event);
+    
+    // Validate using shared schema
+    validateOrThrow(uploadDocumentSchema, { file: formData.file?.file });
 
-    const file = formData.file;
-
-    if (!file) {
-      const { data, status } = handleApiError(new ValidationError('ไม่พบไฟล์ที่อัปโหลด'));
-      setResponseStatus(event, status);
-      return data;
-    }
-
-    // Validate file size again (double check)
-    if (file.file.size > MAX_FILE_SIZE) {
-      const { data, status } = handleApiError(new ValidationError('ขนาดไฟล์ต้องไม่เกิน 5MB'));
-      setResponseStatus(event, status);
-      return data;
-    }
+    // At this point we know formData.file exists and is valid
+    const file = formData.file!;
 
     // Upload document using service
     const documentService = new DocumentService();

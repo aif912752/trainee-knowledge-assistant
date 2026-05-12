@@ -1,9 +1,7 @@
 import type { UserWithoutPassword } from './user';
+import type { LoginInput } from '~~/shared/validations';
 
-export interface LoginInput {
-  username: string;
-  password: string;
-}
+export type { LoginInput };
 
 export interface LoginResult {
   success: boolean;
