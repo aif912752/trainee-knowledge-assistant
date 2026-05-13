@@ -1,16 +1,11 @@
 import type { Document } from '~~/types/document';
+import type { AiTokenUsage } from '~~/shared/tokens';
 
 export const CHAT_SYSTEM_PROMPT =
   'คุณคือผู้ช่วยอัจฉริยะ (Knowledge Assistant) ที่ช่วยตอบคำถามจากข้อมูลที่ได้รับ โปรดตอบคำถามให้ชัดเจน สุภาพ และเป็นกันเอง';
 
 export const MAX_DOCUMENT_CONTEXT_LENGTH = 10000;
 export const DOCUMENT_TRUNCATED_NOTICE = '... [เนื้อหาถูกตัดเนื่องจากยาวเกินไป]';
-
-export interface TokenUsageSummary {
-  input: number;
-  output: number;
-  total: number;
-}
 
 export function truncateDocumentContent(content: string): string {
   if (content.length <= MAX_DOCUMENT_CONTEXT_LENGTH) {
@@ -34,7 +29,7 @@ export function buildChatPrompt(message: string, documentContext: string = ''): 
   return documentContext ? `${documentContext}คำถาม: ${message}` : message;
 }
 
-export function normalizeZaiUsage(usage: any): TokenUsageSummary {
+export function normalizeZaiUsage(usage: any): AiTokenUsage {
   const input = Number(usage?.input_tokens || 0);
   const output = Number(usage?.output_tokens || 0);
 
@@ -45,7 +40,7 @@ export function normalizeZaiUsage(usage: any): TokenUsageSummary {
   };
 }
 
-export function normalizeOpenRouterUsage(usage: any): TokenUsageSummary {
+export function normalizeOpenRouterUsage(usage: any): AiTokenUsage {
   const input = Number(usage?.prompt_tokens || 0);
   const output = Number(usage?.completion_tokens || 0);
 
@@ -61,7 +56,7 @@ export function normalizeOpenRouterUsage(usage: any): TokenUsageSummary {
  * Rule of thumb: ~4 characters per token for English, ~1-2 for Thai
  * We'll use a conservative 3 characters per token average
  */
-export function estimateTokenUsage(inputText: string, outputText: string): TokenUsageSummary {
+export function estimateTokenUsage(inputText: string, outputText: string): AiTokenUsage {
   const input = Math.ceil((inputText || '').length / 3);
   const output = Math.ceil((outputText || '').length / 3);
   
@@ -71,3 +66,4 @@ export function estimateTokenUsage(inputText: string, outputText: string): Token
     total: input + output
   };
 }
+
