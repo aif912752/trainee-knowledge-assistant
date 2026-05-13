@@ -62,41 +62,45 @@ export default defineEventHandler(async (event) => {
               const { done, value } = await reader.read();
               if (done) break;
 
-              // Forward the raw chunk to the client
+              // Forward the raw chunk to the client immediately
               controller.enqueue(value);
 
-              // Also decode it for our fullContent collection
+              // Also decode it for our fullContent collection (non-blocking)
               const chunk = decoder.decode(value, { stream: true });
-
-              // Use stateful SSE parser
               const parsed = parser.parse(chunk);
               fullContent += parsed.content;
-              
+
               if (parsed.model && !usedModel) {
                 usedModel = parsed.model;
               }
             }
-            
+
             // Handle any leftover in buffer
             const finalParsed = parser.flush();
             fullContent += finalParsed.content;
 
+            // Close the stream
             controller.close();
 
-            // 5. Save to database in background
-            event.waitUntil(chatService.saveStreamedResponse(
-              user.id,
-              input.documentId,
-              sessionId,
-              fullContent,
-              usedModel || 'ai-model',
-              prompt
-            ));
+            // Save to database in background (don't block stream close)
+            setImmediate(() => {
+              chatService.saveStreamedResponse(
+                user.id,
+                input.documentId,
+                sessionId,
+                fullContent,
+                usedModel || 'ai-model',
+                prompt
+              ).catch((err) => console.error('Failed to save streamed response:', err));
+            });
 
           } catch (err) {
             controller.error(err);
           }
         }
+      }, {
+        // Enable byte-level streaming for better performance
+        highWaterMark: 0  // Don't buffer, send immediately
       });
 
       return sendStream(event, stream);

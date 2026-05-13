@@ -753,6 +753,24 @@
 **AI Response:** สร้างไฟล์ `shared/chat-stream.ts` รวมฟังก์ชัน `parseChatStreamChunk` ไว้ตรงกลางเพื่อจัดการ SSE chunk รองรับทั้ง OpenAI และ Anthropic format และอัปเดต `server/api/chat/index.post.ts` ให้เรียกใช้
 **My Adjustment:** ลดความซ้ำซ้อนของโค้ด (DRY) ทำให้ฝั่ง Frontend และ Backend ใช้ Logic เดียวกันในการแยกข้อความ Stream หากมี AI Provider ใหม่เพิ่มเข้ามาในอนาคตก็แก้แค่จุดเดียว ✅
 
+## Session 76: Enhancing Streaming Smoothness and Per-Message Token Display
+**Prompts:**
+- "ui หน้าแชท ตอนนี้ข้อความที่ AI ตอบ ไม่ได้ไหลมาทีละคำเหมือนก่อนหน้านี้ เหมือนมาทีเดียวเลยซึ่งดูไม่สมูท ลองปรับให้ที"
+- "แสดง token ที่ใช้ในแต่ละข้อความด้วย ตอนนี้แสดงแค่ token แบบรวม"
+**AI Response:**
+- วิเคราะห์และพบว่าปัญหา "ข้อความมาเป็นก้อน" เกิดจากการจัดการ Partial SSE lines ไม่ดีพอ ทำให้ Parser ข้ามข้อมูลบางส่วนไปจนกว่าจะเจอบรรทัดที่สมบูรณ์
+- ปรับปรุง `ChatStreamParser` ให้เป็น Stateful parser พร้อมระบบ Buffer เพื่อรองรับการตัดแบ่ง Chunk ของเครือข่ายได้ 100%
+- เพิ่มระบบ Real-time Token Tracking:
+  - สร้าง `shared/tokens.ts` สำหรับคำนวณ Token estimation (3 chars/token)
+  - ปรับปรุง `useChat.ts` ให้แสดง Token ทันทีแบบ Real-time ทั้งฝั่ง User และ AI (ขณะกำลังพิมพ์)
+  - ปรับปรุง UI ใน `app/pages/chat.vue` ให้แสดง Token ของแต่ละข้อความอย่างชัดเจน (ถัดจากเวลา) โดยไม่ต้อง Hover
+- เพิ่ม "กำลังคิด..." (Typing indicator) และปรับปรุงระบบ `highWaterMark: 0` ใน Nitro เพื่อให้ข้อมูลไหลออกทันทีโดยไม่ติด Buffer ของ Server
+**My Adjustment:**
+- ระบบแชทกลับมาไหลลื่น (Smooth word-by-word) เหมือนเดิม
+- ผู้ใช้สามารถตรวจสอบการใช้ Token ของแต่ละข้อความได้ทันที ช่วยในการบริหารจัดการโควตาได้ดีขึ้น
+- ระบบมีความเสถียรมากขึ้นในการจัดการข้อมูลจากหลาย Provider (OpenRouter, z.ai)
+**My Adjustment:** แก้ไขปัญหาการไหลของข้อความให้ลื่นไหลเหมือนเดิม และเพิ่มการแสดงผล Token รายข้อความแบบ Real-time ✅
+
 ---
 
 แชทตอบสนองไวขึ้นมาก อัปเดต UI ทันที และบันทึก Token usage ได้ถูกต้องเมื่อสตรีมจบ

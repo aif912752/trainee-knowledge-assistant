@@ -2,6 +2,11 @@ export interface ParsedStreamData {
   content: string;
   model?: string;
   isDone: boolean;
+  usage?: {
+    input: number;
+    output: number;
+    total: number;
+  };
 }
 
 /**
@@ -18,6 +23,7 @@ export class ChatStreamParser {
     let content = '';
     let model: string | undefined = undefined;
     let isDone = false;
+    let usage: ParsedStreamData['usage'] = undefined;
 
     // Add new chunk to buffer and split by lines
     this.buffer += chunk;
@@ -41,6 +47,15 @@ export class ChatStreamParser {
           const data = JSON.parse(dataStr);
           if (data.model) model = data.model;
 
+          // Capture usage (OpenRouter/OpenAI format)
+          if (data.usage) {
+            usage = {
+              input: data.usage.prompt_tokens || 0,
+              output: data.usage.completion_tokens || 0,
+              total: data.usage.total_tokens || (data.usage.prompt_tokens + data.usage.completion_tokens) || 0
+            };
+          }
+
           // 1. OpenAI / OpenRouter format
           if (data.choices?.[0]?.delta?.content) {
             content += data.choices[0].delta.content;
@@ -55,13 +70,13 @@ export class ChatStreamParser {
           }
         } catch (e) {
           // JSON parse error usually means the line was somehow malformed 
-          // but since we buffer full lines it should be rare.
         }
       }
     }
 
-    return { content, model, isDone };
+    return { content, model, isDone, usage };
   }
+
 
   /**
    * Handle any remaining data in the buffer when the stream ends.

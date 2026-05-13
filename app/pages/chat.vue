@@ -128,13 +128,14 @@ const formatTime = (dateStr: string) => {
                 </div>
 
                 <div
-                  class="flex items-center gap-2 text-[11px] text-muted-foreground"
+                  class="flex items-center gap-2 text-[10px] text-muted-foreground/70"
                   :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
                 >
                   <span>{{ formatTime(msg.created_at) }}</span>
-                  <span v-if="msg.tokens > 0" class="opacity-0 transition-opacity group-hover:opacity-100">
-                    {{ msg.tokens }} tokens
-                  </span>
+                  <template v-if="msg.tokens > 0">
+                    <span class="mx-0.5 select-none">·</span>
+                    <span class="font-medium text-primary/80">{{ msg.tokens }} tokens</span>
+                  </template>
                 </div>
               </div>
             </div>
@@ -146,10 +147,13 @@ const formatTime = (dateStr: string) => {
                 <Bot class="size-4" />
               </div>
               <div class="rounded-xl rounded-tl-sm border bg-card px-4 py-3 shadow-sm">
-                <div class="flex h-5 items-center gap-1.5">
-                  <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:-0.3s]"></span>
-                  <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:-0.15s]"></span>
-                  <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce"></span>
+                <div class="flex items-center gap-2">
+                  <div class="flex gap-1">
+                    <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:-0.3s]"></span>
+                    <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:-0.15s]"></span>
+                    <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce"></span>
+                  </div>
+                  <span class="text-xs text-muted-foreground">กำลังคิด...</span>
                 </div>
               </div>
             </div>

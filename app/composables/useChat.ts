@@ -2,6 +2,7 @@ import { toast } from 'vue-sonner'
 import type { Message } from '~~/types/message'
 import type { ApiSuccessResponse } from '~~/shared/api-response'
 import { ChatStreamParser } from '~~/shared/chat-stream'
+import { estimateTokens } from '~~/shared/tokens'
 import { apiFetch } from './useApi'
 
 type ChatResponse = ApiSuccessResponse<{
@@ -31,6 +32,7 @@ type UsageResponse = ApiSuccessResponse<{
 export function useChat() {
   const messages = ref<Message[]>([])
   const isLoading = ref(false)
+  const isTyping = ref(false) // New: tracks when AI is actively streaming
   const isFetchingHistory = ref(false)
   const totalTokens = ref(0)
   const sessionId = ref(`session_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`)
@@ -82,7 +84,7 @@ export function useChat() {
       document_id: documentId || null,
       role: 'user',
       content: text,
-      tokens: 0,
+      tokens: estimateTokens(text),
       created_at: new Date().toISOString()
     })
 
@@ -124,6 +126,9 @@ export function useChat() {
         
         if (!reader) throw new Error('No reader')
 
+        let accumulatedContent = ''
+        isTyping.value = true  // Show typing indicator
+
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
@@ -132,26 +137,41 @@ export function useChat() {
           const parsed = parser.parse(chunk)
 
           if (parsed.content) {
+            accumulatedContent += parsed.content
             // Update assistant message content
             const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
             if (msgIndex !== -1) {
-              messages.value[msgIndex].content += parsed.content
+              messages.value[msgIndex].content = accumulatedContent
               if (parsed.model && !messages.value[msgIndex].model) {
                 messages.value[msgIndex].model = parsed.model
               }
+              // Update tokens on the fly (estimation)
+              messages.value[msgIndex].tokens = estimateTokens(accumulatedContent)
             }
           }
+
+          // If stream provides final usage
+          if (parsed.usage) {
+             const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
+             if (msgIndex !== -1) {
+               messages.value[msgIndex].tokens = parsed.usage.output
+             }
+          }
         }
-        
+
         // Final flush if any
         const finalParsed = parser.flush()
         if (finalParsed.content) {
+          accumulatedContent += finalParsed.content
           const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
           if (msgIndex !== -1) {
-            messages.value[msgIndex].content += finalParsed.content
+            messages.value[msgIndex].content = accumulatedContent
+            messages.value[msgIndex].tokens = estimateTokens(accumulatedContent)
           }
         }
-        
+
+        isTyping.value = false  // Hide typing indicator
+
         // Refresh usage after stream ends
         await fetchUsage()
       } else {
@@ -180,6 +200,7 @@ export function useChat() {
       isLoading.value = false
     }
   }
+
 
   /**
    * Clear chat history
