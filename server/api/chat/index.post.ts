@@ -1,3 +1,4 @@
+import { ChatService } from '~~/server/services/chat.service';
 import { validateBody } from '~~/shared/validations/helpers';
 import { chatSchema } from '~~/shared/validations';
 import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
@@ -8,7 +9,6 @@ import type { ChatInput } from '~~/shared/validations/chat.validation';
 /**
  * Chat API endpoint
  * POST /api/chat
- * Uses singleton ChatService from event.context (initialized by plugin)
  */
 export default defineEventHandler(async (event) => {
   try {
@@ -25,8 +25,12 @@ export default defineEventHandler(async (event) => {
     // 3. Get session ID from headers or cookie
     const sessionId = getHeader(event, 'x-chat-session-id') || `session_${Date.now()}`;
 
-    // 4. Get singleton ChatService from plugin
+    // 4. Get singleton ChatService from context (initialized by plugin)
     const chatService = event.context.chatService;
+
+    if (!chatService) {
+      throw new Error('ChatService not initialized. Check server plugins.');
+    }
 
     // If stream is requested
     if (body.stream) {

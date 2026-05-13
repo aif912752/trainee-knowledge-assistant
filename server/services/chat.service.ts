@@ -17,42 +17,22 @@ export class ChatService {
   private aiProvider: ChatProviderService;
 
   constructor(
-    messageRepo?: MessageRepository,
-    tokenRepo?: TokenRepository,
-    documentRepo?: DocumentRepository,
-    config?: any
+    messageRepo: MessageRepository,
+    tokenRepo: TokenRepository,
+    documentRepo: DocumentRepository,
+    config: any
   ) {
-    // Support both DI and legacy instantiation
-    if (messageRepo && tokenRepo && documentRepo && config) {
-      // Dependency Injection mode (from plugin)
-      this.messageRepository = messageRepo;
-      this.tokenRepository = tokenRepo;
-      this.documentRepository = documentRepo;
-      this.aiProvider = new ChatProviderService({
-        zaiApiKey: config.zaiApiKey,
-        zaiApiBase: config.zaiApiBase,
-        primaryModel: config.primaryModel,
-        openrouterApiKey: config.openrouterApiKey,
-        openrouterApiBase: config.openrouterApiBase,
-        fallbackModel: config.fallbackModel,
-      });
-    } else {
-      // Legacy mode (direct instantiation)
-      const { getDatabase } = require('~~/server/db');
-      const db = getDatabase();
-      this.messageRepository = new MessageRepository(db);
-      this.tokenRepository = new TokenRepository(db);
-      this.documentRepository = new DocumentRepository(db);
-      const runtimeConfig = useRuntimeConfig();
-      this.aiProvider = new ChatProviderService({
-        zaiApiKey: runtimeConfig.zaiApiKey,
-        zaiApiBase: runtimeConfig.zaiApiBase,
-        primaryModel: runtimeConfig.primaryModel,
-        openrouterApiKey: runtimeConfig.openrouterApiKey,
-        openrouterApiBase: runtimeConfig.openrouterApiBase,
-        fallbackModel: runtimeConfig.fallbackModel,
-      });
-    }
+    this.messageRepository = messageRepo;
+    this.tokenRepository = tokenRepo;
+    this.documentRepository = documentRepo;
+    this.aiProvider = new ChatProviderService({
+      zaiApiKey: config.zaiApiKey,
+      zaiApiBase: config.zaiApiBase,
+      primaryModel: config.primaryModel,
+      openrouterApiKey: config.openrouterApiKey,
+      openrouterApiBase: config.openrouterApiBase,
+      fallbackModel: config.fallbackModel,
+    });
   }
 
   /**
