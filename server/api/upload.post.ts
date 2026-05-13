@@ -1,4 +1,3 @@
-import { DocumentService } from '~~/server/services/document.service';
 import { UnauthorizedError, ValidationError, handleApiError } from '~~/server/utils/errors';
 import { successResponse } from '~~/server/utils/response';
 
@@ -8,6 +7,7 @@ import { successResponse } from '~~/server/utils/response';
  *
  * Uses formidable for streaming multipart parsing
  * Saves original file to disk and extracts content to database
+ * Uses singleton DocumentService from event.context
  */
 export default defineEventHandler(async (event) => {
   try {
@@ -20,13 +20,14 @@ export default defineEventHandler(async (event) => {
       return handleApiError(event, new UnauthorizedError('กรุณาเข้าสู่ระบบ'));
     }
 
-    const documentService = new DocumentService();
+    // Use singleton DocumentService from plugin
+    const documentService = event.context.documentService;
 
     // Parse multipart request using formidable
     console.log('⏳ Parsing multipart data with formidable...');
     const { files } = await documentService.parseMultipartRequest(event);
     console.log('✅ Multipart data parsed successfully');
-    
+
     // Get the uploaded file
     const fileArray = files.file;
     const file = Array.isArray(fileArray) ? fileArray[0] : fileArray;

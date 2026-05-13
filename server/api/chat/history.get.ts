@@ -1,10 +1,10 @@
-import { ChatService } from '~~/server/services/chat.service';
 import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
 import { successResponse } from '~~/server/utils/response';
 
 /**
  * Get chat history API endpoint
  * GET /api/chat/history
+ * Uses singleton ChatService from event.context
  */
 export default defineEventHandler(async (event) => {
   try {
@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
     const query = getQuery(event);
     const documentId = query.documentId ? parseInt(query.documentId as string, 10) : undefined;
 
-    const chatService = new ChatService();
+    const chatService = event.context.chatService;
     const messages = chatService.getChatHistory(user.id, documentId);
 
     return successResponse(event, { messages });

@@ -1,13 +1,14 @@
-import { ChatService } from '~~/server/services/chat.service';
 import { validateBody } from '~~/shared/validations/helpers';
 import { chatSchema } from '~~/shared/validations';
 import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
 import { successResponse } from '~~/server/utils/response';
+import { estimateTokenUsage } from '~~/server/utils/chat';
 import type { ChatInput } from '~~/shared/validations/chat.validation';
 
 /**
  * Chat API endpoint
  * POST /api/chat
+ * Uses singleton ChatService from event.context (initialized by plugin)
  */
 export default defineEventHandler(async (event) => {
   try {
@@ -22,11 +23,10 @@ export default defineEventHandler(async (event) => {
     const input = validateBody<ChatInput>(chatSchema, body);
 
     // 3. Get session ID from headers or cookie
-    // If not provided, we use a default one for the session
     const sessionId = getHeader(event, 'x-chat-session-id') || `session_${Date.now()}`;
 
-    // 4. Send message using ChatService
-    const chatService = new ChatService();
+    // 4. Get singleton ChatService from plugin
+    const chatService = event.context.chatService;
 
     // If stream is requested
     if (body.stream) {
@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
         'Connection': 'keep-alive',
       });
 
-      const response = await chatService.sendMessageStream(user.id, input, sessionId);
+      const { stream: response, prompt } = await chatService.sendMessageStream(user.id, input, sessionId);
 
       if (!response.body) {
         throw new Error('No response body from AI provider');
@@ -97,15 +97,14 @@ export default defineEventHandler(async (event) => {
             controller.close();
 
             // 5. Save to database in background
-            // We don't have usage info here easily without better parsing,
-            // so we'll use a rough estimate or just save what we have.
+            // Token estimation is now handled inside saveStreamedResponse using the full prompt
             event.waitUntil(chatService.saveStreamedResponse(
               user.id,
               input.documentId,
               sessionId,
               fullContent,
-              { input: 0, output: 0, total: 0 }, // Estimate or parse later
-              usedModel || 'ai-model'
+              usedModel || 'ai-model',
+              prompt
             ));
 
           } catch (err) {
