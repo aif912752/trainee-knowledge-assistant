@@ -7,6 +7,7 @@ import {
   FileText,
   History,
   MessageSquare,
+  Sparkles,
   Upload,
 } from 'lucide-vue-next'
 
