@@ -732,4 +732,27 @@
 
 ---
 
+## Session 74: Thread-Safe Database Singleton Pattern
+**Prompt:** "Database singleton pattern ไม่ thread-safe... server/db/init.ts:66-76 — getDatabase() ใช้ module-level variable แบบไม่มี lock... ไม่ควรใช้ const { getDatabase } = require('~~/server/db'); แบบนี้ไหม"
+**AI Response:**
+- ย้าย DB init ไปใน database plugin เท่านั้น สร้างครั้งเดียวตอน server startup
+- Attach db instance ไปยัง `event.context.db` ในทุก request
+- Services plugin ใช้ db จาก context (lazy init) แทนการเรียก getDatabase()
+- Update session.ts ให้ใช้ repositories จาก context
+- เพิ่ม deprecation warning ให้ getDatabase()
+- แก้ไข import style ให้ถูกต้อง (ESM import แทน require)
+**My Adjustment:**
+- แก้ไขปัญหา thread-safety ในทางทฤษษี (DB created once per server lifecycle)
+- ลดการพึ่งพา module-level singleton pattern
+- รักษา backward compatibility สำหรับ edge cases
+
+---
+
+## Session 75: Refactoring SSE Parser to Shared Utility
+**Prompt:** "Chat streaming - SSE parsing ซ้อนกัน frontend/backend... แนะนำ: สร้าง SSE parser utility กลางใน shared/ ใช้ร่วมกัน"
+**AI Response:** สร้างไฟล์ `shared/chat-stream.ts` รวมฟังก์ชัน `parseChatStreamChunk` ไว้ตรงกลางเพื่อจัดการ SSE chunk รองรับทั้ง OpenAI และ Anthropic format และอัปเดต `server/api/chat/index.post.ts` ให้เรียกใช้
+**My Adjustment:** ลดความซ้ำซ้อนของโค้ด (DRY) ทำให้ฝั่ง Frontend และ Backend ใช้ Logic เดียวกันในการแยกข้อความ Stream หากมี AI Provider ใหม่เพิ่มเข้ามาในอนาคตก็แก้แค่จุดเดียว ✅
+
+---
+
 แชทตอบสนองไวขึ้นมาก อัปเดต UI ทันที และบันทึก Token usage ได้ถูกต้องเมื่อสตรีมจบ

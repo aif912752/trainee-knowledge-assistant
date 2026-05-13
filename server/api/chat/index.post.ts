@@ -5,6 +5,7 @@ import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
 import { successResponse } from '~~/server/utils/response';
 import { estimateTokenUsage } from '~~/server/utils/chat';
 import type { ChatInput } from '~~/shared/validations/chat.validation';
+import { parseChatStreamChunk } from '~~/shared/chat-stream';
 
 /**
  * Chat API endpoint
@@ -67,35 +68,12 @@ export default defineEventHandler(async (event) => {
               // Also decode it for our fullContent collection
               const chunk = decoder.decode(value, { stream: true });
 
-              // Support both z.ai (Claude/Anthropic) and OpenAI (GLM/OpenRouter) formats
-              const lines = chunk.split('\n');
-              for (const line of lines) {
-                const trimmedLine = line.trim();
-                if (!trimmedLine) continue;
-
-                if (trimmedLine.startsWith('data: ')) {
-                  const dataStr = trimmedLine.slice(6).trim();
-                  if (dataStr === '[DONE]') continue;
-                  
-                  try {
-                    const data = JSON.parse(dataStr);
-                    // Extract model info if present in first chunks
-                    if (data.model && !usedModel) {
-                      usedModel = data.model;
-                    }
-                    
-                    // 1. OpenAI format (OpenRouter, z.ai GLM)
-                    if (data.choices?.[0]?.delta?.content) {
-                      fullContent += data.choices[0].delta.content;
-                    }
-                    // 2. Anthropic format (z.ai Claude)
-                    else if (data.type === 'content_block_delta' && data.delta?.text) {
-                      fullContent += data.delta.text;
-                    }
-                  } catch (e) {
-                    // Ignore JSON parse errors for incomplete chunks
-                  }
-                }
+              // Use shared SSE parser
+              const parsed = parseChatStreamChunk(chunk);
+              fullContent += parsed.content;
+              
+              if (parsed.model && !usedModel) {
+                usedModel = parsed.model;
               }
             }
             controller.close();
