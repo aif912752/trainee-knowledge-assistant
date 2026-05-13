@@ -222,6 +222,7 @@ export function useChat() {
   return {
     messages,
     isLoading,
+    isTyping,
     isFetchingHistory,
     totalTokens,
     sessionId,

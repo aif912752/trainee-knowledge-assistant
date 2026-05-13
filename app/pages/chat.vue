@@ -12,7 +12,7 @@ definePageMeta({
 })
 
 const route = useRoute()
-const { messages, isLoading, isFetchingHistory, totalTokens, fetchHistory, fetchUsage, sendMessage, clearChat } = useChat()
+const { messages, isLoading, isTyping, isFetchingHistory, totalTokens, fetchHistory, fetchUsage, sendMessage, clearChat } = useChat()
 
 const inputMessage = ref('')
 const scrollContainer = ref<HTMLElement | null>(null)
@@ -136,6 +136,11 @@ const formatTime = (dateStr: string) => {
                     <span class="mx-0.5 select-none">·</span>
                     <span class="font-medium text-primary/80">{{ msg.tokens }} tokens</span>
                   </template>
+                  <span v-if="msg.role === 'assistant' && isTyping && msg.id === messages[messages.length - 1]?.id" class="flex items-center gap-1 text-primary">
+                    <span class="size-1 rounded-full bg-current animate-pulse"></span>
+                    <span class="size-1 rounded-full bg-current animate-pulse [animation-delay:0.2s]"></span>
+                    <span class="size-1 rounded-full bg-current animate-pulse [animation-delay:0.4s]"></span>
+                  </span>
                 </div>
               </div>
             </div>
