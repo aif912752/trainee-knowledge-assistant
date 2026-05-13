@@ -140,7 +140,7 @@ const formatTime = (dateStr: string) => {
             </div>
           </div>
 
-          <div v-if="isLoading" class="flex justify-start">
+          <div v-if="isLoading && !messages.some(m => m.role === 'assistant' && m.content)" class="flex justify-start">
             <div class="flex gap-3">
               <div class="mt-1 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Bot class="size-4" />
