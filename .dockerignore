@@ -1,0 +1,52 @@
+# Dependencies
+node_modules
+npm-debug.log
+pnpm-lock.yaml
+
+# Build output
+.nuxt
+.output
+dist
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Storage
+storage
+data
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Testing
+coverage
+.nyc_output
+
+# Documentation
+README.md
+AI_JOURNAL.md
+DECISIONS.md
+TODO.md
+docs
+
+# Misc
+*.md
+!package.json
+!pnpm-lock.yaml
