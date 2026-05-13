@@ -1,33 +1,11 @@
-import { getSessionUserId } from '~~/server/utils/session';
-import { AuthService } from '~~/server/services/auth.service';
+import { getSessionUser } from '~~/server/utils/session';
 import { handleApiError } from '~~/server/utils/errors';
 import { successResponse } from '~~/server/utils/response';
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get user ID from session cookie
-    const userId = getSessionUserId(event);
-
-    if (!userId) {
-      return successResponse(event, {
-        authenticated: false,
-        user: null
-      });
-    }
-
-    // Validate session
-    const authService = new AuthService();
-    const isValid = authService.validateSession(userId);
-
-    if (!isValid) {
-      return successResponse(event, {
-        authenticated: false,
-        user: null
-      });
-    }
-
-    // Get user details
-    const user = authService.getUserById(userId);
+    // Get user from session token (validates database and expiration)
+    const user = getSessionUser(event);
 
     if (!user) {
       return successResponse(event, {
