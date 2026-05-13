@@ -1,34 +1,76 @@
-import type { AiTokenUsage } from './tokens';
-
 export interface ParsedStreamData {
   content: string;
   model?: string;
+  usage?: { output: number };
   isDone: boolean;
-  usage?: AiTokenUsage;
 }
 
 /**
- * Stateful parser for Server-Sent Events (SSE) chunks from AI providers.
- * Handles partial lines split across multiple network chunks.
+ * Utility to parse Server-Sent Events (SSE) chunks from both OpenAI and Anthropic formats.
+ * Shared between backend and frontend to avoid duplication.
+ */
+// Deprecated: แนะนำให้ใช้ ChatStreamParser แทนเพื่อรองรับ Stateful Buffering
+export function parseChatStreamChunk(chunk: string): ParsedStreamData {
+  let content = '';
+  let model: string | undefined = undefined;
+  let isDone = false;
+
+  const lines = chunk.split('\n');
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    if (!trimmedLine) continue;
+
+    if (trimmedLine.startsWith('data: ')) {
+      const dataStr = trimmedLine.slice(6).trim();
+      if (dataStr === '[DONE]') {
+        isDone = true;
+        continue;
+      }
+
+      try {
+        const data = JSON.parse(dataStr);
+        if (data.model) model = data.model;
+
+        if (data.choices?.[0]?.delta?.content) {
+          content += data.choices[0].delta.content; // OpenAI format
+        } else if (data.type === 'content_block_delta' && data.delta?.text) {
+          content += data.delta.text; // Anthropic format
+        }
+      } catch (e) {
+        // Ignore JSON parse errors for incomplete chunks
+      }
+    }
+  }
+
+  return { content, model, isDone };
+}
+
+/**
+ * Stateful Chat Stream Parser with built-in buffering.
+ * Prevents data loss when SSE chunks are fragmented over the network.
  */
 export class ChatStreamParser {
-  private buffer = '';
+  private buffer: string = '';
 
-  /**
-   * Parse a new chunk of data and return the accumulated content and metadata.
-   */
   parse(chunk: string): ParsedStreamData {
-    let content = '';
-    let model: string | undefined = undefined;
-    let isDone = false;
-    let usage: ParsedStreamData['usage'] = undefined;
-
-    // Add new chunk to buffer and split by lines
     this.buffer += chunk;
     const lines = this.buffer.split('\n');
+    this.buffer = lines.pop() || ''; // Keep the last incomplete line in buffer
 
-    // Keep the last (potentially partial) line in the buffer
-    this.buffer = lines.pop() || '';
+    return this.processLines(lines);
+  }
+
+  flush(): ParsedStreamData {
+    const result = this.processLines([this.buffer]);
+    this.buffer = '';
+    return result;
+  }
+
+  private processLines(lines: string[]): ParsedStreamData {
+    let content = '';
+    let model: string | undefined = undefined;
+    let usage: { output: number } | undefined = undefined;
+    let isDone = false;
 
     for (const line of lines) {
       const trimmedLine = line.trim();
@@ -44,66 +86,25 @@ export class ChatStreamParser {
         try {
           const data = JSON.parse(dataStr);
           if (data.model) model = data.model;
-
-          // Capture usage (OpenRouter/OpenAI format)
-          if (data.usage) {
-            usage = {
-              input: data.usage.prompt_tokens || 0,
-              output: data.usage.completion_tokens || 0,
-              total: data.usage.total_tokens || (data.usage.prompt_tokens + data.usage.completion_tokens) || 0
-            };
+          
+          // Capture token usage if available in the stream
+          if (data.usage && data.usage.completion_tokens) {
+            usage = { output: data.usage.completion_tokens }; // OpenAI format
+          } else if (data.type === 'message_delta' && data.usage?.output_tokens !== undefined) {
+            usage = { output: data.usage.output_tokens }; // Anthropic format
           }
 
-          // 1. OpenAI / OpenRouter format
           if (data.choices?.[0]?.delta?.content) {
-            content += data.choices[0].delta.content;
-          } 
-          // 2. Anthropic format
-          else if (data.type === 'content_block_delta' && data.delta?.text) {
-            content += data.delta.text;
-          }
-          // 3. Meta/Message format (OpenRouter usage, etc.)
-          else if (data.choices?.[0]?.text) {
-             content += data.choices[0].text;
+            content += data.choices[0].delta.content; // OpenAI format
+          } else if (data.type === 'content_block_delta' && data.delta?.text) {
+            content += data.delta.text; // Anthropic format
           }
         } catch (e) {
-          // JSON parse error usually means the line was somehow malformed 
+          // Ignore JSON parse errors for incomplete chunks
         }
       }
     }
 
-    return { content, model, isDone, usage };
+    return { content, model, usage, isDone };
   }
-
-
-  /**
-   * Handle any remaining data in the buffer when the stream ends.
-   */
-  flush(): ParsedStreamData {
-    const remaining = this.buffer;
-    this.buffer = '';
-    if (!remaining) return { content: '', isDone: true };
-    
-    // Attempt to parse the remaining bit if it looks like a data line
-    if (remaining.startsWith('data: ')) {
-      const dataStr = remaining.slice(6).trim();
-      if (dataStr !== '[DONE]') {
-        try {
-          const data = JSON.parse(dataStr);
-          const content = data.choices?.[0]?.delta?.content || (data.type === 'content_block_delta' ? data.delta?.text : '');
-          return { content: content || '', model: data.model, isDone: true };
-        } catch (e) {}
-      }
-    }
-    
-    return { content: '', isDone: true };
-  }
-}
-
-/**
- * Non-stateful utility (for backward compatibility if needed, though stateful is better)
- */
-export function parseChatStreamChunk(chunk: string): ParsedStreamData {
-  const parser = new ChatStreamParser();
-  return parser.parse(chunk + '\n'); // Append newline to force parsing the "chunk" as full lines
 }

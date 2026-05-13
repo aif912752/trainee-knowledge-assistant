@@ -796,6 +796,15 @@
   - **AI Bubble:** ใช้ `selection:bg-orange-100 selection:text-orange-900` เพื่อให้ดูเป็นระเบียบและเข้ากับธีมเดิม
 **My Adjustment:** แก้ไขปัญหาการมองไม่เห็นตัวอักษรตอนคลุมดำในฝั่ง User ให้ชัดเจนขึ้น และปรับแต่งให้สวยงามทั้งสองฝั่ง ✅
 
+## Session 79: Support for Anthropic Token Usage in Stream Parser
+**Prompt:** "ChatStreamParser ยังไม่จับ Anthropic message_delta usage..."
+**AI Response:**
+- วิเคราะห์โครงสร้าง SSE ของ Anthropic: พบว่ามีการส่งข้อมูล Usage แยกออกมาในอีเวนต์ `message_delta` แทนที่จะรวมอยู่ใน `choices` เหมือน OpenAI
+- แก้ไข `shared/chat-stream.ts`:
+  - เพิ่มการตรวจสอบ `data.type === 'message_delta'`
+  - ดึงค่า `output_tokens` จาก `data.usage` เพื่อนำมาแสดงผล Token รายข้อความให้ถูกต้องสำหรับโมเดลค่าย Anthropic (เช่น Claude)
+**My Adjustment:** ทำให้การแสดงจำนวน Token ในหน้าแชทถูกต้องครอบคลุมทุกค่ายโมเดลที่ใช้งาน ✅
+
 ---
 
 แชทตอบสนองไวขึ้นมาก อัปเดต UI ทันที และบันทึก Token usage ได้ถูกต้องเมื่อสตรีมจบ
