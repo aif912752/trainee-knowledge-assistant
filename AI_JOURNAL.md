@@ -787,6 +787,15 @@
 - มั่นใจว่าระบบ Streaming และ Token Tracking ทำงานได้อย่างสมบูรณ์และถูกต้องตามมาตรฐาน
 **My Adjustment:** เปลี่ยนชื่อ Interface เป็น `AiTokenUsage` เพื่อแก้ปัญหา Naming Conflict และ Refactor ทั้งระบบให้ใช้มาตรฐานเดียวกัน ✅
 
+## Session 78: Customizing Chat Bubble Text Selection Contrast
+**Prompt:** "ในแชท คอคลุมดำข้อความของ AI พื้นหลังคลุมดำจะเป็นสีส้มอ่อน อันนี้ดีแล้ว แต่ในแชทตัวเอง ตอนคลุมดำ มันไม่เห็นพื้นหลังคลุมดำเลย อาจจะเพราะว่า พื้นหลังแชทเป็นสีเข้มก็ได้"
+**AI Response:**
+- วิเคราะห์ว่ากล่องแชทฝั่ง User ใช้สี `bg-primary` (เข้ม) ทำให้สี Highlight มาตรฐานมองเห็นได้ยาก
+- ปรับปรุง CSS ใน `app/pages/chat.vue` โดยใช้ Tailwind `selection:` modifier:
+  - **User Bubble:** ใช้ `selection:bg-white/25 selection:text-white` เพื่อให้มี Contrast สูงบนพื้นหลังสีเข้ม
+  - **AI Bubble:** ใช้ `selection:bg-orange-100 selection:text-orange-900` เพื่อให้ดูเป็นระเบียบและเข้ากับธีมเดิม
+**My Adjustment:** แก้ไขปัญหาการมองไม่เห็นตัวอักษรตอนคลุมดำในฝั่ง User ให้ชัดเจนขึ้น และปรับแต่งให้สวยงามทั้งสองฝั่ง ✅
+
 ---
 
 แชทตอบสนองไวขึ้นมาก อัปเดต UI ทันที และบันทึก Token usage ได้ถูกต้องเมื่อสตรีมจบ
