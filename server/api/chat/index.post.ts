@@ -86,11 +86,11 @@ export default defineEventHandler(async (event) => {
               input.documentId,
               sessionId,
               fullContent,
-              usedModel || 'ai-model',
+              usedModel,
               prompt
-            ).catch(err => console.error('Failed to save streamed response:', err)));
+        ).catch((err: unknown) => console.error('Failed to save streamed response:', err)));
 
-          } catch (err) {
+      } catch (err: unknown) {
             controller.error(err);
           }
         }
@@ -107,7 +107,7 @@ export default defineEventHandler(async (event) => {
       usage: result.usage
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     return handleApiError(event, error);
   }
 });

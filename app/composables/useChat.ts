@@ -197,11 +197,30 @@ export function useChat() {
       }
     } catch (err: any) {
       console.error('Chat error:', err)
+      
+      const errorMsg = err.message || 'ไม่สามารถส่งข้อความได้'
+      
+      // Update assistant message with error instead of deleting
+      const msg = messages.value.find(m => m.id === assistantMsgId)
+      if (msg) {
+        msg.content = `⚠️ **ข้อผิดพลาด:** ${errorMsg}`
+      } else {
+        // If message was somehow not added, add it now
+        messages.value.push({
+          id: assistantMsgId,
+          user_id: 0,
+          document_id: documentId || null,
+          role: 'assistant',
+          content: `⚠️ **ข้อผิดพลาด:** ${errorMsg}`,
+          tokens: 0,
+          created_at: new Date().toISOString(),
+          model: 'error'
+        })
+      }
+      
       toast.error('เกิดข้อผิดพลาด', {
-        description: err.message || 'ไม่สามารถส่งข้อความได้'
+        description: errorMsg
       })
-      // Clean up optimistic messages on error
-      messages.value = messages.value.filter(m => m.id !== userMsgId && m.id !== assistantMsgId)
     } finally {
       isLoading.value = false
       isTyping.value = false
