@@ -1018,3 +1018,14 @@
 - ลบ interface ที่ซ้ำซ้อนออกจาก history.vue
 
 **Status:** History page ทำงานถูกต้อง 
+
+
+## Session 87: Fix Responsive Design - Word Break in Markdown
+**Prompt:** "คำตอบของ ai บางคำตอบ เนื้อหามันทะลุความกว้าง"
+
+**Changes:**
+- เพิ่ม `word-break: break-word` และ `overflow-wrap: break-word` ให้ markdown-body
+- เพิ่ม word-break styles ให้ทุก elements (p, h1-h6, li, blockquote, code, a, table)
+- เพิ่ม `table-layout: auto` ให้ table
+
+**Status:** Responsive design ทำงานถูกต้อง ✅

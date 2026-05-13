@@ -38,10 +38,13 @@ const renderedContent = computed(() => {
 .markdown-body {
   font-size: 0.875rem;
   line-height: 1.625;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .markdown-body p {
   margin-bottom: 1rem;
+  word-break: break-word;
 }
 
 .markdown-body p:last-child {
@@ -57,6 +60,7 @@ const renderedContent = computed(() => {
   font-weight: 700;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
+  word-break: break-word;
 }
 
 .markdown-body h1:first-child,
@@ -93,6 +97,7 @@ const renderedContent = computed(() => {
 
 .markdown-body li {
   margin-bottom: 0.25rem;
+  word-break: break-word;
 }
 
 .markdown-body blockquote {
@@ -102,6 +107,7 @@ const renderedContent = computed(() => {
   margin-top: 1rem;
   margin-bottom: 1rem;
   color: hsl(var(--muted-foreground));
+  word-break: break-word;
 }
 
 .markdown-body code {
@@ -111,6 +117,7 @@ const renderedContent = computed(() => {
   font-family: var(--font-mono);
   font-size: 0.9em;
   color: hsl(var(--primary));
+  word-break: break-all;
 }
 
 .markdown-body pre {
@@ -128,12 +135,14 @@ const renderedContent = computed(() => {
   color: #e5e5e5;
   font-size: 0.85em;
   line-height: 1.5;
+  word-break: normal;
 }
 
 .markdown-body a {
   color: hsl(var(--primary));
   text-decoration: underline;
   text-underline-offset: 4px;
+  word-break: break-word;
 }
 
 .markdown-body a:hover {
@@ -144,6 +153,7 @@ const renderedContent = computed(() => {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 1rem;
+  table-layout: auto;
 }
 
 .markdown-body th,
@@ -151,6 +161,7 @@ const renderedContent = computed(() => {
   border: 1px solid hsl(var(--border));
   padding: 0.5rem 0.75rem;
   text-align: left;
+  word-break: break-word;
 }
 
 .markdown-body th {
