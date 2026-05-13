@@ -1,6 +1,7 @@
 import { toast } from 'vue-sonner'
 import type { Message } from '~~/types/message'
 import type { ApiSuccessResponse } from '~~/shared/api-response'
+import { ChatStreamParser } from '~~/shared/chat-stream'
 import { apiFetch } from './useApi'
 
 type ChatResponse = ApiSuccessResponse<{
@@ -119,6 +120,7 @@ export function useChat() {
 
         const reader = response.body?.getReader()
         const decoder = new TextDecoder()
+        const parser = new ChatStreamParser()
         
         if (!reader) throw new Error('No reader')
 
@@ -127,37 +129,26 @@ export function useChat() {
           if (done) break
           
           const chunk = decoder.decode(value, { stream: true })
-          const lines = chunk.split('\n')
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const dataStr = line.slice(6).trim()
-              if (dataStr === '[DONE]') continue
-              
-              try {
-                const data = JSON.parse(dataStr)
-                let content = ''
-                
-                // 1. OpenAI format (OpenRouter, z.ai GLM)
-                if (data.choices?.[0]?.delta?.content) {
-                  content = data.choices[0].delta.content
-                } 
-                // 2. Anthropic format (z.ai Claude)
-                else if (data.type === 'content_block_delta' && data.delta?.text) {
-                  content = data.delta.text
-                }
+          const parsed = parser.parse(chunk)
 
-                if (content) {
-                  // Update assistant message content
-                  const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
-                  if (msgIndex !== -1) {
-                    messages.value[msgIndex].content += content
-                  }
-                }
-              } catch (e) {
-                // Partial JSON, ignore
+          if (parsed.content) {
+            // Update assistant message content
+            const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
+            if (msgIndex !== -1) {
+              messages.value[msgIndex].content += parsed.content
+              if (parsed.model && !messages.value[msgIndex].model) {
+                messages.value[msgIndex].model = parsed.model
               }
             }
+          }
+        }
+        
+        // Final flush if any
+        const finalParsed = parser.flush()
+        if (finalParsed.content) {
+          const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
+          if (msgIndex !== -1) {
+            messages.value[msgIndex].content += finalParsed.content
           }
         }
         

@@ -5,7 +5,7 @@ import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
 import { successResponse } from '~~/server/utils/response';
 import { estimateTokenUsage } from '~~/server/utils/chat';
 import type { ChatInput } from '~~/shared/validations/chat.validation';
-import { parseChatStreamChunk } from '~~/shared/chat-stream';
+import { ChatStreamParser } from '~~/shared/chat-stream';
 
 /**
  * Chat API endpoint
@@ -49,8 +49,8 @@ export default defineEventHandler(async (event) => {
 
       // We want to both forward the stream to the client AND collect it to save to DB
       const reader = response.body.getReader();
-      const encoder = new TextEncoder();
       const decoder = new TextDecoder();
+      const parser = new ChatStreamParser();
 
       let fullContent = '';
       let usedModel = '';
@@ -68,18 +68,22 @@ export default defineEventHandler(async (event) => {
               // Also decode it for our fullContent collection
               const chunk = decoder.decode(value, { stream: true });
 
-              // Use shared SSE parser
-              const parsed = parseChatStreamChunk(chunk);
+              // Use stateful SSE parser
+              const parsed = parser.parse(chunk);
               fullContent += parsed.content;
               
               if (parsed.model && !usedModel) {
                 usedModel = parsed.model;
               }
             }
+            
+            // Handle any leftover in buffer
+            const finalParsed = parser.flush();
+            fullContent += finalParsed.content;
+
             controller.close();
 
             // 5. Save to database in background
-            // Token estimation is now handled inside saveStreamedResponse using the full prompt
             event.waitUntil(chatService.saveStreamedResponse(
               user.id,
               input.documentId,
@@ -110,3 +114,4 @@ export default defineEventHandler(async (event) => {
     return handleApiError(event, error);
   }
 });
+
