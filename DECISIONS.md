@@ -173,9 +173,70 @@
 
 ---
 
+## Decision 8: Choosing `markdown-it` and `highlight.js` for Chat UI
+
+### Context
+AI มักจะตอบกลับมาในรูปแบบ Markdown ซึ่งหากแสดงผลเป็นข้อความธรรมดา (Plain Text) จะทำให้อ่านยาก ไม่มีการแบ่งหัวข้อ (Headers) หรือตัวหนา (Bold) และ Code blocks จะไม่มีสีสัน
+
+### Alternatives Considered
+1. **แสดงผลแบบ Plain Text** - ใช้ `whitespace-pre-wrap`
+   - ข้อดี: ง่ายที่สุด ไม่ต้องติดตั้งอะไรเพิ่ม
+   - ข้อเสีย: ประสบการณ์ผู้ใช้แย่ อ่านข้อมูลที่ซับซ้อนยาก ไม่ได้คะแนนโบนัส
+
+2. **vue-markdown-render** - Wrapper สำหรับ markdown-it ใน Vue
+   - ข้อดี: ใช้ง่ายในรูปแบบ component
+   - ข้อเสีย: มี dependency เพิ่มเติม และอาจไม่ยืดหยุ่นเท่าการเรียกใช้ library ตรงๆ
+
+3. **markdown-it + highlight.js** - มาตรฐานอุตสาหกรรม
+   - ข้อดี: เสถียรสูง, ปรับแต่งได้มาก (Plugins), รองรับ Syntax Highlighting ครบถ้วน, ได้คะแนนโบนัส (+3)
+   - ข้อเสีย: ต้องเขียน CSS ปรับแต่งเอง (แต่ใช้ Tailwind ช่วยได้)
+
+### Why `markdown-it` & `highlight.js`
+1. **Industry Standard** - เป็นที่นิยมและมี ecosystem ใหญ่ที่สุด
+2. **Performance** - เร็วและเบา (เมื่อเทียบกับ library อื่นที่ฟีเจอร์เท่ากัน)
+3. **Customization** - สามารถเขียน CSS scoped เพื่อควบคุมหน้าตาของ Markdown ให้เข้ากับธีมของแอปได้ 100%
+4. **Syntax Highlighting** - `highlight.js` รองรับภาษาโปรแกรมที่หลากหลายมาก เหมาะกับ Use case ที่ถามตอบเรื่อง Code
+
+### Trade-offs
+- ❌ **ต้องดูแล CSS เอง** - ต้องเขียนสไตล์สำหรับ `markdown-body` เองเพื่อให้เข้ากับ Tailwind CSS
+- ✅ **สวยงามระดับ ChatGPT/Claude** - ทำให้แอปดูมีความเป็นมืออาชีพสูงขึ้นมาก
+
+---
+
+## Decision 9: Implementing Streaming Responses with SSE and `event.waitUntil`
+
+### Context
+การรอให้ AI ตอบจนเสร็จ (Non-streaming) อาจใช้เวลานาน (5-10 วินาที) ซึ่งทำให้ผู้ใช้รู้สึกว่าระบบค้าง การทำ Streaming ช่วยให้ผู้ใช้เห็นข้อความค่อยๆ ปรากฏขึ้นทันที ลด Perceived Latency ได้อย่างมาก
+
+### Alternatives Considered
+1. **Non-streaming (Current)** - รอรับ JSON ก้อนเดียว
+   - ข้อดี: พัฒนาง่าย, จัดการ Database ง่าย
+   - ข้อเสีย: UX ไม่ดีสำหรับข้อความยาวๆ
+
+2. **WebSockets** - การเชื่อมต่อแบบสองทาง
+   - ข้อดี: Real-time เต็มรูปแบบ
+   - ข้อเสีย: Overkill สำหรับแอปแชททางเดียว, จัดการสถานะการเชื่อมต่อยากกว่าบน Serverless environment
+
+3. **Server-Sent Events (SSE) / ReadableStream** - มาตรฐานการทำ Streaming
+   - ข้อดี: น้ำหนักเบา, รองรับโดยเบราว์เซอร์สมัยใหม่, เหมาะกับ AI response
+   - ข้อเสีย: ต้องจัดการการประมวลผลข้อมูลในขณะที่ยังโหลดไม่เสร็จ
+
+### Why SSE & `event.waitUntil`
+1. **Improved UX** - ผู้ใช้เห็นข้อความทันที (Chunk by chunk)
+2. **Resource Efficiency** - ใช้ `ReadableStream` ของมาตรฐาน Web API ซึ่งประหยัด Memory กว่าการรอโหลดทั้งก้อน
+3. **Background Processing** - ใช้ `event.waitUntil` (Nitro) เพื่อบันทึกข้อมูลลง Database หลังจากส่ง Stream ให้ผู้ใช้เสร็จแล้ว ทำให้ API ตอบสนองได้รวดเร็วที่สุด
+4. **Resiliency** - พัฒนาระบบ Parsing แบบยืดหยุ่นที่รองรับทั้ง format ของ Anthropic (z.ai) และ OpenAI (OpenRouter)
+
+### Trade-offs
+- ❌ **Complexity** - โค้ดฝั่ง Frontend และ Backend ซับซ้อนขึ้นเนื่องจากต้องจัดการกับ Binary/Text streams และ Partial JSON parsing
+- ❌ **Usage Tracking Accuracy** - การนับ Token ในขณะ Streaming ทำได้ยากกว่า (ใช้วิธีประมาณการหรืออัปเดตหลังจากจบ Stream)
+- ✅ **ยอมรับได้** เพื่อแลกกับความพึงพอใจของผู้ใช้สูงสุด
+
+---
+
 ## Summary
 
-ทั้ง 7 decisions นี้แสดงแนวคิดในการพัฒนา:
+ทั้ง 9 decisions นี้แสดงแนวคิดในการพัฒนา:
 
 1. **Pragmatic over Perfect** - เลือกเครื่องมือที่เหมาะกับ context ไม่ใช่ที่ดีที่สุดเสมอไป
 2. **Leverage Existing Skills** - ใช้สิ่งที่คุ้นเคย (Vue, SQL) เพื่อลด learning curve

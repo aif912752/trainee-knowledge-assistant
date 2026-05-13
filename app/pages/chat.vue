@@ -3,6 +3,9 @@ import { nextTick, onMounted, ref, watch } from 'vue'
 import { Bot, FileText, Loader2, Send, Trash2, User } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
 import { useChat } from '~/composables/useChat'
+import MarkdownRenderer from '~/components/MarkdownRenderer.vue'
+import { Button } from '~/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
 
 definePageMeta({
   middleware: 'auth',
@@ -117,7 +120,8 @@ const formatTime = (dateStr: string) => {
                       : 'rounded-tl-sm border bg-card text-card-foreground',
                   ]"
                 >
-                  <div class="whitespace-pre-wrap break-words leading-7">{{ msg.content }}</div>
+                  <div v-if="msg.role === 'user'" class="whitespace-pre-wrap break-words leading-7">{{ msg.content }}</div>
+                  <MarkdownRenderer v-else :content="msg.content" />
                 </div>
 
                 <div

@@ -58,6 +58,44 @@ export abstract class BaseApiService {
   }
 
   /**
+   * Helper for POST Streaming requests
+   * Uses standard fetch because $fetch is not optimized for streaming responses
+   */
+  protected async postStream(url: string, body: any, headers: Record<string, string> = {}): Promise<Response> {
+    const serviceName = this.constructor.name;
+    
+    const requestHeaders = {
+      'Content-Type': 'application/json',
+      ...headers,
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: requestHeaders,
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[${serviceName}] Streaming Request Failed:`, {
+          url,
+          status: response.status,
+          error: errorText
+        });
+        throw new InternalServerError(`การเชื่อมต่อ Streaming ล้มเหลว (${serviceName})`);
+      }
+
+      return response;
+    } catch (error: any) {
+      if (error instanceof InternalServerError) throw error;
+      
+      console.error(`[${serviceName}] Streaming Network Error:`, error.message);
+      throw new InternalServerError(`ไม่สามารถเริ่มต้นการเชื่อมต่อ Streaming ได้ (${serviceName})`);
+    }
+  }
+
+  /**
    * Helper for GET requests
    * @param query Optional query parameters
    * @param headers Optional headers to merge

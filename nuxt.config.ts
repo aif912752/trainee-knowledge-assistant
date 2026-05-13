@@ -50,6 +50,21 @@ export default defineNuxtConfig({
 
   // Security headers configuration
   security: {
+    // CORS configuration
+    cors: {
+      // Allow origins (from env or default to localhost)
+      origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
+      // Allow credentials (cookies, authorization headers)
+      credentials: true,
+      // Allowed methods
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      // Allowed headers
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-Token', 'x-chat-session-id'],
+      // Exposed headers (client can read)
+      exposedHeaders: ['Content-Length', 'Content-Type', 'X-Chat-Session-Id'],
+      // Cache preflight response (seconds)
+      maxAge: 86400, // 24 hours
+    },
     // Enable security headers
     headers: {
       xFrameOptions: 'DENY', // Prevent clickjacking
@@ -63,7 +78,7 @@ export default defineNuxtConfig({
         'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://www.gstatic.com'],
         'font-src': ["'self'", 'https://fonts.gstatic.com', 'https://fonts.googleapis.com'],
         'img-src': ["'self'", 'data:', 'https:'],
-        'connect-src': ["'self'"],
+        'connect-src': ["'self'", 'https://api.z.ai', 'https://api.openrouter.ai'],
       }
     },
     // Add route rules to bypass security features that consume the request body for uploads

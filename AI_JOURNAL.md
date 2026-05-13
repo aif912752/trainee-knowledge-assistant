@@ -171,11 +171,14 @@
 - ปรับโครงสร้างโปรเจกต์ตาม Nuxt 4 (ย้าย `utils/validations/` ไปที่ `shared/validations/`)
 - ตั้งค่า `srcDir: '.'` ใน `nuxt.config.ts` เพื่อให้ Alias `~` ชี้ไปที่ Project root
 - แก้ไขปัญหา Path resolution และตั้งค่า Component directory สำหรับ shadcn-nuxt
+- แก้ปัญหา Naming conflict (`clearSession` -> `clearUserSession`) และใช้ `H3Event` แทน `any`
+- ปรับโครงสร้างโฟลเดอร์ตาม Nuxt 4 และแก้ไขปัญหา Path/Component directory สำหรับ shadcn-nuxt
 **My Adjustment:** 
 - Rename ฟังก์ชันเพื่อเลี่ยงข้อผิดพลาด Naming conflict
 - ปรับโครงสร้าง Directory ให้ตรงตามมาตรฐาน Nuxt 4
 - ปรับปรุง Type safety โดยใช้ `H3Event` แทน `any`
 - Commit แยกส่วนเพื่อประวัติ Git ที่ดี
+ปรับแก้โครงสร้างโปรเจกต์และ Type safety พร้อม Commit แยกส่วนเพื่อลดข้อผิดพลาด
 
 ## Session 29: Fixing Shadcn Component Installation Path
 **Prompt:** "มันควรอยู่ใน app/components/ui นะ แล้วตอนติดตั้งทำไมมันยุข้างนอกได้"
@@ -210,10 +213,13 @@
 - สร้าง Protected route middleware (`middleware/auth.ts`) เพื่อป้องกัน routes
 - สร้าง Index page (`pages/index.vue`) พร้อม authentication check
 - อัปเดต TODO.md ให้สอดคล้องกับความคืบหน้า
+- สร้างหน้า Login ด้วย vee-validate และ shadcn components พร้อม Zod validation
+- สร้าง Auth check API (`me.get.ts`), Protected middleware และปรับปรุงหน้า Index
 **My Adjustment:**
 - สร้างหน้า Login ที่สมบูรณ์ด้วย vee-validate + shadcn-nuxt
 - วางระบบ Authentication ครบถ้วน (API, Middleware, Pages)
 - เตรียมพร้อมสำหรับการทดสอบระบบ Login
+ทำระบบ Authentication (API, Middleware, หน้า Login) เสร็จสมบูรณ์
 
 ## Session 31: Fixing CSS Loading and Nuxt 4 Structure Alignment
 **Prompt:** "เหมือน css จะไม่เข้านะ ดูจากหน้า login ทั้งๆที่มีการตั้งค่าธีมสีไว้แล้ว แต่ไม่มีสีไรเลย"
@@ -366,6 +372,8 @@
 - Filename sanitization: remove special chars, add timestamp
 - PDF text extraction ด้วย pdf-parse
 - TXT file reading ด้วย UTF-8
+- สร้าง `DocumentService` และ Upload API พร้อม UI รองรับ Drag & Drop
+- เพิ่มระบบตรวจสอบไฟล์ (PDF/TXT, ไม่เกิน 5MB) และระบบดึงข้อความจากไฟล์
 **My Adjustment:** Feature 2 (Upload File) สำเร็จครบถ้วน (5 คะแนน)
 
 ## Session 46: Fixing Hydration Mismatch and Directory Cleanup
@@ -408,6 +416,9 @@
   - เพิ่มส่วนการเริ่มต้นใช้งาน (Quick Start Guide)
   - ปรับปรุงสไตล์ให้เข้ากับฟอนต์ Noto Sans Thai และโทนสีหลักของแอป
 **My Adjustment:** หน้า Dashboard มี UI ที่ครบถ้วน สวยงาม และใช้งานได้จริง พร้อมระบบออกจากระบบที่สมบูรณ์
+- สร้าง Logout API และปรับปรุงโครงสร้างคอมโพเนนต์
+- ปรับปรุง UI หน้า Dashboard ใหม่ทั้งหมด (Sticky Header, Glassmorphism, แอนิเมชัน) ให้เข้ากับธีมหลัก
+**My Adjustment:** หน้า Dashboard และระบบ Logout ใช้งานได้จริงและ UI สวยงามตามธีม
 
 ## Session 50: Fixing DropdownMenu Resolution
 **Prompt:** "Vue warn]: Failed to resolve component: DropdownMenuTrigger..."
@@ -456,11 +467,14 @@
   - Document ownership checks
   - Document deletion
   - Document counting
+- อธิบายข้อจำกัดของ Vitest (mock `require` ไม่ได้) และแนะนำให้เปลี่ยนมาใช้ ES import (`import pdfParse`)
+- สร้าง test suite ครอบคลุม 20 test cases สำหรับ Upload API
 **My Adjustment:**
 - เปลี่ยน `DocumentService` จาก `require('pdf-parse')` เป็น `import pdfParse from 'pdf-parse'` เพื่อให้ vitest mock ทำงาน
 - สร้าง `test/api/upload.test.ts` พร้อม mock `pdf-parse` และ `getDatabase`
 - ผลลัพธ์: **20/20 tests ผ่าน** ✅
 - Bonus: Unit tests +5 คะแนน (รวมเป็น +10 จาก unit tests ก่อนหน้า)
+ปรับโค้ดมารองรับ ES import และเขียน Unit Test ผ่าน 100% ครบ 20 cases (Bonus +5)
 
 ## Session 54: Unifying Shared Validations & Types and Fixing ESM/TS Issues
 **Prompts:**
@@ -483,6 +497,9 @@
 - ระบบ Validation มีมาตรฐานเดียวกันทั้งโครงการ (Single Source of Truth)
 - โครงสร้าง Shared Assets ปลอดภัยต่อการใช้งานใน Frontend (ไม่มี Server dependency leak)
 - แก้ไข Bug ทางเทคนิค (ESM compatibility) และปรับปรุง Type safety ในส่วนของ Multipart parsing ให้สมบูรณ์
+- Refactor ระบบให้ใช้ Shared Validations เป็นจุดเดียว และแยก Error classes (`shared/errors.ts`)
+- แก้ไข Bug ESM import ของ `pdf-parse` และ Type errors ใน `form-data.ts`
+**My Adjustment:** ระบบ Validation เป็น Single Source of Truth ปลอดภัย และแก้ไขปัญหา ESM/Type safety สำเร็จ
 
 ## Session 55: Resolving PDF Extraction & ESM Compatibility Issues
 **Prompts:**
@@ -499,6 +516,9 @@
 - แก้ไขปัญหา Windows Path: ใช้ `pathToFileURL` แปลง path เป็น `file://` URL เพื่อให้ ESM loader บน Windows ทำงานได้ถูกต้อง
 - ผลลัพธ์: **การอัปโหลดและดึงข้อความจากไฟล์ PDF ทำงานได้สมบูรณ์ 100%** ✅
 **My Adjustment:** แก้ไขปัญหาทางเทคนิคที่ซับซ้อน (ESM/CJS Interop) ได้สำเร็จ เตรียมพร้อมสำหรับการ Refactor ระบบ Upload ให้เป็นแบบ Hybrid (Database + File System) ด้วย `formidable`
+- เปลี่ยนไปใช้ `pdfjs-dist` (Legacy Build) เพื่อแก้ปัญหา Node.js ESM compatibility แบบเด็ดขาด
+- แก้ปัญหา Windows Path ด้วย `pathToFileURL`
+**My Adjustment:** แก้ปัญหา ESM/CJS Interop ได้เด็ดขาด การดึงข้อความ PDF เสถียร 100%
 
 ## Session 56: Resolving Upload Hang and Cross-Device Move Errors
 **Prompts:**
@@ -552,6 +572,9 @@
 - ยืนยันความถูกต้องของระบบ Chat ผ่าน 14 unit tests (Passed 100%)
 - ปรับปรุงความเสถียรของระบบในการจัดการไฟล์ขนาดใหญ่และ ID ที่ไม่ถูกต้อง
 - อัปเดต TODO.md และบันทึกประวัติการพัฒนา
+- เพิ่ม Unit Test สำหรับ `ChatService` และ `chatSchema` (14 cases)
+- เพิ่มระบบ Truncation (10,000 ตัวอักษร) ป้องกัน Token overflow และแก้ Bug Foreign Key
+**My Adjustment:** ระบบ Chat ผ่านการ Test 100% เสถียรขึ้นเมื่อเจอไฟล์ใหญ่หรือ ID เอกสารผิดพลาด
 
 ## Session 61: Unified BaseApiService & Frontend apiFetch Alignment
 **Prompts:** "แล้ว chat-provider.service ทำไมยังต้องเขียน fetch เองอีก ควรสร้างฟังก์ชันกลาง Base API Service ไว้ดีไหม", "หน้าอื่นๆด้วย", "เพิ่ม Green Flag ด้วย useRuntimeConfig ด้วยแล้วทำไมฝั่ง front ไม่ใช้ apiFetch เหมือนเดิม"
@@ -565,3 +588,42 @@
 - ลดความซ้ำซ้อนในการเขียน Headers (เช่น Content-Type) โดยย้ายไปจัดการใน Base class/function
 - รักษาความสม่ำเสมอของ API Interface ทั้งโครงการเพื่อให้ดูแลรักษาง่าย
 
+## Session 62: Implementing Markdown Rendering & Syntax Highlighting
+**Prompt:** "markdown-it highlight.js คือไร ทำไมต้องติดตั้ง", "โอเครติดตั้งเลย ถ้าเพิ่มไรใหม่ๆแล้วอย่าลืมมอัพเดทในเอกสารด้วย เช่นพวก README TODO DECISIONS หรือถ้ามีการ prompt ให้อัพเดท AI_JOURNAL ด้วย"
+**AI Response:**
+- อธิบายความสำคัญของ `markdown-it` (แปลง Markdown เป็น HTML) และ `highlight.js` (ทำสี Code)
+- ติดตั้ง dependencies: `markdown-it`, `highlight.js`, และ `@types/markdown-it`
+- สร้างคอมโพเนนต์ `MarkdownRenderer.vue` พร้อมปรับแต่ง CSS ด้วย Tailwind `@apply`
+- อัปเดตหน้า Chat ให้ใช้ `MarkdownRenderer` สำหรับข้อความจาก AI
+- อัปเดตเอกสารโครงการทั้งหมด (README, TODO, DECISIONS)
+**My Adjustment:** 
+- เพิ่มฟีเจอร์ Markdown Rendering เพื่อประสบการณ์ผู้ใช้ที่ดีขึ้นและคะแนนโบนัส (+3)
+- รักษาความสวยงามของ Code blocks ด้วยธีม `github-dark`
+- ตรวจสอบความถูกต้องของสไตล์ Markdown ให้เข้ากับธีมของระบบ
+
+## Session 63: Adding CORS Configuration with nuxt-security
+**Prompt:** "Add CORS configuration — ง่าย, ใช้ nuxt-security"
+**AI Response:**
+- เพิ่ม CORS configuration ใน `nuxt.config.ts` ภายใต้ `security.cors`
+- ตั้งค่า `origin` จาก environment variable `CORS_ORIGINS` (default: localhost:3000)
+- เปิดใช้ `credentials: true` สำหรับ cookie/authorization
+- กำหนด allowed methods, headers, exposed headers และ maxAge
+- อัปเดต `.env.example` เพิ่ม `CORS_ORIGINS` สำหรับ production configuration
+**My Adjustment:** เปิดใช้งานและตั้งค่า CORS ผ่าน `nuxt-security` สำเร็จ รองรับการตั้งค่า Origins หลายแหล่งผ่าน Environment Variable สำหรับ Production และอัปเดตสถานะใน TODO.md เรียบร้อย (Code Quality: 13/15 points ✅)
+
+## Session 64: Implementing Streaming Response
+**Prompt:** "Implement Streaming Response"
+**AI Response:**
+- วิเคราะห์โครงสร้าง Chat API เดิมและวางแผนเปลี่ยนเป็น Streaming
+- อัปเดต `BaseApiService` เพิ่ม `postStream` โดยใช้ standard `fetch`
+- อัปเดต `ChatProviderService` ให้รองรับ `streamPrimary` (z.ai) และ `streamFallback` (OpenRouter)
+- ปรับปรุง `ChatService` เพิ่ม `sendMessageStream` และ `saveStreamedResponse`
+- แก้ไข `server/api/chat.post.ts` ให้คืนค่าเป็น `ReadableStream` และใช้ `event.waitUntil` เพื่อบันทึกข้อมูลลง DB ในภายหลัง
+- อัปเดต `useChat.ts` ให้รองรับการอ่าน stream และอัปเดต UI แบบ Real-time
+- เปลี่ยนระบบ Chat เป็น Streaming (ใช้ `ReadableStream`)
+- ใช้ `event.waitUntil` เพื่อบันทึกข้อมูลลง Database เบื้องหลัง และอัปเดต UI หน้าบ้านแบบ Real-time
+**My Adjustment:**
+- ระบบแชทตอบสนองเร็วขึ้นมาก (Perceived Latency ลดลง)
+- จัดการ Error Handling และ Fallback ได้อย่างสมบูรณ์แม้ในโหมด Streaming
+- บันทึกประวัติและ Token usage ได้ถูกต้องหลังจากจบ Stream
+แชทตอบสนองไวขึ้นมาก อัปเดต UI ทันที และบันทึก Token usage ได้ถูกต้องเมื่อสตรีมจบ

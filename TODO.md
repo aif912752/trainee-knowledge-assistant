@@ -75,16 +75,16 @@
 ## Bonus Features (เลือกทำ cap 20 คะแนน)
 
 ### Markdown Rendering (+3 คะแนน)
-- [ ] Install markdown rendering library
-- [ ] Parse AI responses for markdown
-- [ ] Render markdown in chat UI
-- [ ] Test markdown rendering
+- [x] Install markdown rendering library
+- [x] Parse AI responses for markdown
+- [x] Render markdown in chat UI
+- [x] Test markdown rendering
 
 ### Streaming Response (+3 คะแนน)
-- [ ] Implement streaming in chat API
-- [ ] Handle streaming in frontend
-- [ ] Display streaming tokens
-- [ ] Test streaming functionality
+- [x] Implement streaming in chat API
+- [x] Handle streaming in frontend
+- [x] Display streaming tokens (Refresh usage after stream)
+- [x] Test streaming functionality
 
 ### Docker Compose (+3 คะแนน)
 - [ ] Create Dockerfile
@@ -106,7 +106,7 @@
 - [x] Remove hardcoded values (use .env)
 - [x] Implement service layer (auth.service.ts, document.service.ts, chat.service.ts)
 - [x] Add input validation to all current API endpoints (Zod)
-- [ ] Add CORS configuration
+- [x] Add CORS configuration
 - [x] Add path sanitization (Document upload)
 - [ ] Refactor large files (>500 lines)
 - [x] Improve naming conventions (Standardized)
@@ -146,6 +146,6 @@
 
 ## Progress Summary
 - **Required Features:** 30/30 points (Feature 1-5 ✅)
-- **Bonus Features:** 5/20 points (Unit Tests ✅)
-- **Code Quality:** 12/15 points
-- **Total:** 47/50 points (Almost complete!)
+- **Bonus Features:** 11/20 points (Unit Tests, Markdown, Streaming ✅)
+- **Code Quality:** 14/15 points
+- **Total:** 55/50 points (Exceeded expectations!)

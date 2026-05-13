@@ -1,6 +1,7 @@
 import { toast } from 'vue-sonner'
 import type { Message } from '~~/types/message'
 import type { ApiSuccessResponse } from '~~/shared/api-response'
+import { apiFetch } from './useApi'
 
 type ChatResponse = ApiSuccessResponse<{
   message: Message
@@ -69,50 +70,117 @@ export function useChat() {
   /**
    * Send message to AI
    */
-  async function sendMessage(text: string, documentId?: number) {
+  async function sendMessage(text: string, documentId?: number, useStreaming = true) {
     if (!text.trim() || isLoading.value) return
 
-    // Optimistic update: Add user message locally
-    const tempUserMessage: Message = {
-      id: -1,
-      user_id: 0, // Will be set by server
+    // 1. Add user message optimistically
+    const userMsgId = Date.now()
+    messages.value.push({
+      id: userMsgId,
+      user_id: 0,
       document_id: documentId || null,
       role: 'user',
       content: text,
       tokens: 0,
       created_at: new Date().toISOString()
-    }
-    messages.value.push(tempUserMessage)
+    })
+
+    // 2. Add empty assistant message for streaming
+    const assistantMsgId = userMsgId + 1
+    messages.value.push({
+      id: assistantMsgId,
+      user_id: 0,
+      document_id: documentId || null,
+      role: 'assistant',
+      content: '',
+      tokens: 0,
+      created_at: new Date().toISOString()
+    })
 
     isLoading.value = true
     try {
-      const response = await apiFetch<ChatResponse>('/api/chat', {
-        method: 'POST',
-        headers: {
-          'x-chat-session-id': sessionId.value
-        },
-        body: {
-          message: text,
-          documentId
-        }
-      })
+      if (useStreaming) {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-chat-session-id': sessionId.value
+          },
+          body: JSON.stringify({
+            message: text,
+            documentId,
+            stream: true
+          })
+        })
 
-      if (response.success) {
-        // Replace temp message with server message if needed, or just refresh history
-        // For simplicity, we just add the assistant message
-        messages.value.push(response.data.message)
-        // Update usage
+        if (!response.ok) {
+          throw new Error('Streaming failed')
+        }
+
+        const reader = response.body?.getReader()
+        const decoder = new TextDecoder()
+        
+        if (!reader) throw new Error('No reader')
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          
+          const chunk = decoder.decode(value, { stream: true })
+          const lines = chunk.split('\n')
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const dataStr = line.slice(6).trim()
+              if (dataStr === '[DONE]') continue
+              
+              try {
+                const data = JSON.parse(dataStr)
+                let content = ''
+                
+                // Handle different provider formats
+                if (data.type === 'content_block_delta') {
+                  content = data.delta?.text || ''
+                } else if (data.choices?.[0]?.delta?.content) {
+                  content = data.choices[0].delta.content
+                }
+                
+                // Update assistant message content
+                const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
+                if (msgIndex !== -1) {
+                  messages.value[msgIndex].content += content
+                }
+              } catch (e) {
+                // Partial JSON, ignore
+              }
+            }
+          }
+        }
+        
+        // Refresh usage after stream ends
         await fetchUsage()
+      } else {
+        // Fallback to non-streaming if needed
+        const response = await apiFetch<ChatResponse>('/api/chat', {
+          method: 'POST',
+          headers: { 'x-chat-session-id': sessionId.value },
+          body: { message: text, documentId }
+        })
+        
+        if (response.success) {
+          // Replace the placeholder assistant message
+          messages.value = messages.value.filter(m => m.id !== assistantMsgId)
+          messages.value.push(response.data.message)
+          await fetchUsage()
+        }
       }
-      return response
     } catch (err: any) {
-      const errorMsg = err.data?.error || 'ไม่สามารถส่งข้อความได้'
+      console.error('Chat error:', err)
       toast.error('เกิดข้อผิดพลาด', {
-        description: errorMsg
+        description: err.message || 'ไม่สามารถส่งข้อความได้'
       })
-      // Remove the optimistic message on failure?
-      messages.value = messages.value.filter(m => m.id !== -1)
-      throw err
+      // Clean up optimistic messages on error
+      messages.value = messages.value.filter(m => m.id !== userMsgId && m.id !== assistantMsgId)
     } finally {
       isLoading.value = false
     }

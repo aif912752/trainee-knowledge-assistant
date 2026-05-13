@@ -9,22 +9,23 @@ A web application for chatting with AI about uploaded documents. Built with Nuxt
 - **Database:** SQLite (better-sqlite3)
 - **AI API:** z.ai (Claude API proxy)
 - **UI:** shadcn-nuxt
+- **Markdown:** markdown-it + highlight.js
 - **Deployment:** Docker Compose
 
 ## Features
 
 ### Required Features (30 คะแนน)
 - [x] Login + Protected Routes (5 คะแนน)
-- [ ] Upload File (PDF, TXT) (5 คะแนน)
-- [ ] Chat with AI (basic) (5 คะแนน)
-- [ ] Chat with Uploaded File Context (10 คะแนน)
-- [ ] Token Usage Counter (5 คะแนน)
+- [x] Upload File (PDF, TXT) (5 คะแนน)
+- [x] Chat with AI (basic) (5 คะแนน)
+- [x] Chat with Uploaded File Context (10 คะแนน)
+- [x] Token Usage Counter (5 คะแนน)
 
 ### Bonus Features (เลือกทำ cap 20 คะแนน)
-- [ ] Markdown rendering (+3)
-- [ ] Streaming response (+3)
+- [x] Markdown rendering (+3)
+- [x] Streaming response (+3)
 - [ ] Docker Compose + Healthcheck (+3)
-- [ ] Unit tests (+5)
+- [x] Unit tests (+5)
 
 ## Setup & Run
 
