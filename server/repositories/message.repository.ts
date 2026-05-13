@@ -89,4 +89,28 @@ export class MessageRepository {
     const result = stmt.get(userId) as { total: number | null };
     return result.total || 0;
   }
+
+  /**
+   * Find the last message for a user by role
+   */
+  findLastByUserIdAndRole(userId: number, role: 'user' | 'assistant'): Message | undefined {
+    const stmt = this.db.prepare(
+      `SELECT * FROM messages 
+       WHERE user_id = ? AND role = ? 
+       ORDER BY created_at DESC 
+       LIMIT 1`
+    );
+    return stmt.get(userId, role) as Message | undefined;
+  }
+
+  /**
+   * Update tokens for a specific message
+   */
+  updateTokens(messageId: number, tokens: number): boolean {
+    const stmt = this.db.prepare(
+      'UPDATE messages SET tokens = ? WHERE id = ?'
+    );
+    const result = stmt.run(tokens, messageId);
+    return result.changes > 0;
+  }
 }
