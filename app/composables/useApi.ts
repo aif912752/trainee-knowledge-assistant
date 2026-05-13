@@ -13,8 +13,6 @@ import { getErrorMessage } from '../utils/error-handler'
  * })
  */
 export async function apiFetch<T>(url: string, options: any = {}): Promise<T> {
-  const config = useRuntimeConfig()
-  
   // Merge headers: Default -> Method
   const headers = {
     ...options.headers,

@@ -13,7 +13,7 @@ export interface AiTokenUsage {
   total: number;
 }
 
-export function estimateUsage(input: string, output: string): AiTokenUsage {
+export function estimateAiUsage(input: string, output: string): AiTokenUsage {
   const inputTokens = estimateTokens(input);
   const outputTokens = estimateTokens(output);
   return {
@@ -22,4 +22,5 @@ export function estimateUsage(input: string, output: string): AiTokenUsage {
     total: inputTokens + outputTokens
   };
 }
+
 

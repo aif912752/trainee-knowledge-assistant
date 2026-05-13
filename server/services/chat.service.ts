@@ -4,11 +4,10 @@ import { DocumentRepository } from '~~/server/repositories/document.repository';
 import {
   buildChatPrompt,
   buildDocumentContext,
-  estimateTokenUsage,
 } from '~~/server/utils/chat';
 import { ChatProviderService } from '~~/server/services/chat-provider.service';
 import type { ChatInput } from '~~/shared/validations/chat.validation';
-import type { AiTokenUsage } from '~~/shared/tokens';
+import { type AiTokenUsage, estimateAiUsage } from '~~/shared/tokens';
 
 export class ChatService {
   private messageRepository: MessageRepository;
@@ -160,7 +159,7 @@ export class ChatService {
    */
   async saveStreamedResponse(userId: number, documentId: number | undefined, sessionId: string, content: string, model: string, prompt: string) {
     // Calculate estimation internally
-    const usage = estimateTokenUsage(prompt, content);
+    const usage = estimateAiUsage(prompt, content);
     return this.processAiResponse(content, usage, userId, documentId, sessionId, model);
   }
 

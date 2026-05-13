@@ -718,7 +718,7 @@
 
 ---
 
-## Session 73: Singleton Services & Dependency Injection
+## Session 72: Singleton Services & Dependency Injection
 **Prompt:** "server/api/chat/index.post.ts:29, server/middleware/protected.ts:32 — ทุก request สร้าง new AuthService(), new ChatService() ใหม่ ซึ่งแต่ละอันเรียก getDatabase() + สร้าง repository ใหม่ แนะนำ: ใช้ dependency injection หรือสร้าง singleton service ใน Nitro plugin แล้วดึงจาก event.context"
 **AI Response:**
 - สร้าง `server/plugins/services.ts` สำหรับ singleton services
@@ -732,7 +732,7 @@
 
 ---
 
-## Session 74: Thread-Safe Database Singleton Pattern
+## Session 73: Thread-Safe Database Singleton Pattern
 **Prompt:** "Database singleton pattern ไม่ thread-safe... server/db/init.ts:66-76 — getDatabase() ใช้ module-level variable แบบไม่มี lock... ไม่ควรใช้ const { getDatabase } = require('~~/server/db'); แบบนี้ไหม"
 **AI Response:**
 - ย้าย DB init ไปใน database plugin เท่านั้น สร้างครั้งเดียวตอน server startup
@@ -748,12 +748,12 @@
 
 ---
 
-## Session 75: Refactoring SSE Parser to Shared Utility
+## Session 74: Refactoring SSE Parser to Shared Utility
 **Prompt:** "Chat streaming - SSE parsing ซ้อนกัน frontend/backend... แนะนำ: สร้าง SSE parser utility กลางใน shared/ ใช้ร่วมกัน"
 **AI Response:** สร้างไฟล์ `shared/chat-stream.ts` รวมฟังก์ชัน `parseChatStreamChunk` ไว้ตรงกลางเพื่อจัดการ SSE chunk รองรับทั้ง OpenAI และ Anthropic format และอัปเดต `server/api/chat/index.post.ts` ให้เรียกใช้
 **My Adjustment:** ลดความซ้ำซ้อนของโค้ด (DRY) ทำให้ฝั่ง Frontend และ Backend ใช้ Logic เดียวกันในการแยกข้อความ Stream หากมี AI Provider ใหม่เพิ่มเข้ามาในอนาคตก็แก้แค่จุดเดียว ✅
 
-## Session 76: Enhancing Streaming Smoothness and Per-Message Token Display
+## Session 75: Enhancing Streaming Smoothness and Per-Message Token Display
 **Prompts:**
 - "ui หน้าแชท ตอนนี้ข้อความที่ AI ตอบ ไม่ได้ไหลมาทีละคำเหมือนก่อนหน้านี้ เหมือนมาทีเดียวเลยซึ่งดูไม่สมูท ลองปรับให้ที"
 - "แสดง token ที่ใช้ในแต่ละข้อความด้วย ตอนนี้แสดงแค่ token แบบรวม"
@@ -771,7 +771,7 @@
 - ระบบมีความเสถียรมากขึ้นในการจัดการข้อมูลจากหลาย Provider (OpenRouter, z.ai)
 **My Adjustment:** แก้ไขปัญหาการไหลของข้อความให้ลื่นไหลเหมือนเดิม และเพิ่มการแสดงผล Token รายข้อความแบบ Real-time ✅
 
-## Session 77: Resolving Naming Conflicts and Standardizing Types
+## Session 76: Resolving Naming Conflicts and Standardizing Types
 **Prompt:** "WARN Duplicated imports \"TokenUsage\"..."
 **AI Response:**
 - วิเคราะห์สาเหตุ: เกิดการซ้ำซ้อนของชื่อ Interface `TokenUsage` ระหว่าง Database Model (`types/token.ts`) และ AI Usage structure (`shared/tokens.ts`)
@@ -786,6 +786,26 @@
 - โค้ดมีความสะอาดและสื่อความหมายชัดเจนขึ้น (Clear Naming Convention)
 - มั่นใจว่าระบบ Streaming และ Token Tracking ทำงานได้อย่างสมบูรณ์และถูกต้องตามมาตรฐาน
 **My Adjustment:** เปลี่ยนชื่อ Interface เป็น `AiTokenUsage` เพื่อแก้ปัญหา Naming Conflict และ Refactor ทั้งระบบให้ใช้มาตรฐานเดียวกัน ✅
+
+---
+
+## Session 77: DevServer IPv4/IPv6 Configuration & Chat UI Improvements
+**Prompts:**
+- "ทำไม http://localhost:3000/login มันขึ้น Hmmm… can't reach this page"
+- "ตอนที่ส่งข้อความไปหา AI แล้ว AI กำลังตอบมา อยากให้ขึ้น loading เหมือน chat gpt หรือ claude หน่อย ตอนนี้มันขึ้นแค่ วงกลมขาวๆ ไม่มีข้อความไรบอกเลย พอข้อความตอบมา มันก็ตอบมารวดเดียว ไม่มีการส่งมาทีละคำเหมือนคนกำลังพิมพ์จริงเลย"
+- "commit ไปที"
+- "บันทึกลง prompt ด้วย"
+**AI Response:**
+- **DevServer Host:** ปัญหา localhost ไม่เข้าเกิดจาก Nuxt dev server ฟังเฉพาะ IPv6 (`::1`) ไม่ได้ฟัง IPv4 แก้ไขโดยเพิ่ม `devServer: { host: '0.0.0.0' }` ใน `nuxt.config.ts`
+- **Loading Indicator:** เพิ่มข้อความ "กำลังคิด..." ให้ผู้ใช้รู้สถานะของ AI แทนที่จะมีแต่จุด 3 จุด
+- **Typing Indicator:** เพิ่ม `isTyping` state และแสดงจุด 3 จุดกระพริบใต้ข้อความ AI ตอนที่กำลัง stream
+- **Streaming Performance:** ปรับ `highWaterMark: 0` ให้ส่ง chunks ทันทีไม่บัฟเฟอร์ และใช้ `setImmediate` สำหรับบันทึก DB แยกจาก stream
+**My Adjustment:**
+- แก้ไขปัญหาเข้าเว็บไม่ได้บน Windows (IPv4/IPv6 dual-stack)
+- UI แสดงสถานะชัดเจนขึ้น (Thinking/Typing)
+- Streaming smooth ขึ้นด้วยการลด buffering
+
+---
 
 ## Session 78: Customizing Chat Bubble Text Selection Contrast
 **Prompt:** "ในแชท คอคลุมดำข้อความของ AI พื้นหลังคลุมดำจะเป็นสีส้มอ่อน อันนี้ดีแล้ว แต่ในแชทตัวเอง ตอนคลุมดำ มันไม่เห็นพื้นหลังคลุมดำเลย อาจจะเพราะว่า พื้นหลังแชทเป็นสีเข้มก็ได้"
@@ -805,24 +825,11 @@
   - ดึงค่า `output_tokens` จาก `data.usage` เพื่อนำมาแสดงผล Token รายข้อความให้ถูกต้องสำหรับโมเดลค่าย Anthropic (เช่น Claude)
 **My Adjustment:** ทำให้การแสดงจำนวน Token ในหน้าแชทถูกต้องครอบคลุมทุกค่ายโมเดลที่ใช้งาน ✅
 
----
-
-แชทตอบสนองไวขึ้นมาก อัปเดต UI ทันที และบันทึก Token usage ได้ถูกต้องเมื่อสตรีมจบ
-
-## Session 77: DevServer IPv4/IPv6 Configuration & Chat UI Improvements
-**Prompts:**
-- "ทำไม http://localhost:3000/login มันขึ้น Hmmm… can't reach this page"
-- "ตอนที่ส่งข้อความไปหา AI แล้ว AI กำลังตอบมา อยากให้ขึ้น loading เหมือน chat gpt หรือ claude หน่อย ตอนนี้มันขึ้นแค่ วงกลมขาวๆ ไม่มีข้อความไรบอกเลย พอข้อความตอบมา มันก็ตอบมารวดเดียว ไม่มีการส่งมาทีละคำเหมือนคนกำลังพิมพ์จริงเลย"
-- "commit ไปที"
-- "บันทึกลง prompt ด้วย"
+## Session 80: Consolidation of Token Estimation Logic
+**Prompt:** "estimateTokens ใช้ทั้งใน shared/tokens.ts และ server/utils/chat.ts... ควรเก็บแค่ที่ shared/tokens.ts แล้ว import มาใช้"
 **AI Response:**
-- **DevServer Host:** ปัญหา localhost ไม่เข้าเกิดจาก Nuxt dev server ฟังเฉพาะ IPv6 (`::1`) ไม่ได้ฟัง IPv4 แก้ไขโดยเพิ่ม `devServer: { host: '0.0.0.0' }` ใน `nuxt.config.ts`
-- **Loading Indicator:** เพิ่มข้อความ "กำลังคิด..." ให้ผู้ใช้รู้สถานะของ AI แทนที่จะมีแต่จุด 3 จุด
-- **Typing Indicator:** เพิ่ม `isTyping` state และแสดงจุด 3 จุดกระพริบใต้ข้อความ AI ตอนที่กำลัง stream
-- **Streaming Performance:** ปรับ `highWaterMark: 0` ให้ส่ง chunks ทันทีไม่บัฟเฟอร์ และใช้ `setImmediate` สำหรับบันทึก DB แยกจาก stream
-**My Adjustment:**
-- แก้ไขปัญหาเข้าเว็บไม่ได้บน Windows (IPv4/IPv6 dual-stack)
-- UI แสดงสถานะชัดเจนขึ้น (Thinking/Typing)
-- Streaming smooth ขึ้นด้วยการลด buffering
-
----
+- ทำการยุบรวม (Consolidate) Logic การประมาณการ Token ให้ไปอยู่ที่ `shared/tokens.ts` เพียงที่เดียวตามหลักการ DRY (Don't Repeat Yourself)
+- เปลี่ยนชื่อฟังก์ชันใน Shared เป็น `estimateAiUsage` เพื่อให้สื่อความหมายชัดเจนและสม่ำเสมอ
+- ลบโค้ดที่ซ้ำซ้อนใน `server/utils/chat.ts` ออก
+- อัปเดต `ChatService.ts` ให้เรียกใช้ Logic จาก Shared Utility แทน
+**My Adjustment:** โค้ดมีความสะอาดขึ้น ลดความซ้ำซ้อน และเป็น Single Source of Truth สำหรับการคำนวณ Token ทั่วทั้งระบบ ✅

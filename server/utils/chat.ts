@@ -51,19 +51,6 @@ export function normalizeOpenRouterUsage(usage: any): AiTokenUsage {
   };
 }
 
-/**
- * Estimate token usage based on text length
- * Rule of thumb: ~4 characters per token for English, ~1-2 for Thai
- * We'll use a conservative 3 characters per token average
- */
-export function estimateTokenUsage(inputText: string, outputText: string): AiTokenUsage {
-  const input = Math.ceil((inputText || '').length / 3);
-  const output = Math.ceil((outputText || '').length / 3);
-  
-  return {
-    input,
-    output,
-    total: input + output
-  };
-}
+
+
 
