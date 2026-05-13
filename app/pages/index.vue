@@ -45,9 +45,9 @@ const features = [
     title: 'คลังเอกสาร',
     description: 'จัดการไฟล์ที่อัปโหลดและเลือกบริบทสำหรับการถามตอบ',
     icon: FileText,
-    path: '',
+    path: '/documents',
     accent: 'bg-chart-1/15 text-chart-4 ring-chart-1/20',
-    available: false,
+    available: true,
   },
   {
     title: 'ประวัติการใช้งาน',

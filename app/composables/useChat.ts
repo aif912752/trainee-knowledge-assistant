@@ -202,18 +202,6 @@ export function useChat() {
       const msg = messages.value.find(m => m.id === assistantMsgId)
       if (msg) {
         msg.content = `⚠️ **ข้อผิดพลาด:** ${errorMsg}`
-      } else {
-        // If message was somehow not added, add it now
-        messages.value.push({
-          id: assistantMsgId,
-          user_id: 0,
-          document_id: documentId || null,
-          role: 'assistant',
-          content: `⚠️ **ข้อผิดพลาด:** ${errorMsg}`,
-          tokens: 0,
-          created_at: new Date().toISOString(),
-          model: 'error'
-        })
       }
       
       toast.error('เกิดข้อผิดพลาด', {

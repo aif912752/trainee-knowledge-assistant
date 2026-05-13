@@ -84,6 +84,7 @@ const formatTime = (dateStr: string) => {
   return new Date(dateStr).toLocaleTimeString('th-TH', {
     hour: '2-digit',
     minute: '2-digit',
+    hour12: false,
   })
 }
 </script>
