@@ -267,12 +267,57 @@ AI มักจะตอบกลับมาในรูปแบบ Markdown �
 
 ---
 
+## Decision 12: Multi-stage Docker Deployment & Containerization
+
+### Context
+เพื่อให้โปรเจกต์พร้อมสำหรับการ Deployment ในสภาพแวดล้อมที่หลากหลาย (Environment Agnostic) และรองรับการทำ Scalability ในอนาคต จึงจำเป็นต้องสร้าง Docker configuration ที่มีประสิทธิภาพและปลอดภัย
+
+### Alternatives Considered
+1. **Single-stage Dockerfile** - ติดตั้งทุกอย่างใน layer เดียว
+   - ข้อดี: เขียนง่าย, เข้าใจง่าย
+   - ข้อเสีย: Image size ใหญ่มาก (รวมเครื่องมือ build และ dev dependencies), เสี่ยงเรื่องความปลอดภัย
+2. **Multi-stage Dockerfile** - แยกขั้นตอน Build และ Runtime ออกจากกัน
+
+### Why Multi-stage Build
+1. **Reduced Image Size** - แยกขั้นตอนการ Compile/Build (Stage 1) ออกจากขั้นตอนการรันจริง (Stage 2) ทำให้ Docker Image สุดท้ายมีขนาดเล็กมาก เพราะไม่มี Source code ต้นฉบับหรือเครื่องมือ Build (เช่น Python, G++, Make) ติดไปด้วย
+2. **Improved Security** - ใช้ Alpine Linux เป็นฐานซึ่งมีช่องโหว่น้อยกว่า และรันแอปพลิเคชันภายใต้ Non-root user (nodejs:1001) แทนการใช้ root เพื่อป้องกันการบุกรุกระบบหากแอปพลิเคชันมีช่องโหว่
+3. **Optimized Build Cache** - แยกการ `pnpm install` ออกมาเป็น layer ต้นๆ เพื่อให้การแก้โค้ดไม่ต้องดาวน์โหลด dependencies ใหม่ทุกครั้ง
+4. **Volume Persistence** - ออกแบบการ Mount Volume สำหรับโฟลเดอร์ `data/` (SQLite) และ `storage/` (Uploads) เพื่อให้ข้อมูลไม่หายไปเมื่อ Container ถูก restart หรือลบทิ้ง
+
+### Trade-offs
+- ❌ **Build Time** - ในการ Build ครั้งแรกอาจใช้เวลานานขึ้นเล็กน้อยเนื่องจากต้องติดตั้งเครื่องมือสำหรับ Native modules (better-sqlite3) ใน stage แรก
+- ✅ **Production Ready** - ได้ Image ที่สะอาด ปลอดภัย และเหมาะกับการใช้งานจริงบน Cloud หรือ VPS
+
+---
+
+## Decision 13: Strict TypeScript Type Safety & Removal of `any`
+
+### Context
+ในช่วงแรกของการพัฒนา (Prototyping) มีการใช้ `any` ในหลายจุดเพื่อให้โค้ดรันได้เร็ว แต่เมื่อระบบใหญ่ขึ้น การไม่มี Type definition ที่ชัดเจนทำให้เกิด Runtime errors ได้ง่ายและดูแลรักษาโค้ดยาก
+
+### Alternatives Considered
+1. **ใช้ `any` ต่อไป** - พัฒนาได้ไว ไม่ต้องนิยาม Interface ซับซ้อน
+2. **Refactor to Strict Typing** - ไล่เปลี่ยน `any` เป็น Interfaces และ Types ที่ถูกต้อง
+
+### Why Strict Typing
+1. **Early Error Detection** - ตรวจพบข้อผิดพลาดตั้งแต่ขั้นตอนการ Compile (Build-time) แทนที่จะไปพังตอนผู้ใช้ใช้งาน
+2. **Improved DX (Developer Experience)** - ได้ประโยชน์จาก Auto-completion และ IntelliSense ที่แม่นยำ 100% ใน VS Code หรือ IDE อื่นๆ
+3. **Self-Documenting Code** - การมี Interface อย่าง `AnthropicMessageResponse` หรือ `UploadDocumentResult` ทำให้นักพัฒนาคนอื่น (หรือตัวเราในอนาคต) เข้าใจโครงสร้างข้อมูลได้ทันทีโดยไม่ต้องไปไล่อ่านโค้ดภายใน
+4. **Reliable Refactoring** - เมื่อต้องการแก้ไขโครงสร้างข้อมูล TypeScript จะแจ้งเตือนจุดที่ได้รับผลกระทบทั่วทั้งโปรเจกต์ทันที
+
+### Trade-offs
+- ❌ **Development Overhead** - ต้องใช้เวลาเพิ่มขึ้นในการเขียน Interface และ Mapping ข้อมูล (เช่น `normalizeZaiUsage`)
+- ✅ **Long-term Stability** - ลด Technical Debt และทำให้ระบบมีความน่าเชื่อถือสูงขึ้นอย่างมาก
+
+---
+
 ## Summary
 
-ทั้ง 11 decisions นี้แสดงแนวคิดในการพัฒนา:
+ทั้ง 13 decisions นี้แสดงแนวคิดในการพัฒนา:
 
 1. **Pragmatic over Perfect** - เลือกเครื่องมือที่เหมาะกับ context ไม่ใช่ที่ดีที่สุดเสมอไป
 2. **Leverage Existing Skills** - ใช้สิ่งที่คุ้นเคย (Vue, SQL) เพื่อลด learning curve
 3. **Balance Quality vs Constraints** - ยอมรับ trade-offs บางอย่างเพื่อได้ประโยชน์ใหญ่ (คะแนน, เวลา, งบประมาณ)
+4. **Infrastructure & Quality** - ให้ความสำคัญกับความปลอดภัย (Docker/Non-root) และความแม่นยำของโค้ด (TypeScript)
 
 ทั้งหมดนี้เป็น decisions ที่ผ่านการคิดอย่างรอบคอบ และเหมาะสมกับ context ของ Junior Dev Assessment 2026
