@@ -143,22 +143,22 @@ export function useChat() {
           if (parsed.content) {
             accumulatedContent += parsed.content
             // Update assistant message content
-            const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
-            if (msgIndex !== -1) {
-              messages.value[msgIndex].content = accumulatedContent
-              if (parsed.model && !messages.value[msgIndex].model) {
-                messages.value[msgIndex].model = parsed.model
+            const msg = messages.value.find(m => m.id === assistantMsgId)
+            if (msg) {
+              msg.content = accumulatedContent
+              if (parsed.model && !msg.model) {
+                msg.model = parsed.model
               }
               // Update tokens on the fly (estimation)
-              messages.value[msgIndex].tokens = estimateTokens(accumulatedContent)
+              msg.tokens = estimateTokens(accumulatedContent)
             }
           }
 
           // If stream provides final usage
           if (parsed.usage) {
-             const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
-             if (msgIndex !== -1) {
-               messages.value[msgIndex].tokens = parsed.usage.output
+             const msg = messages.value.find(m => m.id === assistantMsgId)
+             if (msg) {
+               msg.tokens = parsed.usage.output
              }
           }
         }
@@ -167,10 +167,10 @@ export function useChat() {
         const finalParsed = parser.flush()
         if (finalParsed.content) {
           accumulatedContent += finalParsed.content
-          const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
-          if (msgIndex !== -1) {
-            messages.value[msgIndex].content = accumulatedContent
-            messages.value[msgIndex].tokens = estimateTokens(accumulatedContent)
+          const msg = messages.value.find(m => m.id === assistantMsgId)
+          if (msg) {
+            msg.content = accumulatedContent
+            msg.tokens = estimateTokens(accumulatedContent)
           }
         }
         
