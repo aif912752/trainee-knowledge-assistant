@@ -25,6 +25,7 @@ export class ChatService {
     this.aiProvider = new ChatProviderService({
       zaiApiKey: config.zaiApiKey,
       zaiApiBase: config.zaiApiBase,
+      primaryModel: config.primaryModel,
       openrouterApiKey: config.openrouterApiKey,
       openrouterApiBase: config.openrouterApiBase,
       fallbackModel: config.fallbackModel,
@@ -49,13 +50,13 @@ export class ChatService {
     try {
       console.log('🤖 Sending request to Primary AI (z.ai)...');
       const primary = await this.aiProvider.callPrimary(prompt);
-      return this.processAiResponse(primary.content, primary.usage, userId, validatedDocumentId, sessionId);
+      return this.processAiResponse(primary.content, primary.usage, userId, validatedDocumentId, sessionId, primary.model);
     } catch (error: any) {
       console.error('⚠️ Primary AI (z.ai) failed, attempting fallback to OpenRouter...', error.message);
       
       try {
         const fallback = await this.aiProvider.callFallback(prompt);
-        return this.processAiResponse(fallback.content, fallback.usage, userId, validatedDocumentId, sessionId);
+        return this.processAiResponse(fallback.content, fallback.usage, userId, validatedDocumentId, sessionId, fallback.model);
       } catch (fallbackError: any) {
         console.error('❌ Fallback AI (OpenRouter) also failed:', fallbackError.message);
         throw fallbackError;
@@ -112,14 +113,15 @@ export class ChatService {
   /**
    * Process and save AI response
    */
-  private processAiResponse(content: string, usage: TokenUsageSummary, userId: number, documentId: number | undefined, sessionId: string) {
+  private processAiResponse(content: string, usage: TokenUsageSummary, userId: number, documentId: number | undefined, sessionId: string, model: string) {
     // 5. Save assistant message
     const assistantMessage = this.messageRepository.create({
       user_id: userId,
       document_id: documentId,
       role: 'assistant',
       content: content,
-      tokens: usage.output
+      tokens: usage.output,
+      model: model
     });
 
     // 6. Record token usage
@@ -138,8 +140,8 @@ export class ChatService {
   /**
    * Save streamed response (called after stream ends)
    */
-  async saveStreamedResponse(userId: number, documentId: number | undefined, sessionId: string, content: string, usage: TokenUsageSummary) {
-    return this.processAiResponse(content, usage, userId, documentId, sessionId);
+  async saveStreamedResponse(userId: number, documentId: number | undefined, sessionId: string, content: string, usage: TokenUsageSummary, model: string) {
+    return this.processAiResponse(content, usage, userId, documentId, sessionId, model);
   }
 
   /**

@@ -5,6 +5,7 @@ export interface Message {
   role: 'user' | 'assistant';
   content: string;
   tokens: number;
+  model: string | null;
   created_at: string;
 }
 
@@ -14,4 +15,5 @@ export interface CreateMessageInput {
   role: 'user' | 'assistant';
   content: string;
   tokens?: number;
+  model?: string;
 }

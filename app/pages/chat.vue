@@ -112,6 +112,9 @@ const formatTime = (dateStr: string) => {
               </div>
 
               <div class="min-w-0 space-y-1">
+                <div v-if="msg.role === 'assistant' && msg.model" class="px-1 text-[10px] font-medium text-muted-foreground uppercase tracking-tight">
+                  {{ msg.model }}
+                </div>
                 <div
                   class="rounded-xl px-4 py-3 text-sm shadow-sm"
                   :class="[

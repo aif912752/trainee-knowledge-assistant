@@ -76,14 +76,23 @@ export abstract class BaseApiService {
         body: JSON.stringify(body),
       });
 
+      const contentType = response.headers.get('content-type') || '';
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`[${serviceName}] Streaming Request Failed:`, {
           url,
           status: response.status,
-          error: errorText
+          contentType,
+          error: errorText.slice(0, 500) // Truncate long HTML errors
         });
-        throw new InternalServerError(`การเชื่อมต่อ Streaming ล้มเหลว (${serviceName})`);
+        throw new InternalServerError(`การเชื่อมต่อ Streaming ล้มเหลว (${response.status})`);
+      }
+
+      // Safeguard: If we expected an API but got HTML (common when URL is wrong)
+      if (contentType.includes('text/html')) {
+        console.error(`[${serviceName}] Received HTML instead of Stream:`, url);
+        throw new InternalServerError('ได้รับข้อมูลไม่ถูกต้องจาก AI Provider (URL อาจผิดหรือคีย์ไม่ถูกต้อง)');
       }
 
       return response;

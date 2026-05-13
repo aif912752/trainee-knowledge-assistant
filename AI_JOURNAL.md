@@ -626,4 +626,67 @@
 - ระบบแชทตอบสนองเร็วขึ้นมาก (Perceived Latency ลดลง)
 - จัดการ Error Handling และ Fallback ได้อย่างสมบูรณ์แม้ในโหมด Streaming
 - บันทึกประวัติและ Token usage ได้ถูกต้องหลังจากจบ Stream
+
+## Session 64: Debugging HTML Response & Robust API Configuration
+**Prompt:** "เช็ค api แชทให้ที หาสาเหตุที่ api ไม่ตอบกลับให้ที ตอนนี้ respon มันแสดง <!DOCTYPE html>..."
+**AI Response:**
+- วิเคราะห์สาเหตุ: ระบบตกไปที่ Fallback (OpenRouter) แต่ URL ในคอนฟิกอาจชี้ไปที่หน้าแรกของเว็บ ทำให้ได้รับ HTML (200 OK) แทนที่จะเป็น JSON/Stream
+- แก้ไข `BaseApiService.ts`: เพิ่มการตรวจสอบ `Content-Type` เพื่อบล็อก HTML และแจ้งเตือน Error ที่ชัดเจน
+- แก้ไข `ChatProviderService.ts`: เพิ่ม Logic ในการต่อท้าย Endpoint (เช่น `/v1/messages` หรือ `/api/v1/chat/completions`) อัตโนมัติ เพื่อลดความผิดพลาดจากคอนฟิก
+- อัปเดต `.env.example`: ปรับปรุงคำอธิบายให้ชัดเจนขึ้น
+**My Adjustment:** 
+- ป้องกันปัญหา "Silent Failure" ที่หน้าเว็บนิ่งเพราะได้รับข้อมูลผิดประเภท
+- ทำให้ระบบมีความยืดหยุ่นสูงขึ้นต่อการตั้งค่า URL ที่หลากหลาย
+- ปรับปรุง Error Logging ให้ระบุสาเหตุเชิงลึกได้ง่ายขึ้น
+
+## Session 65: Migrating z.ai to OpenAI-Compatible API
+**Prompt:** "ลองศึกษาจาก https://docs.z.ai/api-reference/llm/chat-completion"
+**AI Response:**
+- วิเคราะห์เอกสาร: พบว่า z.ai ใช้รูปแบบ OpenAI-compatible (`/api/paas/v4/chat/completions`) ไม่ใช่ Anthropic format อย่างที่เข้าใจในตอนแรก
+- แก้ไข `ChatProviderService.ts`: 
+    - เปลี่ยน Endpoint เป็น `/api/paas/v4/chat/completions`
+    - เปลี่ยน Header จาก `x-api-key` เป็น `Authorization: Bearer`
+    - เปลี่ยนโครงสร้าง Request และ Response ให้เป็นมาตรฐาน OpenAI
+- ปรับปรุงระบบ Parsing (Streaming): เนื่องจากทั้ง Primary (z.ai) และ Fallback (OpenRouter) ใช้มาตรฐานเดียวกัน จึงยุบรวมโค้ด Parsing ให้เรียบง่ายและเสถียรขึ้นทั้งฝั่ง Backend และ Frontend
+**My Adjustment:** 
+- เปลี่ยนมาใช้มาตรฐาน OpenAI ทำให้ระบบมีความเป็นสากลและดูแลรักษาง่ายขึ้น
+- โค้ดกระชับขึ้นและลดโอกาสเกิด Bug จากการ Parse หลายรูปแบบ
+- อัปเดตไฟล์ `.env.example` ให้ตรงกับมาตรฐานใหม่
+
+## Session 66: Support for z.ai GLM Coding Plan
+**Prompt:** "เช็คด้วยว่า GLM Coding Lite-Yearly Plan ใช้ api แบบไหน"
+**AI Response:**
+- วิเคราะห์ข้อมูล: **GLM Coding Plan** ใช้ Endpoint เฉพาะคือ `https://api.z.ai/api/coding/paas/v4/chat/completions`
+- ข้อดีของการใช้ Endpoint นี้คือจะใช้โควตาจากแพ็กเกจสมาชิกรายเดือน/รายปีแทนการหักเครดิตปกติ
+- ปรับปรุง `ChatProviderService.ts`:
+    - เพิ่มระบบตรวจจับ `/coding` ใน URL อัตโนมัติ
+    - เมื่อตรวจเจอ จะสลับไปใช้ Model `glm-4.7` (เหมาะสมที่สุดสำหรับ Coding Plan)
+    - ยังคงรักษาโหมด Adaptive สำหรับค่ายอื่นๆ (Claude/Anthropic) ไว้เช่นเดิม
+**My Adjustment:** 
+- ทำให้ระบบรองรับแพ็กเกจสมาชิกแบบต่างๆ ของ z.ai ได้อย่างสมบูรณ์
+- ปรับปรุงความแม่นยำในการเลือก Endpoint และ Model ให้เหมาะสมกับสิทธิการใช้งานของผู้ใช้
+
+## Session 67: Fixing 404 & Strengthening Robustness
+**Prompt:** "404 NOT_FOUND"
+**AI Response:**
+- วิเคราะห์สาเหตุ: เมื่อใช้ URL แบบ `/anthropic` ระบบลืมเติม `/v1/messages` ต่อท้าย ทำให้เกิด 404
+- แก้ไข `ChatProviderService.ts`: 
+    - เพิ่ม "Smart Suffix" สำหรับทั้ง 2 โหมด (Claude/Anthropic และ OpenAI/Coding)
+    - ระบบจะตรวจสอบและเติม Path ที่จำเป็น (`/v1/messages` หรือ `/chat/completions`) ให้โดยอัตโนมัติหากผู้ใช้ใส่มาไม่ครบ
+- ให้คำแนะนำผู้ใช้: เพื่อให้ใช้สิทธิจากแพ็กเกจ **GLM Coding Plan** ให้คุ้มค่าที่สุด ควรเปลี่ยน URL ใน `.env` เป็นแบบ `/coding`
+**My Adjustment:** 
+- ป้องกันปัญหา 404 จากการตั้งค่า URL ที่ไม่สมบูรณ์
+- ทำให้ระบบ "Self-healing" มากขึ้น โดยพยายามเดาและเติม Endpoint ที่ถูกต้องให้เอง
+- ยืนยันว่าระบบทำงานได้ทั้งกับ URL แบบเดิมและแบบใหม่ตามเอกสาร
+
+## Session 69: Aligning with n8n Configuration
+**Prompt:** "ใน n8n เคยตั้งค่า api แบบนี้ ... มันก็ทำงานได้"
+**AI Response:**
+- วิเคราะห์ข้อมูล: ค่าที่ผู้ใช้ระบุใน n8n ใช้ Model ID แบบระบุวันที่ชัดเจนคือ `claude-sonnet-4-5-20250929`
+- อัปเดต `ChatProviderService.ts`:
+    - เปลี่ยน Model ID ในโหมด Anthropic ให้ตรงกับ n8n (`claude-sonnet-4-5-20250929`)
+    - ยืนยันการใช้ Header `x-api-key` และ Path `/v1/messages` ซึ่งเป็นมาตรฐานเดียวกับที่ n8n Anthropic Node ใช้เรียก Proxy
+**My Adjustment:** 
+- ทำให้ระบบทำงานได้เหมือนกับสภาพแวดล้อมที่ผู้ใช้เคยทดสอบสำเร็จมาแล้ว
+- เพิ่มความแม่นยำในการเลือกโมเดลโดยใช้ค่าคงที่ตาม n8n
 แชทตอบสนองไวขึ้นมาก อัปเดต UI ทันที และบันทึก Token usage ได้ถูกต้องเมื่อสตรีมจบ

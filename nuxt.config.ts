@@ -19,15 +19,16 @@ export default defineNuxtConfig({
     // Server-side environment variables (private)
     zaiApiKey: process.env.ZAI_API_KEY,
     zaiApiBase: process.env.ZAI_API_BASE,
+    primaryModel: process.env.PRIMARY_MODEL,
     openrouterApiKey: process.env.OPENROUTER_API_KEY,
     openrouterApiBase: process.env.OPENROUTER_API_BASE,
     fallbackModel: process.env.FALLBACK_MODEL,
-    databasePath: process.env.DATABASE_PATH || './data/app.db',
-    sessionSecret: process.env.SESSION_SECRET || 'change-this-in-production',
+    databasePath: process.env.DATABASE_PATH,
+    sessionSecret: process.env.SESSION_SECRET,
 
     // Public environment variables (exposed to client)
     public: {
-      appUrl: process.env.APP_URL || 'http://localhost:3000',
+      appUrl: process.env.APP_URL,
     },
   },
 
@@ -53,7 +54,7 @@ export default defineNuxtConfig({
     // CORS configuration
     cors: {
       // Allow origins (from env or default to localhost)
-      origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
+      origin: process.env.CORS_ORIGINS?.split(','),
       // Allow credentials (cookies, authorization headers)
       credentials: true,
       // Allowed methods

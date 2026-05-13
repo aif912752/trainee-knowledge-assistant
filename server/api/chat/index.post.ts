@@ -30,8 +30,14 @@ export default defineEventHandler(async (event) => {
 
     // If stream is requested
     if (body.stream) {
+      setResponseHeaders(event, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      });
+
       const response = await chatService.sendMessageStream(user.id, input, sessionId);
-      
+
       if (!response.body) {
         throw new Error('No response body from AI provider');
       }
@@ -40,38 +46,47 @@ export default defineEventHandler(async (event) => {
       const reader = response.body.getReader();
       const encoder = new TextEncoder();
       const decoder = new TextDecoder();
-      
+
       let fullContent = '';
-      
+      let usedModel = '';
+
       const stream = new ReadableStream({
         async start(controller) {
           try {
             while (true) {
               const { done, value } = await reader.read();
               if (done) break;
-              
+
               // Forward the raw chunk to the client
               controller.enqueue(value);
-              
+
               // Also decode it for our fullContent collection
               const chunk = decoder.decode(value, { stream: true });
-              
-              // Minimal SSE parsing to collect content for DB
-              // Note: This is simplified. Different providers have different formats.
+
+              // Support both z.ai (Claude/Anthropic) and OpenAI (GLM/OpenRouter) formats
               const lines = chunk.split('\n');
               for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                  const dataStr = line.slice(6).trim();
+                const trimmedLine = line.trim();
+                if (!trimmedLine) continue;
+
+                if (trimmedLine.startsWith('data: ')) {
+                  const dataStr = trimmedLine.slice(6).trim();
                   if (dataStr === '[DONE]') continue;
+                  
                   try {
                     const data = JSON.parse(dataStr);
-                    // z.ai/Claude format
-                    if (data.type === 'content_block_delta') {
-                      fullContent += data.delta?.text || '';
+                    // Extract model info if present in first chunks
+                    if (data.model && !usedModel) {
+                      usedModel = data.model;
                     }
-                    // OpenRouter/Standard format
-                    else if (data.choices?.[0]?.delta?.content) {
+                    
+                    // 1. OpenAI format (OpenRouter, z.ai GLM)
+                    if (data.choices?.[0]?.delta?.content) {
                       fullContent += data.choices[0].delta.content;
+                    }
+                    // 2. Anthropic format (z.ai Claude)
+                    else if (data.type === 'content_block_delta' && data.delta?.text) {
+                      fullContent += data.delta.text;
                     }
                   } catch (e) {
                     // Ignore JSON parse errors for incomplete chunks
@@ -80,16 +95,17 @@ export default defineEventHandler(async (event) => {
               }
             }
             controller.close();
-            
+
             // 5. Save to database in background
             // We don't have usage info here easily without better parsing,
             // so we'll use a rough estimate or just save what we have.
             event.waitUntil(chatService.saveStreamedResponse(
-              user.id, 
-              input.documentId, 
-              sessionId, 
-              fullContent, 
-              { input: 0, output: 0, total: 0 } // Estimate or parse later
+              user.id,
+              input.documentId,
+              sessionId,
+              fullContent,
+              { input: 0, output: 0, total: 0 }, // Estimate or parse later
+              usedModel || 'ai-model'
             ));
 
           } catch (err) {
@@ -98,7 +114,7 @@ export default defineEventHandler(async (event) => {
         }
       });
 
-      return stream;
+      return sendStream(event, stream);
     }
 
     // Standard non-streaming response

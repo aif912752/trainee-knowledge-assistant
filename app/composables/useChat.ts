@@ -138,17 +138,21 @@ export function useChat() {
                 const data = JSON.parse(dataStr)
                 let content = ''
                 
-                // Handle different provider formats
-                if (data.type === 'content_block_delta') {
-                  content = data.delta?.text || ''
-                } else if (data.choices?.[0]?.delta?.content) {
+                // 1. OpenAI format (OpenRouter, z.ai GLM)
+                if (data.choices?.[0]?.delta?.content) {
                   content = data.choices[0].delta.content
+                } 
+                // 2. Anthropic format (z.ai Claude)
+                else if (data.type === 'content_block_delta' && data.delta?.text) {
+                  content = data.delta.text
                 }
-                
-                // Update assistant message content
-                const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
-                if (msgIndex !== -1) {
-                  messages.value[msgIndex].content += content
+
+                if (content) {
+                  // Update assistant message content
+                  const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
+                  if (msgIndex !== -1) {
+                    messages.value[msgIndex].content += content
+                  }
                 }
               } catch (e) {
                 // Partial JSON, ignore

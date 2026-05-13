@@ -44,8 +44,8 @@ export class MessageRepository {
    */
   create(input: CreateMessageInput): Message {
     const stmt = this.db.prepare(
-      `INSERT INTO messages (user_id, document_id, role, content, tokens)
-       VALUES (?, ?, ?, ?, ?)`
+      `INSERT INTO messages (user_id, document_id, role, content, tokens, model)
+       VALUES (?, ?, ?, ?, ?, ?)`
     );
 
     const result = stmt.run(
@@ -53,7 +53,8 @@ export class MessageRepository {
       input.document_id || null,
       input.role,
       input.content,
-      input.tokens || 0
+      input.tokens || 0,
+      input.model || null
     );
 
     const message = this.db.prepare(
