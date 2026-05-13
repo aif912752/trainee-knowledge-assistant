@@ -7,13 +7,13 @@ export function estimateTokens(text: string): number {
   return Math.ceil(text.length / 3);
 }
 
-export interface TokenUsage {
+export interface AiTokenUsage {
   input: number;
   output: number;
   total: number;
 }
 
-export function estimateUsage(input: string, output: string): TokenUsage {
+export function estimateUsage(input: string, output: string): AiTokenUsage {
   const inputTokens = estimateTokens(input);
   const outputTokens = estimateTokens(output);
   return {
@@ -22,3 +22,4 @@ export function estimateUsage(input: string, output: string): TokenUsage {
     total: inputTokens + outputTokens
   };
 }
+

@@ -1,12 +1,10 @@
+import type { AiTokenUsage } from './tokens';
+
 export interface ParsedStreamData {
   content: string;
   model?: string;
   isDone: boolean;
-  usage?: {
-    input: number;
-    output: number;
-    total: number;
-  };
+  usage?: AiTokenUsage;
 }
 
 /**

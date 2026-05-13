@@ -1,9 +1,7 @@
 import { toast } from 'vue-sonner'
 import type { Message } from '~~/types/message'
 import type { ApiSuccessResponse } from '~~/shared/api-response'
-import { ChatStreamParser } from '~~/shared/chat-stream'
-import { estimateTokens } from '~~/shared/tokens'
-import { apiFetch } from './useApi'
+import { parseChatStreamChunk } from '~~/shared/chat-stream'
 
 type ChatResponse = ApiSuccessResponse<{
   message: Message
@@ -32,7 +30,7 @@ type UsageResponse = ApiSuccessResponse<{
 export function useChat() {
   const messages = ref<Message[]>([])
   const isLoading = ref(false)
-  const isTyping = ref(false) // New: tracks when AI is actively streaming
+  const isTyping = ref(false)
   const isFetchingHistory = ref(false)
   const totalTokens = ref(0)
   const sessionId = ref(`session_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`)
@@ -43,9 +41,7 @@ export function useChat() {
   async function fetchHistory(documentId?: number) {
     isFetchingHistory.value = true
     try {
-      const response = await apiFetch<HistoryResponse>('/api/chat/history', {
-        query: { documentId }
-      })
+      const response = await api.get<HistoryResponse>('/api/chat/history', { documentId })
       if (response.success) {
         messages.value = response.data.messages
       }
@@ -61,7 +57,7 @@ export function useChat() {
    */
   async function fetchUsage() {
     try {
-      const response = await apiFetch<UsageResponse>('/api/chat/usage')
+      const response = await api.get<UsageResponse>('/api/chat/usage')
       if (response.success) {
         totalTokens.value = response.data.usage.total
       }
@@ -73,143 +69,107 @@ export function useChat() {
   /**
    * Send message to AI
    */
-  async function sendMessage(text: string, documentId?: number, useStreaming = true) {
+  async function sendMessage(text: string, documentId?: number) {
     if (!text.trim() || isLoading.value) return
 
-    // 1. Add user message optimistically
-    const userMsgId = Date.now()
-    messages.value.push({
-      id: userMsgId,
-      user_id: 0,
+    // Optimistic update: Add user message locally
+    const tempUserMessage: Message = {
+      id: -1,
+      user_id: 0, // Will be set by server
       document_id: documentId || null,
       role: 'user',
       content: text,
-      tokens: estimateTokens(text),
-      created_at: new Date().toISOString()
-    })
+      tokens: 0,
+      created_at: new Date().toISOString(),
+      model: null
+    }
+    messages.value.push(tempUserMessage)
 
-    // 2. Add empty assistant message for streaming
-    const assistantMsgId = userMsgId + 1
-    messages.value.push({
-      id: assistantMsgId,
+    // Optimistic update: Add assistant placeholder
+    const tempAssistantMessage: Message = {
+      id: -2,
       user_id: 0,
       document_id: documentId || null,
       role: 'assistant',
       content: '',
       tokens: 0,
-      created_at: new Date().toISOString()
-    })
+      created_at: new Date().toISOString(),
+      model: null
+    }
+    messages.value.push(tempAssistantMessage)
 
     isLoading.value = true
+    isTyping.value = true
     try {
-      if (useStreaming) {
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-chat-session-id': sessionId.value
-          },
-          body: JSON.stringify({
-            message: text,
-            documentId,
-            stream: true
-          })
-        })
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-chat-session-id': sessionId.value
+        },
+        body: JSON.stringify({ message: text, documentId, stream: true })
+      })
 
-        if (!response.ok) {
-          throw new Error('Streaming failed')
-        }
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || errorData.error || 'ไม่สามารถส่งข้อความได้')
+      }
 
-        const reader = response.body?.getReader()
-        const decoder = new TextDecoder()
-        const parser = new ChatStreamParser()
-        
-        if (!reader) throw new Error('No reader')
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
 
-        let accumulatedContent = ''
-        isTyping.value = true  // Show typing indicator
-
+      if (reader) {
+        let buffer = ''
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
-          
-          const chunk = decoder.decode(value, { stream: true })
-          const parsed = parser.parse(chunk)
 
-          if (parsed.content) {
-            accumulatedContent += parsed.content
-            // Update assistant message content
-            const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
-            if (msgIndex !== -1) {
-              messages.value[msgIndex].content = accumulatedContent
-              if (parsed.model && !messages.value[msgIndex].model) {
-                messages.value[msgIndex].model = parsed.model
-              }
-              // Update tokens on the fly (estimation)
-              messages.value[msgIndex].tokens = estimateTokens(accumulatedContent)
-            }
-          }
+          isTyping.value = false // Data started flowing
 
-          // If stream provides final usage
-          if (parsed.usage) {
-             const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
-             if (msgIndex !== -1) {
-               messages.value[msgIndex].tokens = parsed.usage.output
-             }
+          // Add new chunk to buffer and split by lines
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || '' // Keep the last incomplete line
+
+          // Parse complete lines
+          for (const line of lines) {
+            const parsed = parseChatStreamChunk(line + '\n')
+            if (parsed.content) tempAssistantMessage.content += parsed.content
+            if (parsed.model && !tempAssistantMessage.model) tempAssistantMessage.model = parsed.model
           }
         }
-
-        // Final flush if any
-        const finalParsed = parser.flush()
-        if (finalParsed.content) {
-          accumulatedContent += finalParsed.content
-          const msgIndex = messages.value.findIndex(m => m.id === assistantMsgId)
-          if (msgIndex !== -1) {
-            messages.value[msgIndex].content = accumulatedContent
-            messages.value[msgIndex].tokens = estimateTokens(accumulatedContent)
-          }
-        }
-
-        isTyping.value = false  // Hide typing indicator
-
-        // Refresh usage after stream ends
-        await fetchUsage()
-      } else {
-        // Fallback to non-streaming if needed
-        const response = await apiFetch<ChatResponse>('/api/chat', {
-          method: 'POST',
-          headers: { 'x-chat-session-id': sessionId.value },
-          body: { message: text, documentId }
-        })
         
-        if (response.success) {
-          // Replace the placeholder assistant message
-          messages.value = messages.value.filter(m => m.id !== assistantMsgId)
-          messages.value.push(response.data.message)
-          await fetchUsage()
+        // Process any remaining buffer
+        if (buffer) {
+          const parsed = parseChatStreamChunk(buffer)
+          if (parsed.content) tempAssistantMessage.content += parsed.content
         }
       }
+
+      // Re-fetch to sync exact DB IDs and Token counts in the background
+      await fetchUsage()
+      fetchHistory(documentId) 
+      
+      return { success: true }
     } catch (err: any) {
-      console.error('Chat error:', err)
       toast.error('เกิดข้อผิดพลาด', {
-        description: err.message || 'ไม่สามารถส่งข้อความได้'
+        description: err.message || 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
       })
-      // Clean up optimistic messages on error
-      messages.value = messages.value.filter(m => m.id !== userMsgId && m.id !== assistantMsgId)
+      // Remove the optimistic messages on failure
+      messages.value = messages.value.filter(m => m.id !== -1 && m.id !== -2)
+      throw err
     } finally {
       isLoading.value = false
+      isTyping.value = false
     }
   }
-
 
   /**
    * Clear chat history
    */
   async function clearChat() {
     try {
-      const response = await apiFetch<any>('/api/chat/history', {
-        method: 'DELETE'
-      })
+      const response = await api.delete<any>('/api/chat/history')
       if (response.success) {
         messages.value = []
         toast.success('ล้างประวัติสำเร็จ')

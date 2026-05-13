@@ -5,7 +5,7 @@ import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
 import { successResponse } from '~~/server/utils/response';
 import { estimateTokenUsage } from '~~/server/utils/chat';
 import type { ChatInput } from '~~/shared/validations/chat.validation';
-import { ChatStreamParser } from '~~/shared/chat-stream';
+import { parseChatStreamChunk } from '~~/shared/chat-stream';
 
 /**
  * Chat API endpoint
@@ -49,11 +49,12 @@ export default defineEventHandler(async (event) => {
 
       // We want to both forward the stream to the client AND collect it to save to DB
       const reader = response.body.getReader();
+      const encoder = new TextEncoder();
       const decoder = new TextDecoder();
-      const parser = new ChatStreamParser();
 
       let fullContent = '';
       let usedModel = '';
+      let buffer = '';
 
       const stream = new ReadableStream({
         async start(controller) {
@@ -62,45 +63,41 @@ export default defineEventHandler(async (event) => {
               const { done, value } = await reader.read();
               if (done) break;
 
-              // Forward the raw chunk to the client immediately
+              // Forward the raw chunk to the client
               controller.enqueue(value);
 
-              // Also decode it for our fullContent collection (non-blocking)
-              const chunk = decoder.decode(value, { stream: true });
-              const parsed = parser.parse(chunk);
-              fullContent += parsed.content;
+              // Also decode it for our fullContent collection
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || ''; // Keep incomplete line
 
-              if (parsed.model && !usedModel) {
-                usedModel = parsed.model;
+              for (const line of lines) {
+                const parsed = parseChatStreamChunk(line + '\n');
+                fullContent += parsed.content;
+                if (parsed.model && !usedModel) usedModel = parsed.model;
               }
             }
-
-            // Handle any leftover in buffer
-            const finalParsed = parser.flush();
-            fullContent += finalParsed.content;
-
-            // Close the stream
+            if (buffer) {
+              const parsed = parseChatStreamChunk(buffer);
+              fullContent += parsed.content;
+            }
             controller.close();
 
-            // Save to database in background (don't block stream close)
-            setImmediate(() => {
-              chatService.saveStreamedResponse(
-                user.id,
-                input.documentId,
-                sessionId,
-                fullContent,
-                usedModel || 'ai-model',
-                prompt
-              ).catch((err) => console.error('Failed to save streamed response:', err));
-            });
+            // 5. Save to database in background
+            // Token estimation is now handled inside saveStreamedResponse using the full prompt
+            event.waitUntil(chatService.saveStreamedResponse(
+              user.id,
+              input.documentId,
+              sessionId,
+              fullContent,
+              usedModel || 'ai-model',
+              prompt
+            ));
 
           } catch (err) {
             controller.error(err);
           }
         }
-      }, {
-        // Enable byte-level streaming for better performance
-        highWaterMark: 0  // Don't buffer, send immediately
       });
 
       return sendStream(event, stream);
@@ -118,4 +115,3 @@ export default defineEventHandler(async (event) => {
     return handleApiError(event, error);
   }
 });
-
