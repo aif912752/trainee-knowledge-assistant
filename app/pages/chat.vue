@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue'
-import { Bot, FileText, Loader2, Send, Trash2, User } from 'lucide-vue-next'
+import { Bot, FileText, Loader2, Send, Trash2, User, Copy, Check } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
+import { useClipboard } from '@vueuse/core'
 import { useChat } from '~/composables/useChat'
 import MarkdownRenderer from '~/components/MarkdownRenderer.vue'
 import { Button } from '~/components/ui/button'
@@ -24,6 +25,18 @@ definePageMeta({
 
 const route = useRoute()
 const { messages, isLoading, isTyping, isFetchingHistory, totalTokens, fetchHistory, fetchUsage, sendMessage, clearChat } = useChat()
+const { copy, copied } = useClipboard()
+const copiedMessageId = ref<number | null>(null)
+
+const handleCopy = async (text: string, id: number) => {
+  await copy(text)
+  copiedMessageId.value = id
+  setTimeout(() => {
+    if (copiedMessageId.value === id) {
+      copiedMessageId.value = null
+    }
+  }, 2000)
+}
 
 const inputMessage = ref('')
 const scrollContainer = ref<HTMLElement | null>(null)
@@ -146,6 +159,24 @@ const formatTime = (dateStr: string) => {
                     <template v-if="msg.tokens > 0">
                       <span class="mx-0.5 select-none">·</span>
                       <span class="font-medium text-primary/80">{{ msg.tokens }} tokens</span>
+                    </template>
+                    <template v-if="msg.role === 'assistant' && !isTyping">
+                      <span class="mx-0.5 select-none">·</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger as-child>
+                            <button
+                              class="flex items-center gap-1 hover:text-primary transition-colors focus:outline-none"
+                              @click="handleCopy(msg.content, msg.id)"
+                            >
+                              <Check v-if="copiedMessageId === msg.id" class="size-3 text-green-500" />
+                              <Copy v-else class="size-3" />
+                              <span>{{ copiedMessageId === msg.id ? 'คัดลอกแล้ว' : 'คัดลอก' }}</span>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>คัดลอกข้อความ</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </template>
                     <span v-if="msg.role === 'assistant' && isTyping && msg.id === messages[messages.length - 1]?.id" class="flex items-center gap-1 text-primary">
                       <span class="size-1 rounded-full bg-current animate-pulse"></span>
