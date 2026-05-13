@@ -85,7 +85,8 @@ export function useChat() {
       role: 'user',
       content: text,
       tokens: estimateTokens(text),
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      model: null
     })
 
     // 2. Add empty assistant message for streaming
@@ -97,7 +98,8 @@ export function useChat() {
       role: 'assistant',
       content: '',
       tokens: 0,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      model: null
     })
 
     isLoading.value = true
