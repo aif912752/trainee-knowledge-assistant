@@ -89,34 +89,90 @@ export class ChatService {
       console.log('🤖 Starting stream from Primary AI...');
       let response = await this.aiProvider.streamPrimary(prompt);
 
-      // Peek first chunk to see if it's an error (despite 200 OK)
-      // Some proxy providers return 200 OK but send an error event in the stream
-      const clonedResponse = response.clone();
-      const reader = clonedResponse.body?.getReader();
+      // Robust peek logic: read first few chunks to detect 200 OK errors (e.g. quota limits)
+      const reader = response.body?.getReader();
       if (reader) {
-        try {
-          const { done, value } = await reader.read();
-          if (!done && value) {
-            const decoder = new TextDecoder();
-            const chunk = decoder.decode(value, { stream: true });
-            const parser = new ChatStreamParser();
-            const parsed = parser.parse(chunk);
-            
-            if (parsed.error) {
-              console.warn('⚠️ Primary AI returned error in stream, attempting fallback:', parsed.error.message);
+        const decoder = new TextDecoder();
+        const parser = new ChatStreamParser();
+        let isError = false;
+        let errorMessage = '';
+        const bufferedValues: Uint8Array[] = [];
 
-              response = await this.aiProvider.streamFallback(prompt);
+        try {
+          // Read up to 3 chunks to ensure we get the full error JSON if it's fragmented
+          for (let i = 0; i < 3; i++) {
+            const { done, value } = await reader.read();
+            if (value) {
+              bufferedValues.push(value);
+              const chunk = decoder.decode(value, { stream: true });
+              const parsed = parser.parse(chunk);
+              if (parsed.error) {
+                isError = true;
+                errorMessage = parsed.error.message;
+                break;
+              }
+              // If we see valid model or content, it's a success stream
+              if (parsed.content || parsed.model) {
+                break;
+              }
+            }
+            if (done) break;
+          }
+
+          if (!isError) {
+            const flushed = parser.flush();
+            if (flushed.error) {
+              isError = true;
+              errorMessage = flushed.error.message;
             }
           }
         } catch (e) {
           console.error('Error while peeking stream:', e);
-        } finally {
-          reader.releaseLock();
+        }
+
+        if (isError) {
+          console.warn(`⚠️ Primary AI returned error in stream, attempting fallback: ${errorMessage}`);
+          reader.cancel().catch(() => {});
+          response = await this.aiProvider.streamFallback(prompt);
+        } else {
+          // Reconstruct stream for the client since we already consumed some chunks
+          const reconstructedStream = new ReadableStream({
+            start(controller) {
+              for (const val of bufferedValues) {
+                controller.enqueue(val);
+              }
+            },
+            async pull(controller) {
+              try {
+                const { done, value } = await reader.read();
+                if (done) {
+                  controller.close();
+                  reader.releaseLock();
+                } else {
+                  controller.enqueue(value);
+                }
+              } catch (e) {
+                controller.error(e);
+                reader.releaseLock();
+              }
+            },
+            cancel(reason) {
+              reader.cancel(reason).catch(() => {});
+            }
+          });
+
+          // Create a new response with the reconstructed stream
+          response = new Response(reconstructedStream, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers
+          });
         }
       }
 
       return { stream: response, prompt };
     } catch (error: unknown) {
+
       const err = error as { message?: string };
       console.error('⚠️ Primary AI stream failed, attempting fallback...', err.message);
       const stream = await this.aiProvider.streamFallback(prompt);
