@@ -771,6 +771,22 @@
 - ระบบมีความเสถียรมากขึ้นในการจัดการข้อมูลจากหลาย Provider (OpenRouter, z.ai)
 **My Adjustment:** แก้ไขปัญหาการไหลของข้อความให้ลื่นไหลเหมือนเดิม และเพิ่มการแสดงผล Token รายข้อความแบบ Real-time ✅
 
+## Session 77: Resolving Naming Conflicts and Standardizing Types
+**Prompt:** "WARN Duplicated imports \"TokenUsage\"..."
+**AI Response:**
+- วิเคราะห์สาเหตุ: เกิดการซ้ำซ้อนของชื่อ Interface `TokenUsage` ระหว่าง Database Model (`types/token.ts`) และ AI Usage structure (`shared/tokens.ts`)
+- แก้ไขโดยการเปลี่ยนชื่อในส่วนของ AI เป็น `AiTokenUsage` เพื่อให้สื่อความหมายชัดเจนและไม่ชนกับชื่อตารางในฐานข้อมูล
+- ทำการ Refactor ทั้งโครงการให้ใช้ `AiTokenUsage` เป็นมาตรฐานเดียวกัน:
+  - อัปเดต `shared/tokens.ts` และ `shared/chat-stream.ts`
+  - อัปเดต `server/utils/chat.ts` โดยลบ `TokenUsageSummary` ที่ซ้ำซ้อนออกและใช้ `AiTokenUsage` แทน
+  - อัปเดต `ChatService.ts` และ `ChatProviderService.ts` ให้รองรับ Type ใหม่
+- ตรวจสอบและกู้คืน Logic ใน `useChat.ts` ให้กลับมาเป็นเวอร์ชันล่าสุดที่รองรับ `ChatStreamParser` และ `AiTokenUsage` อย่างถูกต้อง
+**My Adjustment:**
+- แก้ไขปัญหา Warning ใน Nuxt Auto-import ได้อย่างถาวร
+- โค้ดมีความสะอาดและสื่อความหมายชัดเจนขึ้น (Clear Naming Convention)
+- มั่นใจว่าระบบ Streaming และ Token Tracking ทำงานได้อย่างสมบูรณ์และถูกต้องตามมาตรฐาน
+**My Adjustment:** เปลี่ยนชื่อ Interface เป็น `AiTokenUsage` เพื่อแก้ปัญหา Naming Conflict และ Refactor ทั้งระบบให้ใช้มาตรฐานเดียวกัน ✅
+
 ---
 
 แชทตอบสนองไวขึ้นมาก อัปเดต UI ทันที และบันทึก Token usage ได้ถูกต้องเมื่อสตรีมจบ
