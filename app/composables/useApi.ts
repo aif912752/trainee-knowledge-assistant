@@ -41,11 +41,9 @@ export async function apiFetch<T>(url: string, options: any = {}): Promise<T> {
     }
 
     // Re-throw so the caller can handle local state (like isLoading),
-    // but the error object now has a processed message
-    throw {
-      ...error,
-      friendlyMessage: message
-    }
+    // but the error object now has a processed message attached
+    error.friendlyMessage = message
+    throw error
   }
 }
 

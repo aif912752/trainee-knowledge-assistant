@@ -6,62 +6,48 @@ import { UserRepository } from '~~/server/repositories/user.repository';
 import { MessageRepository } from '~~/server/repositories/message.repository';
 import { DocumentRepository } from '~~/server/repositories/document.repository';
 import { TokenRepository } from '~~/server/repositories/token.repository';
-import { useRuntimeConfig } from '#imports';
-import type Database from 'better-sqlite3';
+import { getDatabase } from '~~/server/db';
 
 /**
  * Singleton Services Plugin
- * Initializes service instances once on server startup
- * Uses db from event.context (initialized by database plugin)
- *
- * IMPORTANT: database.ts plugin must load first
+ * Initializes service instances once on server startup.
+ * Attaches service instances to every request context.
  */
 export default defineNitroPlugin((nitroApp) => {
-  const config = useRuntimeConfig();
+  try {
+    const config = useRuntimeConfig();
+    const db = getDatabase();
 
-  // Get db from first request context (database plugin attaches it)
-  // We'll create services lazily when first request comes in
-  let repositories: any = null;
-  let authService: AuthService | null = null;
-  let chatService: ChatService | null = null;
-  let documentService: DocumentService | null = null;
+    // Initialize repositories and services once on startup
+    const repositories = {
+      user: new UserRepository(db),
+      session: new SessionRepository(db),
+      message: new MessageRepository(db),
+      document: new DocumentRepository(db),
+      token: new TokenRepository(db),
+    };
 
-  nitroApp.hooks.hook('request', (event) => {
-    // Get db from context (attached by database plugin)
-    const db = (event as any).context.db as Database.Database;
+    const authService = new AuthService(repositories.user);
+    const chatService = new ChatService(
+      repositories.message,
+      repositories.token,
+      repositories.document,
+      config
+    );
+    const documentService = new DocumentService(repositories.document);
 
-    if (!db) {
-      throw new Error('Database not found in event.context - database plugin may not have loaded');
-    }
+    // Attach to event context for all requests
+    nitroApp.hooks.hook('request', (event) => {
+      event.context.db = db;
+      event.context.repositories = repositories;
+      event.context.authService = authService;
+      event.context.chatService = chatService;
+      event.context.documentService = documentService;
+    });
 
-    // Create repositories and services on first request (lazy init)
-    if (!repositories) {
-      repositories = {
-        user: new UserRepository(db),
-        session: new SessionRepository(db),
-        message: new MessageRepository(db),
-        document: new DocumentRepository(db),
-        token: new TokenRepository(db),
-      };
-
-      authService = new AuthService(repositories.user);
-      chatService = new ChatService(
-        repositories.message,
-        repositories.token,
-        repositories.document,
-        config
-      );
-      documentService = new DocumentService(repositories.document);
-
-      console.log('✅ Services initialized (lazy load)');
-    }
-
-    // Attach to event context for API handlers
-    (event as any).context.repositories = repositories;
-    (event as any).context.authService = authService;
-    (event as any).context.chatService = chatService;
-    (event as any).context.documentService = documentService;
-  });
-
-  console.log('✅ Services plugin loaded');
+    console.log('✅ Services initialized and attached to request context');
+  } catch (error) {
+    console.error('❌ Failed to initialize services plugin:', error);
+    // Don't re-throw here to allow Nitro to start, but subsequent requests will fail if they need these services
+  }
 });

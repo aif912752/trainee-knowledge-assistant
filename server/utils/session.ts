@@ -10,8 +10,7 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days in seconds
  * Create user session with secure random token
  */
 export function createUserSession(event: H3Event, user: UserWithoutPassword) {
-  const repositories = (event.context as any).repositories;
-  const sessionRepo = repositories.session as SessionRepository;
+  const sessionRepo = event.context.repositories.session;
 
   // Create session with random token
   const session = sessionRepo.create(user.id, SESSION_MAX_AGE);
@@ -37,9 +36,8 @@ export function getSessionUser(event: H3Event): UserWithoutPassword | null {
     return null;
   }
 
-  const repositories = (event.context as any).repositories;
-  const sessionRepo = repositories.session as SessionRepository;
-  const userRepo = repositories.user as UserRepository;
+  const sessionRepo = event.context.repositories.session;
+  const userRepo = event.context.repositories.user;
 
   const userId = sessionRepo.getUserIdByToken(token);
 
@@ -74,8 +72,7 @@ export function clearUserSession(event: H3Event) {
   const token = getCookie(event, SESSION_COOKIE_NAME);
 
   if (token) {
-    const repositories = (event.context as any).repositories;
-    const sessionRepo = repositories.session as SessionRepository;
+    const sessionRepo = event.context.repositories.session;
     sessionRepo.deleteByToken(token);
   }
 

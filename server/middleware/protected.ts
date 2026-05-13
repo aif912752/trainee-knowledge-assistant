@@ -7,7 +7,7 @@ import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
  */
 export default defineEventHandler(async (event) => {
   // Get the request path
-  const url = (event as any).path || event.node.req.url?.split('?')[0] || '';
+  const url = event.path || event.node.req.url?.split('?')[0] || '';
 
   // Skip middleware for non-API routes
   if (!url.startsWith('/api/')) {
