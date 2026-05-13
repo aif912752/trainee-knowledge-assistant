@@ -914,3 +914,51 @@
 - ผู้ใช้ได้รับประสบการณ์การใช้งานที่ดีขึ้นผ่านการแจ้งเตือน Error ที่ชัดเจนในหน้าจอ
 
 ---
+
+## Session 55: Implementing Chat Feature & Fixing UI Issues
+**Prompts:**
+- "ทำ Feature 3 - Chat"
+- "ทำไมข้อความ AI ขึ้นสองก้อน"
+- "ตอนที่รอ ai ตอบ แทนที่จะขึ้นแค่ก้อนขาวๆแบบนี้ ขึ้นว่ากำลังพิพ์หรือ animation อื่นๆแทนดีกว่าไหม"
+- "ทำไมเวลาตอบมันเพี้ยน มันขึ้น 10:53"
+- "ทำ ui หน้า คลังเอกสาร ให้ที"
+- "ช่องค้นหาสีไม่ค่อยเห็น ปรับให้ที"
+**AI Response:**
+- **Bug Fix 1: Duplicate AI Messages**
+  - สาเหตุ: Error handler ใน `useChat.ts` มีการเพิ่มข้อความ assistant ซ้ำ
+  - แก้ไข: ลบ logic ที่เพิ่มข้อความใหม่ออก เพราะข้อความถูกสร้างไว้แล้วในบรรทัด 82-92
+  
+- **Bug Fix 2: Empty Message Bubble**
+  - สาเหตุ: แสดงก้อนขาวว่างเปล่าขณะรอ AI ตอบ
+  - แก้ไข: เปลี่ยนเงื่อนไขให้แสดง "กำลังพิมพ์..." แทน และข้ามการแสดงข้อความว่างเปล่า
+  
+- **Bug Fix 3: Wrong Time Display**
+  - สาเหตุ: `toLocaleTimeString` ไม่ได้ระบุ `hour12: false`
+  - แก้ไข: เพิ่ม `hour12: false` เพื่อบังคับให้แสดงเวลา 24 ชั่วโมง
+  
+- **Feature: Documents Page (คลังเอกสาร)**
+  - สร้าง `app/pages/documents.vue` พร้อม:
+    - แสดงรายการเอกสารทั้งหมด
+    - ค้นหาเอกสารตามชื่อ
+    - เรียงลำดับตามวันที่, ชื่อ, หรือขนาด
+    - ลบเอกสารพร้อม confirmation dialog
+    - ถามเกี่ยวกับเอกสารแต่ละไฟล์
+  - สร้าง API endpoints:
+    - `GET /api/documents` - ดึงรายการเอกสาร
+    - `DELETE /api/documents/[id]` - ลบเอกสาร
+  - อัปเดต AppHeader เพื่อเพิ่ม "คลังเอกสาร" ในเมนู
+  - ปรับปรุง index.vue ให้ "คลังเอกสาร" เป็น available
+  
+- **UI Improvement: Search Box**
+  - เพิ่มสีพื้นหลัง `bg-card` ให้ช่องค้นหา
+  - เปลี่ยนสีไอคอน Search เป็น `text-primary` ให้เห็นชัดขึ้น
+  - เพิ่ม border color `border-primary/30` และ focus state
+  - เปลี่ยนปุ่ม "เรียงลำดับ" เป็น Dropdown Menu ที่ใช้งานได้จริง
+
+**My Adjustment:**
+- แก้ไข Bug ทั้ง 3 ข้อ ทำให้ Chat feature ทำงานได้ถูกต้อง
+- สร้างหน้า Documents ที่สมบูรณ์พร้อม API endpoints
+- ปรับปรุง UI ให้ดูชัดเจนและใช้งานได้ดีขึ้น
+- Commit แยกส่วนตามลำดับการแก้ไข
+
+**Status:** Feature 3 (Chat) + Feature 4 (Documents) สำเร็จ (10 คะแนน)

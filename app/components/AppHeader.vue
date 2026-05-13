@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LogOut, MessageSquare, Sparkles, Upload, User as UserIcon } from 'lucide-vue-next'
+import { LogOut, MessageSquare, Sparkles, Upload, User as UserIcon, FileText } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import {
   DropdownMenu,
@@ -11,7 +11,7 @@ import {
 } from '~~/app/components/ui/dropdown-menu'
 
 const props = defineProps<{
-  active?: 'dashboard' | 'chat' | 'upload'
+  active?: 'dashboard' | 'chat' | 'upload' | 'documents'
 }>()
 
 const { data: authData } = useFetch('/api/auth/me')
@@ -22,6 +22,7 @@ const navItems = [
   { key: 'dashboard', label: 'แดชบอร์ด', path: '/', icon: Sparkles },
   { key: 'chat', label: 'แชท', path: '/chat', icon: MessageSquare },
   { key: 'upload', label: 'อัปโหลด', path: '/upload', icon: Upload },
+  { key: 'documents', label: 'คลังเอกสาร', path: '/documents', icon: FileText },
 ] as const
 
 const handleLogout = async () => {
