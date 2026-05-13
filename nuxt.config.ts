@@ -5,6 +5,11 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
 
+  devServer: {
+    host: '0.0.0.0', // Listen on all interfaces (IPv4 + IPv6)
+    port: 3000,
+  },
+
   modules: ["@nuxtjs/tailwindcss", "shadcn-nuxt", "nuxt-security"],
 
   css: ['~/assets/css/tailwind.css'],
@@ -86,7 +91,7 @@ export default defineNuxtConfig({
     requestSizeLimiter: {
       throwError: true,
     },
-    rateLimiter: false, // Disable rate limiter for now if needed, or configure
+    rateLimiter: false, // Disabled globally, can be enabled on specific routes
   },
 
   routeRules: {
@@ -96,6 +101,15 @@ export default defineNuxtConfig({
         xssValidator: false,
       },
     },
+    '/api/auth/login': {
+      security: {
+        rateLimiter: {
+          tokensPerInterval: 10,
+          interval: 'minute',
+          driver: { name: 'memory' }
+        }
+      }
+    }
   },
 
   shadcn: {
