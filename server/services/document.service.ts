@@ -1,5 +1,4 @@
 import { DocumentRepository } from '~~/server/repositories/document.repository';
-import { getDatabase } from '~~/server/db';
 import type { CreateDocumentInput } from '~~/types/document';
 import type { H3Event } from 'h3';
 import formidable from 'formidable';
@@ -27,17 +26,8 @@ const UPLOAD_DIR = join(process.cwd(), 'storage/uploads');
 export class DocumentService {
   private documentRepository: DocumentRepository;
 
-  constructor(documentRepo?: DocumentRepository) {
-    // Support both DI and legacy instantiation
-    if (documentRepo) {
-      // Dependency Injection mode (from plugin)
-      this.documentRepository = documentRepo;
-    } else {
-      // Legacy mode (direct instantiation) - should not happen in normal flow
-      console.warn('⚠️ DocumentService instantiated in legacy mode (DI preferred)');
-      const db = getDatabase();
-      this.documentRepository = new DocumentRepository(db);
-    }
+  constructor(documentRepo: DocumentRepository) {
+    this.documentRepository = documentRepo;
 
     // Ensure upload directory exists
     if (!existsSync(UPLOAD_DIR)) {
