@@ -1,20 +1,18 @@
 import { InternalServerError } from '~~/shared/errors';
 
-/**
- * Base class for all backend external API services
- */
+interface RequestOptions extends Omit<Parameters<typeof $fetch>[1], 'headers'> {
+  headers?: Record<string, string>;
+  timeout?: number;
+  method?: string;
+  body?: unknown;
+  query?: Record<string, string | number | boolean | undefined>;
+}
+
 export abstract class BaseApiService {
-  /**
-   * Protected request method to be used by child services
-   * Uses Nuxt useRuntimeConfig for global settings if needed
-   */
-  protected async request<T>(url: string, options: any = {}): Promise<T> {
+  protected async request<T>(url: string, options: RequestOptions = {}): Promise<T> {
     const serviceName = this.constructor.name;
-    // useRuntimeConfig() is a Nuxt/Nitro global
-    const config = useRuntimeConfig();
-    
-    // Merge headers: Default JSON -> Method specific
-    const headers = {
+
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...options.headers,
     };
@@ -25,15 +23,16 @@ export abstract class BaseApiService {
         headers,
         timeout: options.timeout || 30000,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { status?: number; message?: string; data?: unknown };
       console.error(`[${serviceName}] API Request Failed:`, {
         url,
-        status: error.status,
-        message: error.message,
-        data: error.data
+        status: err.status,
+        message: err.message,
+        data: err.data
       });
 
-      if (error.status) {
+      if (err.status) {
         throw new InternalServerError(
           `การเชื่อมต่อกับบริการภายนอกล้มเหลว (${serviceName})`,
           'EXTERNAL_SERVICE_ERROR'
@@ -44,11 +43,7 @@ export abstract class BaseApiService {
     }
   }
 
-  /**
-   * Helper for POST requests
-   * @param headers Optional headers to merge
-   */
-  protected async post<T>(url: string, body: any, headers: Record<string, string> = {}, options: any = {}): Promise<T> {
+  protected async post<T>(url: string, body: unknown, headers: Record<string, string> = {}, options: RequestOptions = {}): Promise<T> {
     return this.request<T>(url, {
       ...options,
       method: 'POST',
@@ -57,14 +52,10 @@ export abstract class BaseApiService {
     });
   }
 
-  /**
-   * Helper for POST Streaming requests
-   * Uses standard fetch because $fetch is not optimized for streaming responses
-   */
-  protected async postStream(url: string, body: any, headers: Record<string, string> = {}): Promise<Response> {
+  protected async postStream(url: string, body: unknown, headers: Record<string, string> = {}): Promise<Response> {
     const serviceName = this.constructor.name;
-    
-    const requestHeaders = {
+
+    const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       ...headers,
     };
@@ -84,32 +75,27 @@ export abstract class BaseApiService {
           url,
           status: response.status,
           contentType,
-          error: errorText.slice(0, 500) // Truncate long HTML errors
+          error: errorText.slice(0, 500)
         });
         throw new InternalServerError(`การเชื่อมต่อ Streaming ล้มเหลว (${response.status})`);
       }
 
-      // Safeguard: If we expected an API but got HTML (common when URL is wrong)
       if (contentType.includes('text/html')) {
         console.error(`[${serviceName}] Received HTML instead of Stream:`, url);
         throw new InternalServerError('ได้รับข้อมูลไม่ถูกต้องจาก AI Provider (URL อาจผิดหรือคีย์ไม่ถูกต้อง)');
       }
 
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof InternalServerError) throw error;
-      
-      console.error(`[${serviceName}] Streaming Network Error:`, error.message);
+
+      const err = error as { message?: string };
+      console.error(`[${serviceName}] Streaming Network Error:`, err.message);
       throw new InternalServerError(`ไม่สามารถเริ่มต้นการเชื่อมต่อ Streaming ได้ (${serviceName})`);
     }
   }
 
-  /**
-   * Helper for GET requests
-   * @param query Optional query parameters
-   * @param headers Optional headers to merge
-   */
-  protected async get<T>(url: string, query: any = {}, headers: Record<string, string> = {}, options: any = {}): Promise<T> {
+  protected async get<T>(url: string, query: Record<string, string | number | boolean | undefined> = {}, headers: Record<string, string> = {}, options: RequestOptions = {}): Promise<T> {
     return this.request<T>(url, {
       ...options,
       method: 'GET',

@@ -6,6 +6,7 @@ import {
   buildDocumentContext,
 } from '~~/server/utils/chat';
 import { ChatProviderService } from '~~/server/services/chat-provider.service';
+import type { ChatProviderConfig } from '~~/server/services/chat-provider.service';
 import type { ChatInput } from '~~/shared/validations/chat.validation';
 import { type AiTokenUsage, estimateAiUsage } from '~~/shared/tokens';
 
@@ -19,7 +20,7 @@ export class ChatService {
     messageRepo: MessageRepository,
     tokenRepo: TokenRepository,
     documentRepo: DocumentRepository,
-    config: any
+    config: ChatProviderConfig
   ) {
     this.messageRepository = messageRepo;
     this.tokenRepository = tokenRepo;
@@ -53,14 +54,16 @@ export class ChatService {
       console.log('🤖 Sending request to Primary AI...');
       const primary = await this.aiProvider.callPrimary(prompt);
       return this.processAiResponse(primary.content, primary.usage, userId, validatedDocumentId, sessionId, primary.model);
-    } catch (error: any) {
-      console.error('⚠️ Primary AI failed, attempting fallback...', error.message);
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      console.error('⚠️ Primary AI failed, attempting fallback...', err.message);
 
       try {
         const fallback = await this.aiProvider.callFallback(prompt);
         return this.processAiResponse(fallback.content, fallback.usage, userId, validatedDocumentId, sessionId, fallback.model);
-      } catch (fallbackError: any) {
-        console.error('❌ Fallback AI also failed:', fallbackError.message);
+      } catch (fallbackError: unknown) {
+        const fbErr = fallbackError as { message?: string };
+        console.error('❌ Fallback AI also failed:', fbErr.message);
         throw fallbackError;
       }
     }
@@ -85,8 +88,9 @@ export class ChatService {
       console.log('🤖 Starting stream from Primary AI...');
       const stream = await this.aiProvider.streamPrimary(prompt);
       return { stream, prompt };
-    } catch (error: any) {
-      console.error('⚠️ Primary AI stream failed, attempting fallback...', error.message);
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      console.error('⚠️ Primary AI stream failed, attempting fallback...', err.message);
       const stream = await this.aiProvider.streamFallback(prompt);
       return { stream, prompt };
     }
