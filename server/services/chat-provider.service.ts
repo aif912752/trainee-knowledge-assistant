@@ -17,6 +17,18 @@ export interface ChatProviderResult {
   model: string;
 }
 
+interface AnthropicMessageResponse {
+  content: Array<{ type: string; text: string }>;
+  usage: { input_tokens: number; output_tokens: number };
+  model: string;
+}
+
+interface OpenAIChatResponse {
+  choices: Array<{ message: { content: string }; delta?: { content: string } }>;
+  usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+  model: string;
+}
+
 /**
  * Service for interacting with external AI providers
  */
@@ -43,35 +55,7 @@ export class ChatProviderService extends BaseApiService {
       const url = baseUrl.endsWith('/v1/messages') ? baseUrl : `${baseUrl}/v1/messages`;
       console.log(`[ChatProvider] Calling Primary AI (Anthropic Mode): ${url}`);
       
-      const response = await this.post<any>(url, {
-        model: primaryModel,
-        max_tokens: 1024,
-        system: CHAT_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: fullPrompt }],
-      }, {
-        'x-api-key': this.config.zaiApiKey,
-        'anthropic-version': '2023-06-01',
-      });
-
-      return {
-        content: response.content[0].text,
-        usage: normalizeZaiUsage(response.usage),
-        model: response.model || primaryModel
-      };
-    } else {
-      // 2. OpenAI-Compatible Format (GLM / Coding Plan)
-      let url = baseUrl;
-      let model = primaryModel;
-      
-      if (isCodingPlan) {
-        url = baseUrl.includes('/chat/completions') ? baseUrl : `${baseUrl}/chat/completions`;
-        model = 'glm-4.7'; // Recommended for Coding Plan
-      } else {
-        url = baseUrl.includes('/chat/completions') ? baseUrl : `${baseUrl}/v4/chat/completions`;
-      }
-      
-      console.log(`[ChatProvider] Calling Primary AI: ${url} (Model: ${model})`);
-      const response = await this.post<any>(url, {
+      const response = await this.post<AnthropicMessageResponse>(url, {
         model,
         messages: [
           { role: 'system', content: CHAT_SYSTEM_PROMPT },
@@ -168,27 +152,26 @@ export class ChatProviderService extends BaseApiService {
     }
 
     console.log(`[ChatProvider] Calling Fallback AI: ${url} (Model: ${model})`);
-    const response = await this.post<any>(url, {
-      model,
-      messages: [
-        { role: 'system', content: CHAT_SYSTEM_PROMPT },
-        { role: 'user', content: fullPrompt },
-      ],
-    }, {
-      Authorization: `Bearer ${this.config.openrouterApiKey}`,
-      'HTTP-Referer': 'https://github.com/aif912752/trainee-knowledge-assistant',
-      'X-Title': 'Mini Knowledge Assistant',
-    });
+      const response = await this.post<OpenAIChatResponse>(url, {
+        model,
+        messages: [
+          { role: 'system', content: CHAT_SYSTEM_PROMPT },
+          { role: 'user', content: fullPrompt }
+        ],
+      }, {
+        Authorization: `Bearer ${this.config.zaiApiKey}`,
+      });
 
-    return {
-      content: response.choices[0].message.content,
-      usage: normalizeOpenRouterUsage(response.usage),
-      model: response.model || model
-    };
+      return {
+        content: response.choices[0].message.content,
+        usage: normalizeOpenRouterUsage(response.usage),
+        model: response.model || model
+      };
+    }
   }
 
   /**
-   * Stream Fallback AI (OpenRouter/Gemini)
+   * Stream Primary AI (z.ai - Adaptive Format)
    */
   async streamFallback(fullPrompt: string): Promise<Response> {
     if (!this.config.openrouterApiKey) {
