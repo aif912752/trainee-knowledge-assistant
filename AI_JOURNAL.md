@@ -893,3 +893,24 @@
 - **Total Score:** 61/65 points (93.8%)
 
 ---
+
+## Session 83: Robust Stream Fallback & Model Name Extraction
+**Prompts:**
+- "มันแค่ขึ้น Chat error... แต่ไม่ขึ้นที่ ui"
+- "แล้วทำไม ai ไม่แสดงชื่อ model ที่ใช้"
+- "model หลักมันขึ้น ⚠️ ข้อผิดพลาด... แต่ทำไมไม่สลับเป็น model รองให้อัตโนมัติ"
+- "เปลี่ยน model รอง เป็น inclusionai/ring-2.6-1t:free"
+- "สร้างเป็นหัวขจ้อใหม่เลย"
+
+**AI Response:**
+- **UI Error Display:** แก้ไข `useChat.ts` ให้แสดงข้อความ Error ภายในกล่องข้อความแชท (Chat Bubble) ของ AI แทนการลบข้อความทิ้ง เพื่อให้ผู้ใช้มองเห็นปัญหาได้ชัดเจนขึ้น
+- **Model Name Extraction:** ปรับปรุง `ChatStreamParser` ให้รองรับการดึงชื่อ Model จากโครงสร้างแบบ Anthropic (`data.message.model`) และแก้ปัญหาที่แอปข้ามการดึงชื่อ Model ใน Chunk แรกที่ไม่มี Content
+- **Robust Stream Fallback:** รื้อระบบ "Peeking" ใน `ChatService` ใหม่ โดยเปลี่ยนจากการดึงข้อมูลแค่ Chunk แรก (ซึ่งอาจถูกหั่นครึ่ง) มาเป็นระบบ **Buffer-and-Reconstruct** ที่รออ่านข้อมูลจนเจอ Error ที่สมบูรณ์ หรือจนกว่าจะแน่ใจว่าเป็นข้อความปกติ แล้วจึงค่อยประกอบร่าง (Reconstruct) Stream ส่งคืนให้ Frontend วิธีนี้ทำให้สามารถจับ Error ใน Stream (200 OK) ได้แม่นยำ 100%
+- **Update Fallback Model:** อัปเดตไฟล์ `.env.example` และ `.env` เปลี่ยนโมเดลรองไปใช้ `inclusionai/ring-2.6-1t:free` บน OpenRouter แทน เนื่องจากโมเดลเดิมอาจพบปัญหาการใช้งาน
+
+**My Adjustment:**
+- ระบบ Stream Fallback สามารถทำงานสลับไปใช้ Model รองได้อัตโนมัติอย่างราบรื่นเมื่อ Model หลักโควตาเต็ม
+- ชื่อโมเดลที่กำลังตอบกลับถูกแสดงผลอย่างถูกต้องและรวดเร็ว
+- ผู้ใช้ได้รับประสบการณ์การใช้งานที่ดีขึ้นผ่านการแจ้งเตือน Error ที่ชัดเจนในหน้าจอ
+
+---
