@@ -2,7 +2,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { MessageSquare, Trash2, Calendar, Zap, Loader2, Search, Filter, MoreVertical, Eye } from 'lucide-vue-next'
-import { toast } from 'vue-sonner'
+import { useHistory, type Session } from '~/composables/useHistory'
+import type { Message } from '~~/types/message'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import {
@@ -29,27 +30,8 @@ definePageMeta({
 })
 
 const router = useRouter()
-const api = useApi()
+const { sessions, isLoading, fetchSessions, deleteSession } = useHistory()
 
-interface Message {
-  id: number
-  role: 'user' | 'assistant'
-  content: string
-  tokens: number
-  created_at: string
-  model?: string
-}
-
-interface Session {
-  id: string
-  messages: Message[]
-  totalTokens: number
-  createdAt: string
-  updatedAt: string
-}
-
-const sessions = ref<Session[]>([])
-const isLoading = ref(false)
 const searchQuery = ref('')
 const filterRole = ref<'all' | 'user' | 'assistant'>('all')
 const deleteDialogOpen = ref(false)
@@ -110,72 +92,16 @@ const getPreview = (content: string, length: number = 100): string => {
   return content.substring(0, length) + '...'
 }
 
-const fetchSessions = async () => {
-  isLoading.value = true
-  try {
-    const response = await api.get<any>('/api/chat/history')
-    if (response.success) {
-      // Group messages by session
-      const messagesData = response.data.messages || []
-      const sessionMap = new Map<string, Session>()
-
-      messagesData.forEach((msg: any) => {
-        const sessionId = msg.session_id || 'default'
-        if (!sessionMap.has(sessionId)) {
-          sessionMap.set(sessionId, {
-            id: sessionId,
-            messages: [],
-            totalTokens: 0,
-            createdAt: msg.created_at,
-            updatedAt: msg.created_at,
-          })
-        }
-
-        const session = sessionMap.get(sessionId)!
-        session.messages.push({
-          id: msg.id,
-          role: msg.role,
-          content: msg.content,
-          tokens: msg.tokens || 0,
-          created_at: msg.created_at,
-          model: msg.model,
-        })
-        session.totalTokens += msg.tokens || 0
-        session.updatedAt = msg.created_at
-      })
-
-      sessions.value = Array.from(sessionMap.values())
-    }
-  } catch (error: any) {
-    toast.error('ไม่สามารถโหลดประวัติได้', {
-      description: error.message || 'เกิดข้อผิดพลาด',
-    })
-  } finally {
-    isLoading.value = false
-  }
-}
-
 const handleDeleteSession = async () => {
   if (!sessionToDelete.value) return
 
-  try {
-    const response = await api.delete<any>(`/api/chat/history/${sessionToDelete.value.id}`)
-
-    if (response.success) {
-      sessions.value = sessions.value.filter(s => s.id !== sessionToDelete.value!.id)
-      if (selectedSession.value?.id === sessionToDelete.value.id) {
-        selectedSession.value = null
-      }
-      toast.success('ลบประวัติสำเร็จ')
-    }
-  } catch (error: any) {
-    toast.error('ไม่สามารถลบประวัติได้', {
-      description: error.message || 'เกิดข้อผิดพลาด',
-    })
-  } finally {
-    deleteDialogOpen.value = false
-    sessionToDelete.value = null
+  const success = await deleteSession(sessionToDelete.value.id)
+  if (success && selectedSession.value?.id === sessionToDelete.value.id) {
+    selectedSession.value = null
   }
+
+  deleteDialogOpen.value = false
+  sessionToDelete.value = null
 }
 
 const openDeleteDialog = (session: Session) => {

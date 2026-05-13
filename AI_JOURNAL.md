@@ -961,9 +961,6 @@
 - ปรับปรุง UI ให้ดูชัดเจนและใช้งานได้ดีขึ้น
 - Commit แยกส่วนตามลำดับการแก้ไข
 
-**Status:** Feature 3 (Chat) + Feature 4 (Documents) สำเร็จ (10 คะแนน)
-
-
 ## Session 85: Implementing History Page (ประวัติการใช้งาน)
 **Prompt:** "ต่อไปหน้า ประวัติการใช้งาน สร้างให้ที"
 **AI Response:**
@@ -1003,6 +1000,21 @@
 - ปรับปรุง UI ให้เข้ากับธีมหลัก
 - เพิ่ม History ในเมนู AppHeader
 
-**Status:** Feature 5 (History) สำเร็จ (5 คะแนน)
+**Status:** Feature 5 (History) สำเร็จ 
 **My Adjustment:** สร้างหน้า History พร้อม API เชื่อมต่อได้อย่างสมบูรณ์ และปรับ UI เข้ากับธีมหลัก
-**Status:** Feature 5 (History) สำเร็จ (5 คะแนน) ✅
+
+
+## Session 86: Refactor History Page - Use Composables & Shared Types
+**Prompts:**
+- "Module '"./useApi"' has no exported member 'useApi'"
+- "ควรทำเหมือนหน้าอื่นๆ"
+- "ใช้ import { apiFetch } from './useApi' แทน"
+- "เหมือนมันจะแยก คำถาม กับ คำตอบ เป็นคนละรายการไปเลย"
+
+**Changes:**
+- สร้าง `useHistory` composable ที่ใช้ `apiFetch` แทน `useApi()`
+- ใช้ shared types (`Message` จาก `~~/types/message`)
+- แก้ไข grouping logic - รวมข้อความทั้งหมดเป็น session เดียว
+- ลบ interface ที่ซ้ำซ้อนออกจาก history.vue
+
+**Status:** History page ทำงานถูกต้อง 
