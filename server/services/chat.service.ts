@@ -5,10 +5,10 @@ import {
   buildChatPrompt,
   buildDocumentContext,
   estimateTokenUsage,
-  type TokenUsageSummary,
 } from '~~/server/utils/chat';
 import { ChatProviderService } from '~~/server/services/chat-provider.service';
 import type { ChatInput } from '~~/shared/validations/chat.validation';
+import type { AiTokenUsage } from '~~/shared/tokens';
 
 export class ChatService {
   private messageRepository: MessageRepository;
@@ -118,7 +118,7 @@ export class ChatService {
   /**
    * Process and save AI response
    */
-  private processAiResponse(content: string, usage: TokenUsageSummary, userId: number, documentId: number | undefined, sessionId: string, model: string) {
+  private processAiResponse(content: string, usage: AiTokenUsage, userId: number, documentId: number | undefined, sessionId: string, model: string) {
     // 1. Find the last user message to update its token count
     // This is optional but good for detailed tracking
     try {
