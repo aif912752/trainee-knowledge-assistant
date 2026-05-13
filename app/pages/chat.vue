@@ -6,6 +6,17 @@ import { useChat } from '~/composables/useChat'
 import MarkdownRenderer from '~/components/MarkdownRenderer.vue'
 import { Button } from '~/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '~/components/ui/alert-dialog'
 
 definePageMeta({
   middleware: 'auth',
@@ -53,9 +64,7 @@ const handleSend = async () => {
 }
 
 const handleClear = async () => {
-  if (confirm('คุณแน่ใจหรือไม่ว่าต้องการล้างประวัติการสนทนาทั้งหมด?')) {
-    await clearChat()
-  }
+  await clearChat()
 }
 
 const formatTime = (dateStr: string) => {
@@ -102,51 +111,54 @@ const formatTime = (dateStr: string) => {
             class="flex w-full"
             :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
           >
-            <div class="group flex max-w-[92%] gap-3 sm:max-w-[78%]" :class="msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'">
-              <div
-                class="mt-1 flex size-8 shrink-0 items-center justify-center rounded-lg"
-                :class="msg.role === 'user' ? 'bg-secondary text-secondary-foreground' : 'bg-primary text-primary-foreground'"
-              >
-                <User v-if="msg.role === 'user'" class="size-4" />
-                <Bot v-else class="size-4" />
-              </div>
-
-              <div class="min-w-0 space-y-1">
-                <div v-if="msg.role === 'assistant' && msg.model" class="px-1 text-[10px] font-medium text-muted-foreground uppercase tracking-tight">
-                  {{ msg.model }}
-                </div>
+            <!-- Skip rendering empty assistant messages (they'll be shown as typing indicator) -->
+            <template v-if="!(msg.role === 'assistant' && !msg.content)">
+              <div class="group flex max-w-[92%] gap-3 sm:max-w-[78%]" :class="msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'">
                 <div
-                  class="rounded-xl px-4 py-3 text-sm shadow-sm"
-                  :class="[
-                    msg.role === 'user'
-                      ? 'rounded-tr-sm bg-primary text-primary-foreground selection:bg-white/25 selection:text-white'
-                      : 'rounded-tl-sm border bg-card text-card-foreground selection:bg-orange-100 selection:text-orange-900',
-                  ]"
+                  class="mt-1 flex size-8 shrink-0 items-center justify-center rounded-lg"
+                  :class="msg.role === 'user' ? 'bg-secondary text-secondary-foreground' : 'bg-primary text-primary-foreground'"
                 >
-                  <div v-if="msg.role === 'user'" class="whitespace-pre-wrap wrap-break-word leading-7">{{ msg.content }}</div>
-                  <MarkdownRenderer v-else :content="msg.content" />
+                  <User v-if="msg.role === 'user'" class="size-4" />
+                  <Bot v-else class="size-4" />
                 </div>
 
-                <div
-                  class="flex items-center gap-2 text-[10px] text-muted-foreground/70"
-                  :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
-                >
-                  <span>{{ formatTime(msg.created_at) }}</span>
-                  <template v-if="msg.tokens > 0">
-                    <span class="mx-0.5 select-none">·</span>
-                    <span class="font-medium text-primary/80">{{ msg.tokens }} tokens</span>
-                  </template>
-                  <span v-if="msg.role === 'assistant' && isTyping && msg.id === messages[messages.length - 1]?.id" class="flex items-center gap-1 text-primary">
-                    <span class="size-1 rounded-full bg-current animate-pulse"></span>
-                    <span class="size-1 rounded-full bg-current animate-pulse [animation-delay:0.2s]"></span>
-                    <span class="size-1 rounded-full bg-current animate-pulse [animation-delay:0.4s]"></span>
-                  </span>
+                <div class="min-w-0 space-y-1">
+                  <div v-if="msg.role === 'assistant' && msg.model" class="px-1 text-[10px] font-medium text-muted-foreground uppercase tracking-tight">
+                    {{ msg.model }}
+                  </div>
+                  <div
+                    class="rounded-xl px-4 py-3 text-sm shadow-sm"
+                    :class="[
+                      msg.role === 'user'
+                        ? 'rounded-tr-sm bg-primary text-primary-foreground selection:bg-white/25 selection:text-white'
+                        : 'rounded-tl-sm border bg-card text-card-foreground selection:bg-orange-100 selection:text-orange-900',
+                    ]"
+                  >
+                    <div v-if="msg.role === 'user'" class="whitespace-pre-wrap wrap-break-word leading-7">{{ msg.content }}</div>
+                    <MarkdownRenderer v-else :content="msg.content" />
+                  </div>
+
+                  <div
+                    class="flex items-center gap-2 text-[10px] text-muted-foreground/70"
+                    :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
+                  >
+                    <span>{{ formatTime(msg.created_at) }}</span>
+                    <template v-if="msg.tokens > 0">
+                      <span class="mx-0.5 select-none">·</span>
+                      <span class="font-medium text-primary/80">{{ msg.tokens }} tokens</span>
+                    </template>
+                    <span v-if="msg.role === 'assistant' && isTyping && msg.id === messages[messages.length - 1]?.id" class="flex items-center gap-1 text-primary">
+                      <span class="size-1 rounded-full bg-current animate-pulse"></span>
+                      <span class="size-1 rounded-full bg-current animate-pulse [animation-delay:0.2s]"></span>
+                      <span class="size-1 rounded-full bg-current animate-pulse [animation-delay:0.4s]"></span>
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            </template>
           </div>
 
-          <div v-if="isLoading && !messages.some(m => m.role === 'assistant' && m.content)" class="flex justify-start">
+          <div v-if="isLoading && messages.some(m => m.role === 'assistant' && !m.content)" class="flex justify-start">
             <div class="flex gap-3">
               <div class="mt-1 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Bot class="size-4" />
@@ -158,7 +170,7 @@ const formatTime = (dateStr: string) => {
                     <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:-0.15s]"></span>
                     <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce"></span>
                   </div>
-                  <span class="text-xs text-muted-foreground">กำลังคิด...</span>
+                  <span class="text-xs text-muted-foreground">กำลังพิมพ์...</span>
                 </div>
               </div>
             </div>
@@ -190,16 +202,32 @@ const formatTime = (dateStr: string) => {
           <div class="flex items-center gap-2">
             <span class="font-mono text-primary">{{ totalTokens.toLocaleString() }}</span>
             <span>tokens</span>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <Button variant="ghost" size="icon-sm" class="text-muted-foreground hover:text-destructive" @click="handleClear">
-                    <Trash2 class="size-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>ล้างการสนทนา</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <AlertDialog>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <AlertDialogTrigger as-child>
+                      <Button variant="ghost" size="icon-sm" class="text-muted-foreground hover:text-destructive">
+                        <Trash2 class="size-3.5" />
+                      </Button>
+                    </AlertDialogTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>ล้างการสนทนา</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>ล้างประวัติการสนทนา?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    คุณแน่ใจหรือไม่ว่าต้องการล้างประวัติการสนทนาทั้งหมด? การกระทำนี้ไม่สามารถยกเลิกได้
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                  <AlertDialogAction @click="handleClear" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">ล้างข้อความ</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </div>
