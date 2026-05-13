@@ -119,8 +119,8 @@ const formatTime = (dateStr: string) => {
                   class="rounded-xl px-4 py-3 text-sm shadow-sm"
                   :class="[
                     msg.role === 'user'
-                      ? 'rounded-tr-sm bg-primary text-primary-foreground'
-                      : 'rounded-tl-sm border bg-card text-card-foreground',
+                      ? 'rounded-tr-sm bg-primary text-primary-foreground selection:bg-white/25 selection:text-white'
+                      : 'rounded-tl-sm border bg-card text-card-foreground selection:bg-orange-100 selection:text-orange-900',
                   ]"
                 >
                   <div v-if="msg.role === 'user'" class="whitespace-pre-wrap break-words leading-7">{{ msg.content }}</div>
