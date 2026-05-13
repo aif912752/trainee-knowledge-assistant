@@ -774,3 +774,21 @@
 ---
 
 แชทตอบสนองไวขึ้นมาก อัปเดต UI ทันที และบันทึก Token usage ได้ถูกต้องเมื่อสตรีมจบ
+
+## Session 77: DevServer IPv4/IPv6 Configuration & Chat UI Improvements
+**Prompts:**
+- "ทำไม http://localhost:3000/login มันขึ้น Hmmm… can't reach this page"
+- "ตอนที่ส่งข้อความไปหา AI แล้ว AI กำลังตอบมา อยากให้ขึ้น loading เหมือน chat gpt หรือ claude หน่อย ตอนนี้มันขึ้นแค่ วงกลมขาวๆ ไม่มีข้อความไรบอกเลย พอข้อความตอบมา มันก็ตอบมารวดเดียว ไม่มีการส่งมาทีละคำเหมือนคนกำลังพิมพ์จริงเลย"
+- "commit ไปที"
+- "บันทึกลง prompt ด้วย"
+**AI Response:**
+- **DevServer Host:** ปัญหา localhost ไม่เข้าเกิดจาก Nuxt dev server ฟังเฉพาะ IPv6 (`::1`) ไม่ได้ฟัง IPv4 แก้ไขโดยเพิ่ม `devServer: { host: '0.0.0.0' }` ใน `nuxt.config.ts`
+- **Loading Indicator:** เพิ่มข้อความ "กำลังคิด..." ให้ผู้ใช้รู้สถานะของ AI แทนที่จะมีแต่จุด 3 จุด
+- **Typing Indicator:** เพิ่ม `isTyping` state และแสดงจุด 3 จุดกระพริบใต้ข้อความ AI ตอนที่กำลัง stream
+- **Streaming Performance:** ปรับ `highWaterMark: 0` ให้ส่ง chunks ทันทีไม่บัฟเฟอร์ และใช้ `setImmediate` สำหรับบันทึก DB แยกจาก stream
+**My Adjustment:**
+- แก้ไขปัญหาเข้าเว็บไม่ได้บน Windows (IPv4/IPv6 dual-stack)
+- UI แสดงสถานะชัดเจนขึ้น (Thinking/Typing)
+- Streaming smooth ขึ้นด้วยการลด buffering
+
+---
