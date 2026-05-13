@@ -9,7 +9,7 @@ const props = defineProps<{
 }>()
 
 const md = new MarkdownIt({
-  html: true,
+  html: false, // Security: prevent XSS from AI responses
   linkify: true,
   typographer: true,
   highlight: (str, lang) => {
