@@ -915,7 +915,7 @@
 
 ---
 
-## Session 55: Implementing Chat Feature & Fixing UI Issues
+## Session 84: Implementing Chat Feature & Fixing UI Issues
 **Prompts:**
 - "ทำ Feature 3 - Chat"
 - "ทำไมข้อความ AI ขึ้นสองก้อน"
@@ -962,3 +962,47 @@
 - Commit แยกส่วนตามลำดับการแก้ไข
 
 **Status:** Feature 3 (Chat) + Feature 4 (Documents) สำเร็จ (10 คะแนน)
+
+
+## Session 85: Implementing History Page (ประวัติการใช้งาน)
+**Prompt:** "ต่อไปหน้า ประวัติการใช้งาน สร้างให้ที"
+**AI Response:**
+- สร้าง `app/pages/history.vue` พร้อมฟีเจอร์:
+  - แสดงรายการเซสชันการสนทนาทั้งหมด
+  - ค้นหาประวัติตามเนื้อหา
+  - ดูรายละเอียดข้อความแต่ละเซสชัน
+  - ฟิลเตอร์ข้อความตามประเภท (ทั้งหมด, คำถาม, คำตอบ)
+  - ลบประวัติการสนทนา
+  - แสดงจำนวน tokens ที่ใช้
+  - แสดงเวลาของแต่ละข้อความ
+  
+- สร้าง API endpoint:
+  - `DELETE /api/chat/history/[id]` - ลบประวัติการสนทนา
+  
+- อัปเดต AppHeader:
+  - เพิ่ม History link ในเมนู
+  - เพิ่ม History ใน active props
+  
+- อัปเดต index.vue:
+  - เปลี่ยน History status จาก "เร็วๆ นี้" เป็น "available"
+- สร้าง `app/pages/history.vue` (รองรับการแสดงรายการ, ค้นหา, ฟิลเตอร์, ลบประวัติ และดู Token/เวลา)
+- สร้าง API endpoint `DELETE /api/chat/history/[id]`
+- อัปเดต `AppHeader` และ `index.vue` ให้รองรับการเข้าถึงเมนู History
+
+**Features:**
+- 📋 แสดงรายการเซสชันการสนทนา
+- 🔍 ค้นหาประวัติตามเนื้อหา
+- 💬 ดูรายละเอียดข้อความแต่ละเซสชัน
+- 🏷️ ฟิลเตอร์ข้อความตามประเภท
+- ⚡ แสดงจำนวน tokens ที่ใช้
+- 🗑️ ลบประวัติพร้อม confirmation dialog
+- 📱 Responsive design
+
+**My Adjustment:**
+- สร้างหน้า History ที่สมบูรณ์พร้อม API endpoint
+- ปรับปรุง UI ให้เข้ากับธีมหลัก
+- เพิ่ม History ในเมนู AppHeader
+
+**Status:** Feature 5 (History) สำเร็จ (5 คะแนน)
+**My Adjustment:** สร้างหน้า History พร้อม API เชื่อมต่อได้อย่างสมบูรณ์ และปรับ UI เข้ากับธีมหลัก
+**Status:** Feature 5 (History) สำเร็จ (5 คะแนน) ✅

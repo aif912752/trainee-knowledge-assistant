@@ -53,9 +53,9 @@ const features = [
     title: 'ประวัติการใช้งาน',
     description: 'ตรวจสอบบทสนทนาและการใช้ token ย้อนหลัง',
     icon: History,
-    path: '',
+    path: '/history',
     accent: 'bg-chart-2/20 text-primary ring-chart-2/25',
-    available: false,
+    available: true,
   },
 ]
 
