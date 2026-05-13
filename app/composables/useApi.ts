@@ -1,10 +1,10 @@
 import { toast } from 'vue-sonner'
 import { getErrorMessage } from '../utils/error-handler'
 
-interface FetchOptions extends Omit<Parameters<typeof $fetch>[1], 'headers'> {
+interface FetchOptions extends Omit<Parameters<typeof $fetch>[1], 'headers' | 'method' | 'body'> {
   headers?: Record<string, string>;
-  method?: string;
-  body?: unknown;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS' | 'TRACE' | 'CONNECT' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'head' | 'options' | 'trace';
+  body?: any;
   query?: Record<string, string | number | boolean | undefined>;
 }
 
@@ -37,7 +37,7 @@ export async function apiFetch<T>(url: string, options: FetchOptions = {}): Prom
 
 export const api = {
   get: <T>(url: string, options: FetchOptions = {}) => apiFetch<T>(url, { ...options, method: 'GET' }),
-  post: <T>(url: string, body?: unknown, options: FetchOptions = {}) => apiFetch<T>(url, { ...options, method: 'POST', body }),
-  put: <T>(url: string, body?: unknown, options: FetchOptions = {}) => apiFetch<T>(url, { ...options, method: 'PUT', body }),
+  post: <T>(url: string, body?: any, options: FetchOptions = {}) => apiFetch<T>(url, { ...options, method: 'POST', body }),
+  put: <T>(url: string, body?: any, options: FetchOptions = {}) => apiFetch<T>(url, { ...options, method: 'PUT', body }),
   delete: <T>(url: string, options: FetchOptions = {}) => apiFetch<T>(url, { ...options, method: 'DELETE' }),
 }

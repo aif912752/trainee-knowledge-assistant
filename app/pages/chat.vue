@@ -123,7 +123,7 @@ const formatTime = (dateStr: string) => {
                       : 'rounded-tl-sm border bg-card text-card-foreground selection:bg-orange-100 selection:text-orange-900',
                   ]"
                 >
-                  <div v-if="msg.role === 'user'" class="whitespace-pre-wrap break-words leading-7">{{ msg.content }}</div>
+                  <div v-if="msg.role === 'user'" class="whitespace-pre-wrap wrap-break-word leading-7">{{ msg.content }}</div>
                   <MarkdownRenderer v-else :content="msg.content" />
                 </div>
 
