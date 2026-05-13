@@ -29,17 +29,11 @@ interface OpenAIChatResponse {
   model: string;
 }
 
-/**
- * Service for interacting with external AI providers
- */
 export class ChatProviderService extends BaseApiService {
   constructor(private config: ChatProviderConfig) {
     super();
   }
 
-  /**
-   * Call Primary AI (z.ai - Adaptive Format)
-   */
   async callPrimary(fullPrompt: string): Promise<ChatProviderResult> {
     const baseUrl = this.config.zaiApiBase.replace(/\/$/, '');
     const isAnthropic = baseUrl.includes('/anthropic');
@@ -49,13 +43,43 @@ export class ChatProviderService extends BaseApiService {
     if (!primaryModel) {
       throw new Error('PRIMARY_MODEL is not configured in .env');
     }
-    
+
     if (isAnthropic) {
-      // 1. Anthropic/Claude Format
       const url = baseUrl.endsWith('/v1/messages') ? baseUrl : `${baseUrl}/v1/messages`;
       console.log(`[ChatProvider] Calling Primary AI (Anthropic Mode): ${url}`);
-      
+
       const response = await this.post<AnthropicMessageResponse>(url, {
+        model: primaryModel,
+        max_tokens: 1024,
+        system: CHAT_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: fullPrompt }],
+      }, {
+        'x-api-key': this.config.zaiApiKey,
+        'anthropic-version': '2023-06-01',
+      });
+
+      if (!response.content || response.content.length === 0 || !response.content[0]?.text) {
+        throw new Error('Anthropic API response content is empty or malformed.');
+      }
+
+      return {
+        content: response.content[0].text,
+        usage: normalizeZaiUsage(response.usage),
+        model: response.model || primaryModel
+      };
+    } else {
+      let url = baseUrl;
+      let model = primaryModel;
+
+      if (isCodingPlan) {
+        url = baseUrl.includes('/chat/completions') ? baseUrl : `${baseUrl}/chat/completions`;
+        model = 'glm-4.7';
+      } else {
+        url = baseUrl.includes('/chat/completions') ? baseUrl : `${baseUrl}/v4/chat/completions`;
+      }
+
+      console.log(`[ChatProvider] Calling Primary AI: ${url} (Model: ${model})`);
+      const response = await this.post<OpenAIChatResponse>(url, {
         model,
         messages: [
           { role: 'system', content: CHAT_SYSTEM_PROMPT },
@@ -65,17 +89,19 @@ export class ChatProviderService extends BaseApiService {
         Authorization: `Bearer ${this.config.zaiApiKey}`,
       });
 
+      const choice = response.choices?.[0];
+      if (!choice || !choice.message || typeof choice.message.content !== 'string') {
+        throw new Error('Primary AI API response choices are empty or malformed.');
+      }
+
       return {
-        content: response.choices[0].message.content,
+        content: choice.message.content,
         usage: normalizeOpenRouterUsage(response.usage),
         model: response.model || model
       };
     }
   }
 
-  /**
-   * Stream Primary AI (z.ai - Adaptive Format)
-   */
   async streamPrimary(fullPrompt: string): Promise<Response> {
     const baseUrl = this.config.zaiApiBase.replace(/\/$/, '');
     const isAnthropic = baseUrl.includes('/anthropic');
@@ -87,10 +113,9 @@ export class ChatProviderService extends BaseApiService {
     }
 
     if (isAnthropic) {
-      // 1. Anthropic/Claude Format
       const url = baseUrl.endsWith('/v1/messages') ? baseUrl : `${baseUrl}/v1/messages`;
       console.log(`[ChatProvider] Streaming Primary AI (Anthropic Mode): ${url}`);
-      
+
       return this.postStream(url, {
         model: primaryModel,
         max_tokens: 1024,
@@ -102,7 +127,6 @@ export class ChatProviderService extends BaseApiService {
         'anthropic-version': '2023-06-01',
       });
     } else {
-      // 2. OpenAI-Compatible Format (GLM / Coding Plan)
       let url = baseUrl;
       let model = primaryModel;
 
@@ -127,9 +151,6 @@ export class ChatProviderService extends BaseApiService {
     }
   }
 
-  /**
-   * Call Fallback AI (OpenRouter/Gemini)
-   */
   async callFallback(fullPrompt: string): Promise<ChatProviderResult> {
     if (!this.config.openrouterApiKey) {
       throw new Error('OPENROUTER_API_KEY is not configured in .env');
@@ -141,7 +162,6 @@ export class ChatProviderService extends BaseApiService {
     }
 
     const baseUrl = this.config.openrouterApiBase!.replace(/\/$/, '');
-    // Ensure we don't double append /v1 or /chat/completions
     let url = baseUrl;
     if (!url.includes('/chat/completions')) {
       if (!url.endsWith('/v1')) {
@@ -152,27 +172,30 @@ export class ChatProviderService extends BaseApiService {
     }
 
     console.log(`[ChatProvider] Calling Fallback AI: ${url} (Model: ${model})`);
-      const response = await this.post<OpenAIChatResponse>(url, {
-        model,
-        messages: [
-          { role: 'system', content: CHAT_SYSTEM_PROMPT },
-          { role: 'user', content: fullPrompt }
-        ],
-      }, {
-        Authorization: `Bearer ${this.config.zaiApiKey}`,
-      });
+    const response = await this.post<OpenAIChatResponse>(url, {
+      model,
+      messages: [
+        { role: 'system', content: CHAT_SYSTEM_PROMPT },
+        { role: 'user', content: fullPrompt },
+      ],
+    }, {
+      Authorization: `Bearer ${this.config.openrouterApiKey}`,
+      'HTTP-Referer': 'https://github.com/aif912752/trainee-knowledge-assistant',
+      'X-Title': 'Mini Knowledge Assistant',
+    });
 
-      return {
-        content: response.choices[0].message.content,
-        usage: normalizeOpenRouterUsage(response.usage),
-        model: response.model || model
-      };
+    const choice = response.choices?.[0];
+    if (!choice || !choice.message || typeof choice.message.content !== 'string') {
+      throw new Error('Fallback AI response choices are empty or malformed.');
     }
+
+    return {
+      content: choice.message.content,
+      usage: normalizeOpenRouterUsage(response.usage),
+      model: response.model || model
+    };
   }
 
-  /**
-   * Stream Primary AI (z.ai - Adaptive Format)
-   */
   async streamFallback(fullPrompt: string): Promise<Response> {
     if (!this.config.openrouterApiKey) {
       throw new Error('OPENROUTER_API_KEY is not configured in .env');

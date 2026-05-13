@@ -1,7 +1,6 @@
 # Dependencies
 node_modules
 npm-debug.log
-pnpm-lock.yaml
 
 # Build output
 .nuxt

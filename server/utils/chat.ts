@@ -29,7 +29,7 @@ export function buildChatPrompt(message: string, documentContext: string = ''): 
   return documentContext ? `${documentContext}คำถาม: ${message}` : message;
 }
 
-export function normalizeZaiUsage(usage: any): AiTokenUsage {
+export function normalizeZaiUsage(usage: { input_tokens?: number; output_tokens?: number }): AiTokenUsage {
   const input = Number(usage?.input_tokens || 0);
   const output = Number(usage?.output_tokens || 0);
 
@@ -40,7 +40,7 @@ export function normalizeZaiUsage(usage: any): AiTokenUsage {
   };
 }
 
-export function normalizeOpenRouterUsage(usage: any): AiTokenUsage {
+export function normalizeOpenRouterUsage(usage: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }): AiTokenUsage {
   const input = Number(usage?.prompt_tokens || 0);
   const output = Number(usage?.completion_tokens || 0);
 

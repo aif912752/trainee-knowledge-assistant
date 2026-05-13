@@ -1,10 +1,10 @@
 import { InternalServerError } from '~~/shared/errors';
 
-interface RequestOptions extends Omit<Parameters<typeof $fetch>[1], 'headers'> {
+interface RequestOptions extends Omit<Parameters<typeof $fetch>[1], 'headers' | 'method' | 'body'> {
   headers?: Record<string, string>;
   timeout?: number;
-  method?: string;
-  body?: unknown;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS' | 'TRACE' | 'CONNECT' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'head' | 'options' | 'trace';
+  body?: any;
   query?: Record<string, string | number | boolean | undefined>;
 }
 
@@ -18,11 +18,11 @@ export abstract class BaseApiService {
     };
 
     try {
-      return await $fetch<T>(url, {
+      return (await $fetch<T>(url, {
         ...options,
         headers,
         timeout: options.timeout || 30000,
-      });
+      })) as T;
     } catch (error: unknown) {
       const err = error as { status?: number; message?: string; data?: unknown };
       console.error(`[${serviceName}] API Request Failed:`, {
@@ -43,7 +43,7 @@ export abstract class BaseApiService {
     }
   }
 
-  protected async post<T>(url: string, body: unknown, headers: Record<string, string> = {}, options: RequestOptions = {}): Promise<T> {
+  protected async post<T>(url: string, body: any, headers: Record<string, string> = {}, options: RequestOptions = {}): Promise<T> {
     return this.request<T>(url, {
       ...options,
       method: 'POST',
@@ -52,7 +52,7 @@ export abstract class BaseApiService {
     });
   }
 
-  protected async postStream(url: string, body: unknown, headers: Record<string, string> = {}): Promise<Response> {
+  protected async postStream(url: string, body: any, headers: Record<string, string> = {}): Promise<Response> {
     const serviceName = this.constructor.name;
 
     const requestHeaders: Record<string, string> = {

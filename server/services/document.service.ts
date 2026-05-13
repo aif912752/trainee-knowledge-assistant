@@ -1,5 +1,5 @@
 import { DocumentRepository } from '~~/server/repositories/document.repository';
-import type { CreateDocumentInput } from '~~/types/document';
+import type { Document } from '~~/types/document';
 import type { H3Event } from 'h3';
 import formidable from 'formidable';
 import { renameSync, readFileSync, mkdirSync, existsSync, copyFileSync, unlinkSync } from 'fs';
@@ -21,6 +21,23 @@ const ALLOWED_FILE_TYPES = [
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
 // Uploads directory
+interface PdfTextItem {
+  str: string;
+  transform: number[];
+  width: number;
+  height: number;
+}
+
+interface UploadDocumentResult {
+  id: number;
+  filename: string;
+  originalName: string;
+  fileType: string;
+  fileSize: number;
+  filePath: string | undefined;
+  content: string | undefined;
+}
+
 const UPLOAD_DIR = join(process.cwd(), 'storage/uploads');
 
 export class DocumentService {
@@ -139,7 +156,7 @@ export class DocumentService {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
         const pageText = textContent.items
-          .map((item: any) => item.str)
+          .map((item: PdfTextItem) => item.str)
           .join(' ');
         fullText += pageText + '\n';
         
@@ -203,7 +220,7 @@ export class DocumentService {
   async uploadDocument(
     userId: number,
     formidableFile: formidable.File
-  ): Promise<any> {
+  ): Promise<UploadDocumentResult> {
     const overallStartTime = Date.now();
     const originalName = formidableFile.originalFilename || 'unknown';
     const mimeType = formidableFile.mimetype || 'application/octet-stream';
@@ -261,7 +278,7 @@ export class DocumentService {
       originalName: document.original_name,
       fileType: document.file_type,
       fileSize: document.file_size,
-      filePath: document.file_path,
+      filePath: document.file_path || undefined,
       content: document.content || undefined,
     };
   }

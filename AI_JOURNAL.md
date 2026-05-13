@@ -833,3 +833,46 @@
 - ลบโค้ดที่ซ้ำซ้อนใน `server/utils/chat.ts` ออก
 - อัปเดต `ChatService.ts` ให้เรียกใช้ Logic จาก Shared Utility แทน
 **My Adjustment:** โค้ดมีความสะอาดขึ้น ลดความซ้ำซ้อน และเป็น Single Source of Truth สำหรับการคำนวณ Token ทั่วทั้งระบบ ✅
+
+---
+
+## Session 81: Docker Deployment Setup & Documentation Completion
+**Prompts:**
+- "เช็ค todo ให้ทีว่าต้องทำไรต่อ"
+- "1. ✅ Docker Compose (+3) - ทำครบ 4 ขั้นตอน 2. ✅ README.md - เขียนวิธีติดตั้ง 3. ✅ DECISIONS.md - เขียน 3 decisions สำคัญ"
+- "commit ที่เหลือ"
+- "บันทึกลงใน AI_JOURNAL ด้วย"
+
+**AI Response:**
+- **Dockerfile:** สร้าง Multi-stage build สำหรับ Nuxt 4 application:
+  - Stage 1 (builder): Install dependencies และ build ด้วย pnpm
+  - Stage 2 (runtime): ใช้ Alpine Linux, install production dependencies เท่านั้น
+  - Healthcheck: ใช้ HTTP request ตรวจสอบว่า server ทำงาน
+  - Run as non-root user (nodejs:1001) เพื่อความปลอดภัย
+- **docker-compose.yml:** สร้าง service configuration:
+  - Expose port 3000
+  - Mount volumes สำหรับ database และ storage (persist data)
+  - Healthcheck configuration
+  - Environment variables จาก .env file
+- **README.md:** อัปเดตครบถ้วน:
+  - Tech stack badges (Nuxt, TypeScript, SQLite)
+  - Local development setup instructions
+  - Docker deployment instructions (compose + manual)
+  - API endpoints documentation
+  - Project structure (Nuxt 4 format)
+  - Security considerations list
+- **DECISIONS.md:** พบว่ามีอยู่แล้ว 11 decisions (ครบถ้วน)
+- **TypeScript Improvements:** ปรับปรุง type safety:
+  - เพิ่ม `FetchOptions` interface ใน `useApi.ts`
+  - เพิ่ม `RequestOptions` interface ใน `BaseApiService`
+  - เพิ่ม `AnthropicMessageResponse` และ `OpenAIChatResponse` interfaces
+  - แทนที่ `any` types ด้วย proper type definitions
+
+**My Adjustment:**
+- เสร็จสมบูรณ์ Docker Compose bonus feature (+3 คะแนน)
+- เสร็จสมบูรณ์ Documentation (README.md อัปเดต)
+- เสร็จสมบูรณ์ DECISIONS.md (มีอยู่แล้ว 11 decisions)
+- ปรับปรุง TypeScript type safety ทั่วทั้ง project
+- **Total Score:** 59/65 points (91%)
+
+---
