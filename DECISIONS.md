@@ -234,9 +234,42 @@ AI มักจะตอบกลับมาในรูปแบบ Markdown �
 
 ---
 
+## Decision 10: Standardizing on OpenAI-Compatible API Format
+
+### Context
+การเชื่อมต่อกับ AI Providers หลายเจ้า (z.ai สำหรับ Claude/GLM และ OpenRouter สำหรับ Gemini) ทำให้เกิดความซับซ้อน เนื่องจากแต่เดิมพยายามเรียกใช้ API Format ตามต้นฉบับของแต่ละเจ้า (เช่น Anthropic ใช้ `/v1/messages`)
+
+### Alternatives Considered
+1. **เขียน Mapper แยกแต่ละ Provider** - โค้ดในส่วนของ Chat Service จะใหญ่และซับซ้อน ต้องจัดการการ Parse ข้อมูล (โดยเฉพาะจังหวะ Streaming) แยกกัน
+2. **ใช้มาตรฐาน OpenAI API (`/chat/completions`)** - มาตรฐานอุตสาหกรรมที่ Proxy Provider ส่วนใหญ่ (รวมถึง z.ai และ OpenRouter) มี Endpoint รองรับ
+
+### Why OpenAI-Compatible Format
+1. **Unified Logic** - สามารถใช้ Logic ในการส่ง Request และ Parse Streaming Response ตัวเดียวกันได้ทั้ง Primary AI และ Fallback AI
+2. **Maintainability** - โค้ดใน `ChatProviderService` สะอาดและกระชับขึ้นมาก ลดโอกาสเกิด Bug จากการสลับ Provider
+3. **Future-Proof** - หากต้องการเพิ่ม AI Provider ใหม่ในอนาคต (ที่รองรับ OpenAI format) จะสามารถทำได้ทันทีโดยแทบไม่ต้องแก้โค้ด Core logic
+
+---
+
+## Decision 11: Stateful Database-Backed Sessions over Plain Cookies/JWT
+
+### Context
+ในช่วงแรกของการพัฒนาระบบ Auth มีการเก็บ `user.id` เป็น Plain text ใน HTTP-only cookie ซึ่งมีความเสี่ยงด้านความปลอดภัยอย่างมาก (เสี่ยงต่อ Session Hijacking หรือการ Tampering ข้อมูล)
+
+### Alternatives Considered
+1. **JWT (JSON Web Tokens)** - Stateless, ทำงานเร็ว แต่มีข้อเสียคือ Invalidate (บังคับให้ออกจากระบบทันที) ได้ยากก่อนที่ Token จะหมดอายุ
+2. **Signed Cookies** - ป้องกันการถูกแก้ไขข้อมูลได้ แต่ยังคงเป็น Stateless ควบคุมสถานะฝั่งเซิร์ฟเวอร์ยาก
+3. **Opaque Tokens (Database-backed)** - สร้าง Token แบบสุ่มที่เดาไม่ได้ แล้วนำไปจับคู่กับ User ใน Database
+
+### Why Database-Backed Sessions
+1. **Absolute Control** - สามารถลบ Session ทิ้งจาก Database เพื่อเตะผู้ใช้ออกจากระบบ (Logout) ได้ทันทีและเด็ดขาด
+2. **Security First** - ข้อมูลที่เก็บใน Cookie ฝั่ง Client เป็นเพียง Token แบบสุ่ม (256-bit cryptographically secure) ที่อ่านความหมายไม่ได้ ทำให้ไม่มีข้อมูลส่วนตัว (เช่น ID) รั่วไหลไปที่ Browser
+3. **Perfect Fit for SQLite** - เนื่องจากเราใช้ SQLite (In-memory/Local file) ที่อ่านเขียนได้เร็วมาก การ Query ตาราง `sessions` ทุกครั้งที่ตรวจสอบ Auth (Middleware) จึงรวดเร็วและไม่เกิดคอขวดสำหรับ Use case นี้
+
+---
+
 ## Summary
 
-ทั้ง 9 decisions นี้แสดงแนวคิดในการพัฒนา:
+ทั้ง 11 decisions นี้แสดงแนวคิดในการพัฒนา:
 
 1. **Pragmatic over Perfect** - เลือกเครื่องมือที่เหมาะกับ context ไม่ใช่ที่ดีที่สุดเสมอไป
 2. **Leverage Existing Skills** - ใช้สิ่งที่คุ้นเคย (Vue, SQL) เพื่อลด learning curve

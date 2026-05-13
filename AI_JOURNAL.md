@@ -715,4 +715,20 @@
 - Code Quality: 14/15 points (CORS ✅)
 - Bonus: 14/20 points (Markdown + Streaming + Unit Tests ✅)
 
+---
+
+## Session 73: Singleton Services & Dependency Injection
+**Prompt:** "server/api/chat/index.post.ts:29, server/middleware/protected.ts:32 — ทุก request สร้าง new AuthService(), new ChatService() ใหม่ ซึ่งแต่ละอันเรียก getDatabase() + สร้าง repository ใหม่ แนะนำ: ใช้ dependency injection หรือสร้าง singleton service ใน Nitro plugin แล้วดึงจาก event.context"
+**AI Response:**
+- สร้าง `server/plugins/services.ts` สำหรับ singleton services
+- อัปเดต Service constructors (ChatService, AuthService, DocumentService) รองรับ DI + legacy mode
+- อัปเดต API endpoints ใช้ `event.context.chatService`, `event.context.authService`, `event.context.documentService`
+- Services ถูกสร้างครั้งเดียวตอน server startup และใช้ร่วมกันทุก request
+**My Adjustment:**
+- ลด overhead ของการสร้าง service/repository ใหม่ทุก request
+- Database connection ถูก reuse ผ่าน singleton repositories
+- Code Quality: 15/15 points (CORS + Performance ✅)
+
+---
+
 แชทตอบสนองไวขึ้นมาก อัปเดต UI ทันที และบันทึก Token usage ได้ถูกต้องเมื่อสตรีมจบ
