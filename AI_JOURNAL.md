@@ -689,4 +689,30 @@
 **My Adjustment:** 
 - ทำให้ระบบทำงานได้เหมือนกับสภาพแวดล้อมที่ผู้ใช้เคยทดสอบสำเร็จมาแล้ว
 - เพิ่มความแม่นยำในการเลือกโมเดลโดยใช้ค่าคงที่ตาม n8n
+
+## Session 70: Dynamic Model Config & UI Display
+**Prompt:** "อยากจถเสริมให้มันแสดงชื่อ model ด้วยได้ไหม... และควรตั้ง claude-sonnet-4-5-20250929 ใน env แทนการ hardcode"
+**AI Response:**
+- ย้ายการตั้งค่าโมเดลหลักไปไว้ใน `.env` (`PRIMARY_MODEL`)
+- เพิ่มคอลัมน์ `model` ในตาราง `messages` เพื่อบันทึกประวัติ
+- แก้ไข API ให้ส่งชื่อโมเดลจริงกลับมา และแสดงผลใน UI เหนือกล่องข้อความ AI
+- แก้ไขปัญหา Font ไม่เข้าโดยปรับปรุง CSS Import และ Font-family ให้ถูกต้อง
+- เพิ่มการตรวจสอบความถูกต้องของคอนฟิก (Validation): ระบบจะแจ้งเตือนทันทีหากลืมตั้งค่า `PRIMARY_MODEL` หรือ `FALLBACK_MODEL` ใน `.env`
+**My Adjustment:** เพิ่มความโปร่งใสให้ผู้ใช้ทราบว่า AI ตัวไหนเป็นผู้ตอบ, ทำความสะอาดโค้ดให้รองรับ Environment variables เต็มรูปแบบ และป้องกันปัญหา "Empty Model" จากการลืมตั้งค่าคอนฟิก
+
+---
+
+## Session 71: Bug Fixes & Security Improvements
+**Prompts:**
+- "server/utils/session.ts:12 — cookie เก็บ user.id เป็น plain text ไม่มี signing/hashing ใครก็แก้ได้"
+**AI Response:**
+- **Session Security:** แก้ไขระบบ session ให้ใช้ secure random token (256-bit) แทน plain user.id
+  - เพิ่ม `sessions` table (token, user_id, expires_at)
+  - สร้าง `SessionRepository` (generateToken, validate, expire)
+  - อัปเดต `session.ts`, `protected.ts`, `me.get.ts`
+**My Adjustment:**
+- แก้ไขช่องโหว่ความปลอดภัย (Session Hijacking prevention) 🔒
+- Code Quality: 14/15 points (CORS ✅)
+- Bonus: 14/20 points (Markdown + Streaming + Unit Tests ✅)
+
 แชทตอบสนองไวขึ้นมาก อัปเดต UI ทันที และบันทึก Token usage ได้ถูกต้องเมื่อสตรีมจบ

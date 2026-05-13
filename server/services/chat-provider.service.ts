@@ -32,6 +32,10 @@ export class ChatProviderService extends BaseApiService {
     const isAnthropic = baseUrl.includes('/anthropic');
     const isCodingPlan = baseUrl.includes('/coding');
     const primaryModel = this.config.primaryModel;
+
+    if (!primaryModel) {
+      throw new Error('PRIMARY_MODEL is not configured in .env');
+    }
     
     if (isAnthropic) {
       // 1. Anthropic/Claude Format
@@ -93,6 +97,10 @@ export class ChatProviderService extends BaseApiService {
     const isCodingPlan = baseUrl.includes('/coding');
     const primaryModel = this.config.primaryModel;
 
+    if (!primaryModel) {
+      throw new Error('PRIMARY_MODEL is not configured in .env');
+    }
+
     if (isAnthropic) {
       // 1. Anthropic/Claude Format
       const url = baseUrl.endsWith('/v1/messages') ? baseUrl : `${baseUrl}/v1/messages`;
@@ -139,17 +147,28 @@ export class ChatProviderService extends BaseApiService {
    */
   async callFallback(fullPrompt: string): Promise<ChatProviderResult> {
     if (!this.config.openrouterApiKey) {
-      throw new Error('OpenRouter API key is not configured');
+      throw new Error('OPENROUTER_API_KEY is not configured in .env');
     }
 
-    const baseUrl = this.config.openrouterApiBase!;
-    const url = baseUrl.includes('/v1/chat/completions') 
-      ? baseUrl 
-      : `${baseUrl.replace(/\/$/, '')}/api/v1/chat/completions`;
+    const model = this.config.fallbackModel;
+    if (!model) {
+      throw new Error('FALLBACK_MODEL is not configured in .env');
+    }
+
+    const baseUrl = this.config.openrouterApiBase!.replace(/\/$/, '');
+    // Ensure we don't double append /v1 or /chat/completions
+    let url = baseUrl;
+    if (!url.includes('/chat/completions')) {
+      if (!url.endsWith('/v1')) {
+        url = `${url}/v1/chat/completions`;
+      } else {
+        url = `${url}/chat/completions`;
+      }
+    }
 
     console.log(`[ChatProvider] Calling Fallback AI: ${url} (Model: ${model})`);
     const response = await this.post<any>(url, {
-      model: this.config.fallbackModel,
+      model,
       messages: [
         { role: 'system', content: CHAT_SYSTEM_PROMPT },
         { role: 'user', content: fullPrompt },
@@ -172,17 +191,27 @@ export class ChatProviderService extends BaseApiService {
    */
   async streamFallback(fullPrompt: string): Promise<Response> {
     if (!this.config.openrouterApiKey) {
-      throw new Error('OpenRouter API key is not configured');
+      throw new Error('OPENROUTER_API_KEY is not configured in .env');
     }
 
-    const baseUrl = this.config.openrouterApiBase!;
-    const url = baseUrl.includes('/v1/chat/completions') 
-      ? baseUrl 
-      : `${baseUrl.replace(/\/$/, '')}/api/v1/chat/completions`;
+    const model = this.config.fallbackModel;
+    if (!model) {
+      throw new Error('FALLBACK_MODEL is not configured in .env');
+    }
+
+    const baseUrl = this.config.openrouterApiBase!.replace(/\/$/, '');
+    let url = baseUrl;
+    if (!url.includes('/chat/completions')) {
+      if (!url.endsWith('/v1')) {
+        url = `${url}/v1/chat/completions`;
+      } else {
+        url = `${url}/chat/completions`;
+      }
+    }
 
     console.log(`[ChatProvider] Streaming Fallback AI: ${url} (Model: ${model})`);
     return this.postStream(url, {
-      model: this.config.fallbackModel,
+      model,
       messages: [
         { role: 'system', content: CHAT_SYSTEM_PROMPT },
         { role: 'user', content: fullPrompt },
