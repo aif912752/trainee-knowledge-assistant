@@ -3,9 +3,8 @@ import { validateBody } from '~~/shared/validations/helpers';
 import { chatSchema } from '~~/shared/validations';
 import { UnauthorizedError, handleApiError } from '~~/server/utils/errors';
 import { successResponse } from '~~/server/utils/response';
-import { estimateTokenUsage } from '~~/server/utils/chat';
 import type { ChatInput } from '~~/shared/validations/chat.validation';
-import { parseChatStreamChunk } from '~~/shared/chat-stream';
+import { ChatStreamParser } from '~~/shared/chat-stream';
 
 /**
  * Chat API endpoint
@@ -49,12 +48,11 @@ export default defineEventHandler(async (event) => {
 
       // We want to both forward the stream to the client AND collect it to save to DB
       const reader = response.body.getReader();
-      const encoder = new TextEncoder();
       const decoder = new TextDecoder();
+      const parser = new ChatStreamParser();
 
       let fullContent = '';
       let usedModel = '';
-      let buffer = '';
 
       const stream = new ReadableStream({
         async start(controller) {
@@ -63,28 +61,26 @@ export default defineEventHandler(async (event) => {
               const { done, value } = await reader.read();
               if (done) break;
 
-              // Forward the raw chunk to the client
+              // Forward the raw chunk to the client immediately
               controller.enqueue(value);
 
-              // Also decode it for our fullContent collection
-              buffer += decoder.decode(value, { stream: true });
-              const lines = buffer.split('\n');
-              buffer = lines.pop() || ''; // Keep incomplete line
-
-              for (const line of lines) {
-                const parsed = parseChatStreamChunk(line + '\n');
-                fullContent += parsed.content;
-                if (parsed.model && !usedModel) usedModel = parsed.model;
+              // Also decode it for our fullContent collection (non-blocking)
+              const chunk = decoder.decode(value, { stream: true });
+              const parsed = parser.parse(chunk);
+              fullContent += parsed.content;
+              
+              if (parsed.model && !usedModel) {
+                usedModel = parsed.model;
               }
             }
-            if (buffer) {
-              const parsed = parseChatStreamChunk(buffer);
-              fullContent += parsed.content;
-            }
+            
+            // Handle any leftover in buffer
+            const finalParsed = parser.flush();
+            fullContent += finalParsed.content;
+
             controller.close();
 
             // 5. Save to database in background
-            // Token estimation is now handled inside saveStreamedResponse using the full prompt
             event.waitUntil(chatService.saveStreamedResponse(
               user.id,
               input.documentId,
@@ -92,7 +88,7 @@ export default defineEventHandler(async (event) => {
               fullContent,
               usedModel || 'ai-model',
               prompt
-            ));
+            ).catch(err => console.error('Failed to save streamed response:', err)));
 
           } catch (err) {
             controller.error(err);

@@ -1,5 +1,6 @@
 import { BaseApiService } from './base-api.service';
-import { CHAT_SYSTEM_PROMPT, normalizeOpenRouterUsage, normalizeZaiUsage, type TokenUsageSummary } from '~~/server/utils/chat';
+import { CHAT_SYSTEM_PROMPT, normalizeOpenRouterUsage, normalizeZaiUsage } from '~~/server/utils/chat';
+import type { AiTokenUsage } from '~~/shared/tokens';
 
 export interface ChatProviderConfig {
   zaiApiKey: string;
@@ -12,7 +13,7 @@ export interface ChatProviderConfig {
 
 export interface ChatProviderResult {
   content: string;
-  usage: TokenUsageSummary;
+  usage: AiTokenUsage;
   model: string;
 }
 
