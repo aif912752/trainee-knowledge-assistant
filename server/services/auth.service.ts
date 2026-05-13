@@ -1,5 +1,4 @@
 import bcrypt from 'bcrypt';
-import { getDatabase } from '~~/server/db';
 import { UserRepository } from '~~/server/repositories/user.repository';
 import type { LoginInput, LoginResult } from '~~/types/auth';
 import type { UserWithoutPassword } from '~~/types/user';
@@ -7,9 +6,17 @@ import type { UserWithoutPassword } from '~~/types/user';
 export class AuthService {
   private userRepository: UserRepository;
 
-  constructor() {
-    const db = getDatabase();
-    this.userRepository = new UserRepository(db);
+  constructor(userRepo?: UserRepository) {
+    // Support both DI and legacy instantiation
+    if (userRepo) {
+      // Dependency Injection mode (from plugin)
+      this.userRepository = userRepo;
+    } else {
+      // Legacy mode (direct instantiation)
+      const { getDatabase } = require('~~/server/db');
+      const db = getDatabase();
+      this.userRepository = new UserRepository(db);
+    }
   }
 
   /**

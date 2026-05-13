@@ -1,10 +1,10 @@
 import { MessageRepository } from '~~/server/repositories/message.repository';
 import { TokenRepository } from '~~/server/repositories/token.repository';
 import { DocumentRepository } from '~~/server/repositories/document.repository';
-import { getDatabase } from '~~/server/db';
 import {
   buildChatPrompt,
   buildDocumentContext,
+  estimateTokenUsage,
   type TokenUsageSummary,
 } from '~~/server/utils/chat';
 import { ChatProviderService } from '~~/server/services/chat-provider.service';
@@ -16,20 +16,43 @@ export class ChatService {
   private documentRepository: DocumentRepository;
   private aiProvider: ChatProviderService;
 
-  constructor() {
-    const db = getDatabase();
-    this.messageRepository = new MessageRepository(db);
-    this.tokenRepository = new TokenRepository(db);
-    this.documentRepository = new DocumentRepository(db);
-    const config = useRuntimeConfig();
-    this.aiProvider = new ChatProviderService({
-      zaiApiKey: config.zaiApiKey,
-      zaiApiBase: config.zaiApiBase,
-      primaryModel: config.primaryModel,
-      openrouterApiKey: config.openrouterApiKey,
-      openrouterApiBase: config.openrouterApiBase,
-      fallbackModel: config.fallbackModel,
-    });
+  constructor(
+    messageRepo?: MessageRepository,
+    tokenRepo?: TokenRepository,
+    documentRepo?: DocumentRepository,
+    config?: any
+  ) {
+    // Support both DI and legacy instantiation
+    if (messageRepo && tokenRepo && documentRepo && config) {
+      // Dependency Injection mode (from plugin)
+      this.messageRepository = messageRepo;
+      this.tokenRepository = tokenRepo;
+      this.documentRepository = documentRepo;
+      this.aiProvider = new ChatProviderService({
+        zaiApiKey: config.zaiApiKey,
+        zaiApiBase: config.zaiApiBase,
+        primaryModel: config.primaryModel,
+        openrouterApiKey: config.openrouterApiKey,
+        openrouterApiBase: config.openrouterApiBase,
+        fallbackModel: config.fallbackModel,
+      });
+    } else {
+      // Legacy mode (direct instantiation)
+      const { getDatabase } = require('~~/server/db');
+      const db = getDatabase();
+      this.messageRepository = new MessageRepository(db);
+      this.tokenRepository = new TokenRepository(db);
+      this.documentRepository = new DocumentRepository(db);
+      const runtimeConfig = useRuntimeConfig();
+      this.aiProvider = new ChatProviderService({
+        zaiApiKey: runtimeConfig.zaiApiKey,
+        zaiApiBase: runtimeConfig.zaiApiBase,
+        primaryModel: runtimeConfig.primaryModel,
+        openrouterApiKey: runtimeConfig.openrouterApiKey,
+        openrouterApiBase: runtimeConfig.openrouterApiBase,
+        fallbackModel: runtimeConfig.fallbackModel,
+      });
+    }
   }
 
   /**
@@ -38,27 +61,27 @@ export class ChatService {
   async sendMessage(userId: number, input: ChatInput, sessionId: string) {
     const { prompt, validatedDocumentId } = this.preparePrompt(userId, input);
 
-    // 3. Save user message to database
+    // Save user message to database
     this.messageRepository.create({
       user_id: userId,
       document_id: validatedDocumentId,
       role: 'user',
       content: input.message,
-      tokens: 0 // We'll count tokens from AI response
+      tokens: 0
     });
 
     try {
-      console.log('🤖 Sending request to Primary AI (z.ai)...');
+      console.log('🤖 Sending request to Primary AI...');
       const primary = await this.aiProvider.callPrimary(prompt);
       return this.processAiResponse(primary.content, primary.usage, userId, validatedDocumentId, sessionId, primary.model);
     } catch (error: any) {
-      console.error('⚠️ Primary AI (z.ai) failed, attempting fallback to OpenRouter...', error.message);
-      
+      console.error('⚠️ Primary AI failed, attempting fallback...', error.message);
+
       try {
         const fallback = await this.aiProvider.callFallback(prompt);
         return this.processAiResponse(fallback.content, fallback.usage, userId, validatedDocumentId, sessionId, fallback.model);
       } catch (fallbackError: any) {
-        console.error('❌ Fallback AI (OpenRouter) also failed:', fallbackError.message);
+        console.error('❌ Fallback AI also failed:', fallbackError.message);
         throw fallbackError;
       }
     }
@@ -70,7 +93,7 @@ export class ChatService {
   async sendMessageStream(userId: number, input: ChatInput, sessionId: string) {
     const { prompt, validatedDocumentId } = this.preparePrompt(userId, input);
 
-    // 3. Save user message to database
+    // Save user message to database
     this.messageRepository.create({
       user_id: userId,
       document_id: validatedDocumentId,
@@ -80,11 +103,13 @@ export class ChatService {
     });
 
     try {
-      console.log('🤖 Starting stream from Primary AI (z.ai)...');
-      return await this.aiProvider.streamPrimary(prompt);
+      console.log('🤖 Starting stream from Primary AI...');
+      const stream = await this.aiProvider.streamPrimary(prompt);
+      return { stream, prompt };
     } catch (error: any) {
       console.error('⚠️ Primary AI stream failed, attempting fallback...', error.message);
-      return await this.aiProvider.streamFallback(prompt);
+      const stream = await this.aiProvider.streamFallback(prompt);
+      return { stream, prompt };
     }
   }
 
@@ -95,7 +120,7 @@ export class ChatService {
     const { message, documentId } = input;
     let documentContext = '';
     let validatedDocumentId: number | undefined = undefined;
-    
+
     if (documentId) {
       const doc = this.documentRepository.findByIdAndUserId(documentId, userId);
       if (doc) {
@@ -114,7 +139,20 @@ export class ChatService {
    * Process and save AI response
    */
   private processAiResponse(content: string, usage: TokenUsageSummary, userId: number, documentId: number | undefined, sessionId: string, model: string) {
-    // 5. Save assistant message
+    // 1. Find the last user message to update its token count
+    // This is optional but good for detailed tracking
+    try {
+      const lastUserMsg = this.messageRepository.findLastByUserIdAndRole(userId, 'user');
+      if (lastUserMsg && lastUserMsg.tokens === 0) {
+        // We'll add update tokens method to repository if needed, 
+        // or just use raw SQL here via repository
+        this.messageRepository.updateTokens(lastUserMsg.id, usage.input);
+      }
+    } catch (e) {
+      console.warn('⚠️ Could not update user message tokens:', e);
+    }
+
+    // 2. Save assistant message
     const assistantMessage = this.messageRepository.create({
       user_id: userId,
       document_id: documentId,
@@ -124,7 +162,7 @@ export class ChatService {
       model: model
     });
 
-    // 6. Record token usage
+    // 3. Record token usage in global counter
     this.tokenRepository.create({
       user_id: userId,
       session_id: sessionId,
@@ -140,7 +178,9 @@ export class ChatService {
   /**
    * Save streamed response (called after stream ends)
    */
-  async saveStreamedResponse(userId: number, documentId: number | undefined, sessionId: string, content: string, usage: TokenUsageSummary, model: string) {
+  async saveStreamedResponse(userId: number, documentId: number | undefined, sessionId: string, content: string, model: string, prompt: string) {
+    // Calculate estimation internally
+    const usage = estimateTokenUsage(prompt, content);
     return this.processAiResponse(content, usage, userId, documentId, sessionId, model);
   }
 
