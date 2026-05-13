@@ -9,6 +9,7 @@ import { ChatProviderService } from '~~/server/services/chat-provider.service';
 import type { ChatProviderConfig } from '~~/server/services/chat-provider.service';
 import type { ChatInput } from '~~/shared/validations/chat.validation';
 import { type AiTokenUsage, estimateAiUsage } from '~~/shared/tokens';
+import { ChatStreamParser } from '~~/shared/chat-stream';
 
 export class ChatService {
   private messageRepository: MessageRepository;
@@ -86,8 +87,35 @@ export class ChatService {
 
     try {
       console.log('🤖 Starting stream from Primary AI...');
-      const stream = await this.aiProvider.streamPrimary(prompt);
-      return { stream, prompt };
+      let response = await this.aiProvider.streamPrimary(prompt);
+
+      // Peek first chunk to see if it's an error (despite 200 OK)
+      // Some proxy providers return 200 OK but send an error event in the stream
+      const clonedResponse = response.clone();
+      const reader = clonedResponse.body?.getReader();
+      if (reader) {
+        try {
+          const { done, value } = await reader.read();
+          if (!done && value) {
+            const decoder = new TextDecoder();
+            const chunk = decoder.decode(value, { stream: true });
+            const parser = new ChatStreamParser();
+            const parsed = parser.parse(chunk);
+            
+            if (parsed.error) {
+              console.warn('⚠️ Primary AI returned error in stream, attempting fallback:', parsed.error.message);
+
+              response = await this.aiProvider.streamFallback(prompt);
+            }
+          }
+        } catch (e) {
+          console.error('Error while peeking stream:', e);
+        } finally {
+          reader.releaseLock();
+        }
+      }
+
+      return { stream: response, prompt };
     } catch (error: unknown) {
       const err = error as { message?: string };
       console.error('⚠️ Primary AI stream failed, attempting fallback...', err.message);

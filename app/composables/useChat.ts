@@ -140,6 +140,10 @@ export function useChat() {
           const chunk = decoder.decode(value, { stream: true })
           const parsed = parser.parse(chunk)
 
+          if (parsed.error) {
+            throw new Error(parsed.error.message)
+          }
+
           if (parsed.content) {
             accumulatedContent += parsed.content
             // Update assistant message content

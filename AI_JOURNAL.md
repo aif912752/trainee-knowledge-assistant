@@ -876,3 +876,20 @@
 - **Total Score:** 59/65 points (91%)
 
 ---
+
+## Session 82: AI Fallback & Streaming Error Handling Fix
+**Prompts:**
+- "api แชท มันขึ้น event: error data: {\"error\":{\"code\":\"1308\",\"message\":\"Usage limit reached...\"}} ... ถ้ามัน error ก็ควรให้มันแสดง error ด้วย ui จะได้รู้ และถ้าตัวหลัก error ทำไมมันไม่สลับไปใช้ตัวรอง"
+
+**AI Response:**
+- **ChatStreamParser Enhancement:** ปรับปรุงให้รองรับ `event: error` และการ parse JSON ที่มีฟิลด์ `error` เพื่อให้ระบบรู้ว่าเกิดความผิดพลาดในระดับ Stream
+- **UI Error Handling:** อัปเดต `useChat.ts` ให้ตรวจจับ `parsed.error` จาก Stream หากพบจะทำการ throw error เพื่อให้ระบบแสดง Toast แจ้งเตือนผู้ใช้และล้างสถานะข้อความที่ค้างอยู่
+- **Proactive Stream Fallback:** ปรับปรุง `ChatService.sendMessageStream` ให้ใช้เทคนิค "Peeking" โดยการ clone response และอ่าน chunk แรกมาตรวจสอบ หากพบว่าเป็น error (แม้ status จะเป็น 200 OK) จะทำการสลับไปใช้ Fallback AI (OpenRouter) ทันทีก่อนส่ง stream ให้ client
+
+**My Adjustment:**
+- แก้ปัญหา Fallback ไม่ทำงานในโหมด Streaming เมื่อ AI Provider ส่ง error ภายใน stream 200 OK
+- ปรับปรุง UX ให้ผู้ใช้เห็นสาเหตุของข้อความที่ส่งไม่สำเร็จผ่าน Toast
+- เพิ่มความทนทาน (Resiliency) ให้กับระบบ AI Integration
+- **Total Score:** 61/65 points (93.8%)
+
+---
