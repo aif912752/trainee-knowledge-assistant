@@ -1,4 +1,5 @@
 import { DocumentRepository } from '~~/server/repositories/document.repository';
+import { getDatabase } from '~~/server/db';
 import type { CreateDocumentInput } from '~~/types/document';
 import type { H3Event } from 'h3';
 import formidable from 'formidable';
@@ -32,8 +33,8 @@ export class DocumentService {
       // Dependency Injection mode (from plugin)
       this.documentRepository = documentRepo;
     } else {
-      // Legacy mode (direct instantiation)
-      const { getDatabase } = require('~~/server/db');
+      // Legacy mode (direct instantiation) - should not happen in normal flow
+      console.warn('⚠️ DocumentService instantiated in legacy mode (DI preferred)');
       const db = getDatabase();
       this.documentRepository = new DocumentRepository(db);
     }

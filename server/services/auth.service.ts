@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import { UserRepository } from '~~/server/repositories/user.repository';
 import type { LoginInput, LoginResult } from '~~/types/auth';
 import type { UserWithoutPassword } from '~~/types/user';
+import { getDatabase } from '~~/server/db';
 
 export class AuthService {
   private userRepository: UserRepository;
@@ -12,8 +13,8 @@ export class AuthService {
       // Dependency Injection mode (from plugin)
       this.userRepository = userRepo;
     } else {
-      // Legacy mode (direct instantiation)
-      const { getDatabase } = require('~~/server/db');
+      // Legacy mode (direct instantiation) - should not happen in normal flow
+      console.warn('⚠️ AuthService instantiated in legacy mode (DI preferred)');
       const db = getDatabase();
       this.userRepository = new UserRepository(db);
     }

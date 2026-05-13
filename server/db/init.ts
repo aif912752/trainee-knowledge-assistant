@@ -62,6 +62,8 @@ export function seedDatabase(db: Database.Database): void {
 
 /**
  * Get database instance (singleton pattern)
+ * @deprecated Use event.context.db instead (from database plugin)
+ * This function is kept for initialization only
  */
 let dbInstance: Database.Database | null = null;
 
@@ -73,4 +75,11 @@ export function getDatabase(): Database.Database {
     seedDatabase(dbInstance);
   }
   return dbInstance;
+}
+
+/**
+ * Check if database has been initialized
+ */
+export function isDatabaseInitialized(): boolean {
+  return dbInstance !== null;
 }

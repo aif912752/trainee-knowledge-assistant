@@ -1,7 +1,7 @@
 import type { H3Event } from 'h3';
 import type { UserWithoutPassword } from '~~/types/user';
-import { getDatabase } from '~~/server/db';
-import { SessionRepository } from '~~/server/repositories/session.repository';
+import type { SessionRepository } from '~~/server/repositories/session.repository';
+import type { UserRepository } from '~~/server/repositories/user.repository';
 
 const SESSION_COOKIE_NAME = 'session_token';
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days in seconds
@@ -10,8 +10,8 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days in seconds
  * Create user session with secure random token
  */
 export function createUserSession(event: H3Event, user: UserWithoutPassword) {
-  const db = getDatabase();
-  const sessionRepo = new SessionRepository(db);
+  const repositories = (event.context as any).repositories;
+  const sessionRepo = repositories.session as SessionRepository;
 
   // Create session with random token
   const session = sessionRepo.create(user.id, SESSION_MAX_AGE);
@@ -37,8 +37,9 @@ export function getSessionUser(event: H3Event): UserWithoutPassword | null {
     return null;
   }
 
-  const db = getDatabase();
-  const sessionRepo = new SessionRepository(db);
+  const repositories = (event.context as any).repositories;
+  const sessionRepo = repositories.session as SessionRepository;
+  const userRepo = repositories.user as UserRepository;
 
   const userId = sessionRepo.getUserIdByToken(token);
 
@@ -46,11 +47,16 @@ export function getSessionUser(event: H3Event): UserWithoutPassword | null {
     return null;
   }
 
-  // Fetch user from database
-  const userStmt = db.prepare('SELECT id, username, created_at FROM users WHERE id = ?');
-  const user = userStmt.get(userId) as UserWithoutPassword | undefined;
+  // Fetch user from repository
+  const user = userRepo.findById(userId);
 
-  return user || null;
+  // Return user without password
+  if (user) {
+    const { password_hash, ...userWithoutPassword } = user;
+    return userWithoutPassword as UserWithoutPassword;
+  }
+
+  return null;
 }
 
 /**
@@ -68,8 +74,8 @@ export function clearUserSession(event: H3Event) {
   const token = getCookie(event, SESSION_COOKIE_NAME);
 
   if (token) {
-    const db = getDatabase();
-    const sessionRepo = new SessionRepository(db);
+    const repositories = (event.context as any).repositories;
+    const sessionRepo = repositories.session as SessionRepository;
     sessionRepo.deleteByToken(token);
   }
 
