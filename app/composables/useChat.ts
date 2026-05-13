@@ -144,26 +144,24 @@ export function useChat() {
             throw new Error(parsed.error.message)
           }
 
-          if (parsed.content) {
-            accumulatedContent += parsed.content
-            // Update assistant message content
-            const msg = messages.value.find(m => m.id === assistantMsgId)
-            if (msg) {
+          const msg = messages.value.find(m => m.id === assistantMsgId)
+          if (msg) {
+            // Some providers send the model name in the first chunk without content
+            if (parsed.model && !msg.model) {
+              msg.model = parsed.model
+            }
+
+            if (parsed.content) {
+              accumulatedContent += parsed.content
               msg.content = accumulatedContent
-              if (parsed.model && !msg.model) {
-                msg.model = parsed.model
-              }
               // Update tokens on the fly (estimation)
               msg.tokens = estimateTokens(accumulatedContent)
             }
-          }
 
-          // If stream provides final usage
-          if (parsed.usage) {
-             const msg = messages.value.find(m => m.id === assistantMsgId)
-             if (msg) {
-               msg.tokens = parsed.usage.output
-             }
+            // If stream provides final usage
+            if (parsed.usage) {
+              msg.tokens = parsed.usage.output
+            }
           }
         }
         

@@ -78,10 +78,15 @@ export class ChatStreamParser {
             continue;
           }
 
-          if (data.model) model = data.model;
-          
+          if (data.model) {
+            model = data.model;
+          } else if (data.message?.model) {
+            model = data.message.model; // Anthropic message_start event
+          }
+
           // Capture token usage if available in the stream
           if (data.usage && data.usage.completion_tokens) {
+
             usage = { output: data.usage.completion_tokens }; // OpenAI format
           } else if (data.type === 'message_delta' && data.usage?.output_tokens !== undefined) {
             usage = { output: data.usage.output_tokens }; // Anthropic format
