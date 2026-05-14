@@ -1094,3 +1094,21 @@
 - UI แสดงชื่อโมเดลตามที่กำหนดใน `.env` อย่างสม่ำเสมอทั้งตอน Streaming และตอนโหลดประวัติ โดยไม่มีการ Hardcode ชื่อลงในโค้ด
 - โค้ด Backend สะอาดขึ้นโดยการย้าย Logic การตัดสินใจชื่อโมเดลไปไว้ในที่เดียว (SSOT)
 
+
+## Session 91: Fix Frequent Logouts (Session Expiration Logic)
+**Prompt:** "ทำไม sesscion มันเด้งออกจากระบบบ่อยมาก เช็คให้ทีว่าได้กำหนดเวลา sesscion ไหม"
+
+**Analysis & Goal:**
+- ปัญหาเกิดจากการเปรียบเทียบเวลาหมดอายุใน SQLite โดยใช้ `datetime('now')` ซึ่งคืนค่าเป็น UTC เสมอ ขณะที่โค้ดบันทึกเป็น ISO String ที่อาจมี Timezone ต่างกัน หรือมีปัญหาเรื่อง Format ตอน Query บนสภาพแวดล้อมที่ต่างกัน (เช่น Docker vs Local)
+- เป้าหมายคือทำให้การเช็ค Session แม่นยำและไม่ขึ้นกับ Timezone
+
+**Action Taken:**
+- **server/repositories/session.repository.ts:** 
+    - เปลี่ยนการบันทึก `expires_at` จาก ISO String เป็น **Unix Timestamp (วินาที)**
+    - แก้ไข Logic การตรวจสอบใน `findByToken` ให้เปรียบเทียบตัวเลข Unix Timestamp ตรงๆ โดยใช้ `CAST(expires_at AS INTEGER) > ?`
+    - อัปเดต `deleteExpired` ให้ใช้มาตรฐานเดียวกัน
+- **Verification:** ยืนยันว่า `SESSION_MAX_AGE` ตั้งไว้ที่ 7 วัน (604,800 วินาที) และทำงานถูกต้อง
+
+**Result:**
+- ระบบตรวจสอบ Session มีความเสถียรสูงขึ้น ไม่เกิดปัญหา "เด้งออก" จากความคลาดเคลื่อนของ Timezone
+- การ Query ฐานข้อมูลทำได้เร็วขึ้นเนื่องจากเป็นการเปรียบเทียบตัวเลข

@@ -6,6 +6,7 @@ export interface ChatProviderConfig {
   zaiApiKey: string;
   zaiApiBase: string;
   primaryModel: string;
+  primaryModelDisplayName?: string;
   openrouterApiKey?: string;
   openrouterApiBase?: string;
   fallbackModel?: string;

@@ -16,6 +16,7 @@ export class ChatService {
   private tokenRepository: TokenRepository;
   private documentRepository: DocumentRepository;
   private aiProvider: ChatProviderService;
+  private config: ChatProviderConfig;
 
   constructor(
     messageRepo: MessageRepository,
@@ -26,14 +27,8 @@ export class ChatService {
     this.messageRepository = messageRepo;
     this.tokenRepository = tokenRepo;
     this.documentRepository = documentRepo;
-    this.aiProvider = new ChatProviderService({
-      zaiApiKey: config.zaiApiKey,
-      zaiApiBase: config.zaiApiBase,
-      primaryModel: config.primaryModel,
-      openrouterApiKey: config.openrouterApiKey,
-      openrouterApiBase: config.openrouterApiBase,
-      fallbackModel: config.fallbackModel,
-    });
+    this.config = config;
+    this.aiProvider = new ChatProviderService(config);
   }
 
   /**
@@ -206,8 +201,8 @@ export class ChatService {
    * Process and save AI response
    */
   private processAiResponse(content: string, usage: AiTokenUsage, userId: number, documentId: number | undefined, sessionId: string, model: string) {
-    // Determine the display model name from environment variable
-    const displayModel = process.env.PRIMARY_MODEL_DISPLAY_NAME || process.env.PRIMARY_MODEL || model;
+    // Determine the display model name from config
+    const displayModel = this.config.primaryModelDisplayName || this.config.primaryModel || model;
 
     // 1. Find the last user message to update its token count
     // This is optional but good for detailed tracking
