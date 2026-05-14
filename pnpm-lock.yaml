@@ -59,6 +59,9 @@ importers:
       tailwind-merge:
         specifier: ^3.6.0
         version: 3.6.0
+      unpdf:
+        specifier: ^1.6.2
+        version: 1.6.2(@napi-rs/canvas@0.1.100)
       vee-validate:
         specifier: ^4.15.1
         version: 4.15.1(vue@3.5.34(typescript@6.0.3))
@@ -4236,6 +4239,14 @@ packages:
       oxc-parser: '*'
     peerDependenciesMeta:
       oxc-parser:
+        optional: true
+
+  unpdf@1.6.2:
+    resolution: {integrity: sha512-zQ80ySoPuPHOsvIoRp/nJyQt8TOUoTh1+WBCGcBvlddQNgKDLRwm0AY3x8Q35I7+kIiRSgqMx+Ma2pl9McIp7A==}
+    peerDependencies:
+      '@napi-rs/canvas': ^0.1.69
+    peerDependenciesMeta:
+      '@napi-rs/canvas':
         optional: true
 
   unplugin-remove@1.0.3:
@@ -8976,6 +8987,10 @@ snapshots:
       unplugin-utils: 0.3.1
     optionalDependencies:
       oxc-parser: 0.128.0
+
+  unpdf@1.6.2(@napi-rs/canvas@0.1.100):
+    optionalDependencies:
+      '@napi-rs/canvas': 0.1.100
 
   unplugin-remove@1.0.3(rollup@4.60.3):
     dependencies:

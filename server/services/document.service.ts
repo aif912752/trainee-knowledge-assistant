@@ -127,22 +127,26 @@ export class DocumentService {
   }
 
   /**
-   * Extract text from PDF buffer using pdf-parse
+   * Extract text from PDF buffer using unpdf
    */
   private async extractPDFText(buffer: Buffer): Promise<string> {
     const startTime = Date.now();
     try {
-      console.log('📄 Starting PDF text extraction (pdf-parse)...');
+      console.log('📄 Starting PDF text extraction (unpdf)...');
       
-      // Dynamic import for pdf-parse (it's already in your package.json)
-      const pdf = await import('pdf-parse/lib/pdf-parse.js');
-      const data = await pdf.default(buffer);
+      // unpdf is ESM-native and works great with Nuxt/Nitro
+      const { extractText } = await import('unpdf');
+      const uint8Array = new Uint8Array(buffer);
+      const { text } = await extractText(uint8Array);
+      
+      // text is string[], so we need to join it before trimming
+      const fullText = Array.isArray(text) ? text.join('\n') : text;
       
       const duration = Date.now() - startTime;
-      console.log(`✅ PDF extraction completed in ${duration}ms. Pages: ${data.numpages}`);
-      return data.text.trim();
+      console.log(`✅ PDF extraction completed in ${duration}ms`);
+      return (fullText || '').trim();
     } catch (error) {
-      console.error('PDF extraction error (pdf-parse):', error);
+      console.error('PDF extraction error (unpdf):', error);
       throw new ValidationError(
         'ไม่สามารถอ่านไฟล์ PDF ได้ กรุณาลองไฟล์อื่น',
         'PDF_PARSE_ERROR'

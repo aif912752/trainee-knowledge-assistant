@@ -1052,3 +1052,24 @@
 - ระบบอัปโหลดและดึงข้อความ PDF กลับมาใช้งานได้ปกติใน Docker
 - บันทึกประวัติการแก้ไขลงใน `AI_JOURNAL.md` ตามคำขอ
 
+## Session 89: Migrating PDF Extraction to unpdf (Modern ESM Solution)
+**Prompts:**
+- "ใน dev เมื่ออัพโหลดเอกสาร มันขึ้น PDF extraction error (pdf-parse): Package subpath './lib/pdf-parse.js' is not defined..."
+- "ทำไมต้องใช้ require"
+- "แล้วมี Library ใหม่ๆบ้างใหม่ ที่ใช้แทนได้"
+- "เปลี่ยนไปใช้ unpdf"
+- "ทำไมต้อง const { extractText } = await import('unpdf'); เขียนแบบนี้ ทำไมมไ่เขียน import ไว้บ้างบนแทน"
+- "Property 'trim' does not exist on type 'string[]'.ts(2339)"
+
+**AI Response:**
+- **Technological Shift:** เปลี่ยนจาก `pdf-parse` (CommonJS) มาเป็น **`unpdf`** ซึ่งเป็น ESM-native library ที่พัฒนาโดยทีม Unjs (ทีมเดียวกับ Nuxt) เพื่อแก้ปัญหาเรื่อง Module Resolution ใน Nuxt 3 และ Docker
+- **ESM Compatibility:** อธิบายความสำคัญของการใช้ **Dynamic Import (`await import`)** สำหรับ Library ที่จัดการไฟล์ซับซ้อน เพื่อป้องกันปัญหาตอน Build และช่วยเรื่อง Performance (Lazy loading)
+- **Type Safety:** แก้ไขข้อผิดพลาดของ Type โดยการรวม Array ของข้อความ (`string[]`) จากแต่ละหน้า PDF ด้วย `.join('\n')` ก่อนทำการ `trim()`
+- **Docker Ready:** การเปลี่ยนมาใช้ `unpdf` ช่วยให้การ Bundle ไฟล์ในโหมด Production/Standalone ของ Docker เสถียรขึ้นมาก
+
+**My Adjustment:**
+- ติดตั้ง `unpdf` v1.6.2
+- ปรับปรุง `DocumentService.ts` ให้ใช้ `unpdf` พร้อมจัดการ Type ให้ถูกต้อง
+- แก้ไขปัญหา `MODULE_NOT_FOUND` และ `pdf is not a function` ได้อย่างถาวรทั้งในโหมด Dev และ Docker
+- ระบบดึงข้อความ PDF ทำงานได้รวดเร็วและแม่นยำขึ้น
+
