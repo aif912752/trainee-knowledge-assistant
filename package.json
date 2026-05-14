@@ -51,5 +51,15 @@
     "typescript": "^6.0.3",
     "vitest": "^4.1.6",
     "vue-tsc": "^3.2.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "bcrypt",
+      "better-sqlite3",
+      "esbuild",
+      "msw",
+      "vue-demi"
+    ]
   }
 }

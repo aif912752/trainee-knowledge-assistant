@@ -4,10 +4,8 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcrypt';
 
-// Resolve schema path relative to project root in dev, or bundled location in prod
-const schemaPath = process.env.NODE_ENV === 'development'
-  ? join(process.cwd(), 'server/db/schema.sql')
-  : join(dirname(fileURLToPath(import.meta.url)), 'schema.sql');
+// Resolve schema path relative to project root
+const schemaPath = join(process.cwd(), 'server/db/schema.sql');
 
 export interface DatabaseContext {
   db: Database.Database;
