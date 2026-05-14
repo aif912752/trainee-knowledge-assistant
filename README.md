@@ -34,9 +34,9 @@ A web application for chatting with AI about uploaded documents. Built with Nuxt
 ## Setup & Run
 
 ### Prerequisites
-- Node.js 20+
-- pnpm 9+
-- z.ai API key (or OpenRouter API key)
+- **Node.js:** 20.x or 22.x (LTS recommended)
+- **Package Manager:** pnpm 9+
+- **API Keys:** z.ai API key (Primary) and OpenRouter API key (Fallback)
 
 ### Local Development
 
@@ -50,26 +50,27 @@ cd trainee-knowledge-assistant
 ```bash
 pnpm install
 ```
+*Note: If you encounter errors during install on Windows, ensure you have "Build Tools for Visual Studio" installed for native modules like `better-sqlite3` and `bcrypt`.*
 
 3. **Setup environment variables**
 ```bash
 cp .env.example .env
 ```
+Edit `.env` and fill in your API keys (See [Environment Variables](#environment-variables) section below).
 
-Edit `.env`:
+4. **Verify Installation (Optional but recommended)**
 ```bash
-ZAI_API_KEY=your-zai-api-key-here
-ZAI_API_BASE=https://api.z.ai/api/anthropic
-PRIMARY_MODEL=claude-sonnet-4-5-20250929
-SESSION_SECRET=your-random-secret-here
+pnpm test:run
 ```
+This will run 80+ unit tests to ensure your environment is set up correctly.
 
-4. **Run development server**
+5. **Run development server**
 ```bash
 pnpm dev
 ```
-
-Application will be available at `http://localhost:3000`
+- Application: `http://localhost:3000`
+- **Database:** The SQLite database will be initialized automatically on the first run in `data/app.db`.
+- **Default Login:** `admin` / `admin123`
 
 ### Docker Deployment
 
@@ -83,7 +84,7 @@ cp .env.example .env
 
 2. **Start services**
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
 
 3. **View logs**
@@ -91,27 +92,18 @@ docker-compose up -d
 docker-compose logs -f app
 ```
 
-4. **Stop services**
-```bash
-docker-compose down
-```
+Application will be available at `http://localhost:3001` (Note: Docker uses port 3001 by default to avoid conflicts with local dev).
 
-Application will be available at `http://localhost:3000`
+## Environment Variables
 
-#### Manual Docker Build
-
-```bash
-# Build image
-docker build -t trainee-knowledge-assistant .
-
-# Run container
-docker run -p 3000:3000 \
-  -e ZAI_API_KEY=your-key \
-  -e SESSION_SECRET=your-secret \
-  -v $(pwd)/data:/app/data \
-  -v $(pwd)/storage:/app/storage \
-  trainee-knowledge-assistant
-```
+| Variable | Description | Example |
+| :--- | :--- | :--- |
+| `ZAI_API_KEY` | Your Z.AI API Key | `your_key_here` |
+| `ZAI_API_BASE` | Z.AI Anthropic Endpoint | `https://api.z.ai/api/anthropic` |
+| `PRIMARY_MODEL` | Technical Model ID | `claude-3-5-sonnet-20241022` |
+| `PRIMARY_MODEL_DISPLAY_NAME` | Friendly name for UI | `Claude 3.5 Sonnet` |
+| `OPENROUTER_API_KEY` | Fallback AI Provider Key | `sk-or-v1-...` |
+| `SESSION_SECRET` | Random string for cookies | `at-least-32-chars-long` |
 
 ## Usage
 
