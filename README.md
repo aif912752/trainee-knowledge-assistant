@@ -218,6 +218,7 @@ pnpm test:coverage    # Run tests with coverage
 - ✅ CORS configuration
 - ✅ Rate limiting on login endpoint
 - ✅ Singleton services with DI pattern
+- ✅ CSP configuration for Web Workers (Blob support)
 
 ## License
 
