@@ -37,8 +37,8 @@ A web application for chatting with AI about uploaded documents. Built with Nuxt
 - **Node.js:** 20.x or 22.x (LTS recommended)
 - **Package Manager:** pnpm 9+
 - **API Keys:** 
-  - [Z.AI API Key](https://z.ai/) (Primary Provider)
-  - [OpenRouter API Key](https://openrouter.ai/) (Fallback Provider)
+  - **Z.AI (Primary):** Login to [z.ai](https://z.ai/), go to "API Keys", and create a new key.
+  - **OpenRouter (Fallback):** Login to [openrouter.ai](https://openrouter.ai/), go to "Keys", and create a new key. (Required for fallback features)
 
 ### Local Development
 
