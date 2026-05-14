@@ -24,7 +24,8 @@ export class SessionRepository {
    */
   create(userId: number, maxAgeSeconds: number = 60 * 60 * 24 * 7): Session {
     const token = this.generateToken();
-    const expiresAt = new Date(Date.now() + maxAgeSeconds * 1000).toISOString();
+    // Use Unix timestamp in seconds for better compatibility across environments
+    const expiresAt = Math.floor(Date.now() / 1000) + maxAgeSeconds;
 
     const stmt = this.db.prepare(`
       INSERT INTO sessions (user_id, token, expires_at)
@@ -37,7 +38,7 @@ export class SessionRepository {
       id: result.lastInsertRowid as number,
       user_id: userId,
       token,
-      expires_at: expiresAt,
+      expires_at: expiresAt.toString(),
       created_at: new Date().toISOString()
     };
   }
@@ -46,14 +47,15 @@ export class SessionRepository {
    * Find session by token
    */
   findByToken(token: string): Session | null {
+    const now = Math.floor(Date.now() / 1000);
     const stmt = this.db.prepare(`
       SELECT * FROM sessions
-      WHERE token = ? AND expires_at > datetime('now')
+      WHERE token = ? AND CAST(expires_at AS INTEGER) > ?
       ORDER BY created_at DESC
       LIMIT 1
     `);
 
-    return stmt.get(token) as Session | null;
+    return stmt.get(token, now) as Session | null;
   }
 
   /**
@@ -86,8 +88,9 @@ export class SessionRepository {
    * Clean up expired sessions
    */
   deleteExpired(): number {
-    const stmt = this.db.prepare('DELETE FROM sessions WHERE expires_at <= datetime("now")');
-    const result = stmt.run();
+    const now = Math.floor(Date.now() / 1000);
+    const stmt = this.db.prepare('DELETE FROM sessions WHERE CAST(expires_at AS INTEGER) <= ?');
+    const result = stmt.run(now);
     return result.changes;
   }
 }
