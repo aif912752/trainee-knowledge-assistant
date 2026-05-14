@@ -132,6 +132,17 @@ Application will be available at `http://localhost:3001` (Note: Docker uses port
 - Token usage is displayed after each message
 - Total tokens per session is shown in chat header
 
+## Troubleshooting
+
+### No Z.AI API Key?
+If you don't have a Z.AI account, you can easily use **OpenRouter** as the primary provider:
+1. Use your OpenRouter Key for `NUXT_ZAI_API_KEY`.
+2. Set `NUXT_ZAI_API_BASE` to `https://openrouter.ai/api/v1`.
+3. Set `NUXT_PUBLIC_PRIMARY_MODEL` to any model on OpenRouter (e.g., `google/gemini-2.0-flash-001`).
+4. Set `NUXT_PUBLIC_PRIMARY_MODEL_DISPLAY_NAME` to your preferred display name.
+
+The system will automatically detect the OpenAI-compatible format and work seamlessly.
+
 ## Architecture
 
 ### Layer Structure
