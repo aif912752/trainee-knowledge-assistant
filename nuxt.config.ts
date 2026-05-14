@@ -22,20 +22,20 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     // Server-side environment variables (private)
-    zaiApiKey: process.env.ZAI_API_KEY,
-    zaiApiBase: process.env.ZAI_API_BASE,
-    primaryModel: process.env.PRIMARY_MODEL,
-    openrouterApiKey: process.env.OPENROUTER_API_KEY,
-    openrouterApiBase: process.env.OPENROUTER_API_BASE,
-    fallbackModel: process.env.FALLBACK_MODEL,
-    databasePath: process.env.DATABASE_PATH,
-    sessionSecret: process.env.SESSION_SECRET,
+    zaiApiKey: process.env.NUXT_ZAI_API_KEY,
+    zaiApiBase: process.env.NUXT_ZAI_API_BASE,
+    primaryModel: process.env.NUXT_PRIMARY_MODEL,
+    openrouterApiKey: process.env.NUXT_OPENROUTER_API_KEY,
+    openrouterApiBase: process.env.NUXT_OPENROUTER_API_BASE,
+    fallbackModel: process.env.NUXT_FALLBACK_MODEL,
+    databasePath: process.env.NUXT_DATABASE_PATH,
+    sessionSecret: process.env.NUXT_SESSION_SECRET,
 
     // Public environment variables (exposed to client)
     public: {
-      appUrl: process.env.APP_URL,
-      primaryModel: process.env.PRIMARY_MODEL,
-      primaryModelDisplayName: process.env.PRIMARY_MODEL_DISPLAY_NAME,
+      appUrl: process.env.NUXT_PUBLIC_APP_URL,
+      primaryModel: process.env.NUXT_PRIMARY_MODEL,
+      primaryModelDisplayName: process.env.NUXT_PRIMARY_MODEL_DISPLAY_NAME,
     },
   },
 
