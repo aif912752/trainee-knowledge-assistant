@@ -206,6 +206,9 @@ export class ChatService {
    * Process and save AI response
    */
   private processAiResponse(content: string, usage: AiTokenUsage, userId: number, documentId: number | undefined, sessionId: string, model: string) {
+    // Determine the display model name from environment variable
+    const displayModel = process.env.PRIMARY_MODEL_DISPLAY_NAME || process.env.PRIMARY_MODEL || model;
+
     // 1. Find the last user message to update its token count
     // This is optional but good for detailed tracking
     try {
@@ -226,7 +229,7 @@ export class ChatService {
       role: 'assistant',
       content: content,
       tokens: usage.output,
-      model: model
+      model: displayModel
     });
 
     // 3. Record token usage in global counter

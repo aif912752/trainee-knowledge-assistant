@@ -34,10 +34,23 @@ export class ChatProviderService extends BaseApiService {
     super();
   }
 
+  /**
+   * Build URL for OpenAI-compatible API
+   */
+  private buildOpenAiUrl(baseUrl: string): string {
+    return baseUrl.includes('/chat/completions') ? baseUrl : `${baseUrl}/v4/chat/completions`;
+  }
+
+  /**
+   * Build URL for Anthropic API
+   */
+  private buildAnthropicUrl(baseUrl: string): string {
+    return baseUrl.endsWith('/v1/messages') ? baseUrl : `${baseUrl}/v1/messages`;
+  }
+
   async callPrimary(fullPrompt: string): Promise<ChatProviderResult> {
     const baseUrl = this.config.zaiApiBase.replace(/\/$/, '');
     const isAnthropic = baseUrl.includes('/anthropic');
-    const isCodingPlan = baseUrl.includes('/coding');
     const primaryModel = this.config.primaryModel;
 
     if (!primaryModel) {
@@ -45,7 +58,7 @@ export class ChatProviderService extends BaseApiService {
     }
 
     if (isAnthropic) {
-      const url = baseUrl.endsWith('/v1/messages') ? baseUrl : `${baseUrl}/v1/messages`;
+      const url = this.buildAnthropicUrl(baseUrl);
       console.log(`[ChatProvider] Calling Primary AI (Anthropic Mode): ${url}`);
 
       const response = await this.post<AnthropicMessageResponse>(url, {
@@ -65,22 +78,14 @@ export class ChatProviderService extends BaseApiService {
       return {
         content: response.content[0].text,
         usage: normalizeZaiUsage(response.usage),
-        model: response.model || primaryModel
+        model: primaryModel
       };
     } else {
-      let url = baseUrl;
-      let model = primaryModel;
+      const url = this.buildOpenAiUrl(baseUrl);
 
-      if (isCodingPlan) {
-        url = baseUrl.includes('/chat/completions') ? baseUrl : `${baseUrl}/chat/completions`;
-        model = 'glm-4.7';
-      } else {
-        url = baseUrl.includes('/chat/completions') ? baseUrl : `${baseUrl}/v4/chat/completions`;
-      }
-
-      console.log(`[ChatProvider] Calling Primary AI: ${url} (Model: ${model})`);
+      console.log(`[ChatProvider] Calling Primary AI: ${url} (Model: ${primaryModel})`);
       const response = await this.post<OpenAIChatResponse>(url, {
-        model,
+        model: primaryModel,
         messages: [
           { role: 'system', content: CHAT_SYSTEM_PROMPT },
           { role: 'user', content: fullPrompt }
@@ -97,7 +102,7 @@ export class ChatProviderService extends BaseApiService {
       return {
         content: choice.message.content,
         usage: normalizeOpenRouterUsage(response.usage),
-        model: response.model || model
+        model: primaryModel
       };
     }
   }
@@ -105,7 +110,6 @@ export class ChatProviderService extends BaseApiService {
   async streamPrimary(fullPrompt: string): Promise<Response> {
     const baseUrl = this.config.zaiApiBase.replace(/\/$/, '');
     const isAnthropic = baseUrl.includes('/anthropic');
-    const isCodingPlan = baseUrl.includes('/coding');
     const primaryModel = this.config.primaryModel;
 
     if (!primaryModel) {
@@ -113,7 +117,7 @@ export class ChatProviderService extends BaseApiService {
     }
 
     if (isAnthropic) {
-      const url = baseUrl.endsWith('/v1/messages') ? baseUrl : `${baseUrl}/v1/messages`;
+      const url = this.buildAnthropicUrl(baseUrl);
       console.log(`[ChatProvider] Streaming Primary AI (Anthropic Mode): ${url}`);
 
       return this.postStream(url, {
@@ -127,19 +131,11 @@ export class ChatProviderService extends BaseApiService {
         'anthropic-version': '2023-06-01',
       });
     } else {
-      let url = baseUrl;
-      let model = primaryModel;
+      const url = this.buildOpenAiUrl(baseUrl);
 
-      if (isCodingPlan) {
-        url = baseUrl.includes('/chat/completions') ? baseUrl : `${baseUrl}/chat/completions`;
-        model = 'glm-4.7';
-      } else {
-        url = baseUrl.includes('/chat/completions') ? baseUrl : `${baseUrl}/v4/chat/completions`;
-      }
-
-      console.log(`[ChatProvider] Streaming Primary AI: ${url} (Model: ${model})`);
+      console.log(`[ChatProvider] Streaming Primary AI: ${url} (Model: ${primaryModel})`);
       return this.postStream(url, {
-        model,
+        model: primaryModel,
         messages: [
           { role: 'system', content: CHAT_SYSTEM_PROMPT },
           { role: 'user', content: fullPrompt }
@@ -192,7 +188,7 @@ export class ChatProviderService extends BaseApiService {
     return {
       content: choice.message.content,
       usage: normalizeOpenRouterUsage(response.usage),
-      model: response.model || model
+      model: model
     };
   }
 

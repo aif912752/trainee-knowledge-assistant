@@ -128,6 +128,7 @@ export function useChat() {
         
         if (!reader) throw new Error('No reader')
 
+        const config = useRuntimeConfig()
         let accumulatedContent = ''
         isTyping.value = true
 
@@ -148,7 +149,12 @@ export function useChat() {
           if (msg) {
             // Some providers send the model name in the first chunk without content
             if (parsed.model && !msg.model) {
-              msg.model = parsed.model
+              // If the model matches our primary model or the technical name (glm-4.7),
+              // use the display name from config
+              const isPrimary = parsed.model === config.public.primaryModel || parsed.model === 'glm-4.7'
+              msg.model = isPrimary && config.public.primaryModelDisplayName 
+                ? config.public.primaryModelDisplayName 
+                : parsed.model
             }
 
             if (parsed.content) {

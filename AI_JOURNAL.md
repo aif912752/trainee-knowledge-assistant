@@ -1073,3 +1073,24 @@
 - แก้ไขปัญหา `MODULE_NOT_FOUND` และ `pdf is not a function` ได้อย่างถาวรทั้งในโหมด Dev และ Docker
 - ระบบดึงข้อความ PDF ทำงานได้รวดเร็วและแม่นยำขึ้น
 
+
+## Session 90: CSP Fix & Model Display Externalization
+**Prompt:** "client:935 Creating a worker from 'blob:http://localhost:3000/...' violates Content Security Policy... และอยากให้ UI แสดงชื่อ model ตามที่ตั้งใน env ห้าม hardcode"
+
+**Analysis & Goal:**
+1. **CSP Fix:** ไลบรารี PDF.js พยายามสร้าง Web Worker จาก Blob URL ซึ่งถูกบล็อกโดย `nuxt-security` ค่าพื้นฐาน ต้องอนุญาต `blob:` ใน `script-src` และ `worker-src`
+2. **Model Display:** ผู้ใช้ต้องการให้ UI แสดงชื่อโมเดลที่อ่านง่าย (Friendly Name) เช่น "Claude 3.5 Sonnet" แทนที่จะแสดงชื่อทางเทคนิคหรือชื่อที่ Z.AI แมปมา (เช่น `glm-4.7`) โดยต้องตั้งค่าผ่าน `.env` เท่านั้น
+
+**Action Taken:**
+- **nuxt.config.ts:** 
+    - อัปเดต `contentSecurityPolicy` เพิ่ม `blob:` ใน `script-src` และเพิ่ม `worker-src`
+    - เพิ่ม `PRIMARY_MODEL` และ `PRIMARY_MODEL_DISPLAY_NAME` เข้าใน `public` runtime config เพื่อให้ Frontend เข้าถึงได้
+- **.env & .env.example:** เพิ่มตัวแปร `PRIMARY_MODEL_DISPLAY_NAME="Claude 3.5 Sonnet"`
+- **server/services/chat.service.ts:** แก้ไขให้บันทึกข้อความด้วยชื่อจาก `PRIMARY_MODEL_DISPLAY_NAME` แทนชื่อโมเดลจาก API Response
+- **app/composables/useChat.ts:** เพิ่ม Logic ในการดึง Display Name มาแสดงผลในช่วง Streaming หากโมเดลที่ได้รับตรงกับโมเดลหลักของเรา
+
+**Result:**
+- PDF Viewer/Uploader ทำงานได้ปกติไม่ติด CSP
+- UI แสดงชื่อโมเดลตามที่กำหนดใน `.env` อย่างสม่ำเสมอทั้งตอน Streaming และตอนโหลดประวัติ โดยไม่มีการ Hardcode ชื่อลงในโค้ด
+- โค้ด Backend สะอาดขึ้นโดยการย้าย Logic การตัดสินใจชื่อโมเดลไปไว้ในที่เดียว (SSOT)
+

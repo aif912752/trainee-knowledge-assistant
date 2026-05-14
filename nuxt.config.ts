@@ -34,6 +34,8 @@ export default defineNuxtConfig({
     // Public environment variables (exposed to client)
     public: {
       appUrl: process.env.APP_URL,
+      primaryModel: process.env.PRIMARY_MODEL,
+      primaryModelDisplayName: process.env.PRIMARY_MODEL_DISPLAY_NAME,
     },
   },
 
@@ -80,11 +82,12 @@ export default defineNuxtConfig({
       contentSecurityPolicy: {
         // CSP for basic protection
         'default-src': ["'self'"],
-        'script-src': ["'self'", "'unsafe-inline'"],
+        'script-src': ["'self'", "'unsafe-inline'", "blob:"],
         'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://www.gstatic.com'],
         'font-src': ["'self'", 'https://fonts.gstatic.com', 'https://fonts.googleapis.com'],
         'img-src': ["'self'", 'data:', 'https:'],
         'connect-src': ["'self'", 'https://api.z.ai', 'https://api.openrouter.ai'],
+        'worker-src': ["'self'", "blob:"],
       }
     },
     // Add route rules to bypass security features that consume the request body for uploads

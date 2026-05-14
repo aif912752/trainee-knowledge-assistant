@@ -321,3 +321,27 @@ AI มักจะตอบกลับมาในรูปแบบ Markdown �
 4. **Infrastructure & Quality** - ให้ความสำคัญกับความปลอดภัย (Docker/Non-root) และความแม่นยำของโค้ด (TypeScript)
 
 ทั้งหมดนี้เป็น decisions ที่ผ่านการคิดอย่างรอบคอบ และเหมาะสมกับ context ของ Junior Dev Assessment 2026
+
+---
+
+## Decision 14: Model Label Externalization & Friendly UI Display
+
+### Context
+AI Providers (เช่น Z.AI) มักส่งชื่อโมเดลภายใน (เช่น `glm-4.7`) กลับมาใน API Response ซึ่งหากนำไปแสดงผลบน UI ตรงๆ จะทำให้นักพัฒนาหรือผู้ใช้ทั่วไปสับสน เนื่องจากไม่ตรงกับโมเดลระดับที่คาดหวัง (เช่น Claude 3.5 Sonnet) นอกจากนี้การ Hardcode ชื่อโมเดลลงในโค้ดทำให้การปรับเปลี่ยนในอนาคตทำได้ยาก
+
+### Alternatives Considered
+1. **Hardcode Mapping ใน Frontend** - เขียน if/else ใน Vue component เพื่อเปลี่ยน `glm-4.7` เป็น `Claude 3.5 Sonnet`
+   - ข้อเสีย: ดูแลยาก, ขัดกับหลักการ DRY, ต้องแก้โค้ดทุกครั้งที่เปลี่ยนโมเดล
+2. **ใช้ชื่อจาก API Response โดยตรง** - แสดง `glm-4.7`
+   - ข้อเสีย: UX ไม่ดี, ผู้ใช้ไม่ทราบระดับความสามารถที่แท้จริงของ AI
+3. **Environment-Based Display Name (Externalization)** - ตั้งชื่อที่ต้องการแสดงผลไว้ใน `.env`
+
+### Why Externalized Display Name
+1. **Single Source of Truth (SSOT)** - ควบคุมทั้ง "โมเดลที่ใช้จริง" (`PRIMARY_MODEL`) และ "ชื่อที่ใช้แสดงผล" (`PRIMARY_MODEL_DISPLAY_NAME`) ผ่านไฟล์ Configuration (`.env`) เพียงที่เดียว
+2. **Decoupling** - แยก Logic การประมวลผล (Backend) ออกจากการแสดงผล (Frontend) โดยใช้ Runtime Config ของ Nuxt เป็นตัวกลางส่งผ่านข้อมูล
+3. **Flexibility** - สามารถเปลี่ยนชื่อแบรนด์หรือรุ่นของโมเดลได้ทันทีโดยไม่ต้องแก้ไข Source code หรือทำการ Rebuild แอปพลิเคชัน (ในกรณีที่รันแบบปกติ) หรือเพียงแค่เปลี่ยนค่าใน Config ของ Docker
+4. **Consistency** - มั่นใจได้ว่าชื่อโมเดลจะแสดงผลเหมือนกันในทุกส่วนของแอปพลิเคชัน (Chat, History, Logs)
+
+### Trade-offs
+- ✅ **Clean UI/UX** - ผู้ใช้เห็นชื่อโมเดลที่เข้าใจง่ายและเป็นมิตร
+- ✅ **Developer Productivity** - ลดความสับสนระหว่างการ Debug และการตั้งค่าระบบ
