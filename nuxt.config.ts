@@ -19,25 +19,24 @@ export default defineNuxtConfig({
     exposeConfig: true,
     viewer: true,
   },
+// Runtime configuration
+runtimeConfig: {
+  // Private keys (Server only)
+  zaiApiKey: '',
+  zaiApiBase: '',
+  openrouterApiKey: '',
+  openrouterApiBase: '',
+  fallbackModel: '',
+  databasePath: '',
+  sessionSecret: '',
 
-  runtimeConfig: {
-    // Server-side environment variables (private)
-    zaiApiKey: process.env.NUXT_ZAI_API_KEY,
-    zaiApiBase: process.env.NUXT_ZAI_API_BASE,
-    primaryModel: process.env.NUXT_PRIMARY_MODEL,
-    openrouterApiKey: process.env.NUXT_OPENROUTER_API_KEY,
-    openrouterApiBase: process.env.NUXT_OPENROUTER_API_BASE,
-    fallbackModel: process.env.NUXT_FALLBACK_MODEL,
-    databasePath: process.env.NUXT_DATABASE_PATH,
-    sessionSecret: process.env.NUXT_SESSION_SECRET,
-
-    // Public environment variables (exposed to client)
-    public: {
-      appUrl: process.env.NUXT_PUBLIC_APP_URL,
-      primaryModel: process.env.NUXT_PRIMARY_MODEL,
-      primaryModelDisplayName: process.env.NUXT_PRIMARY_MODEL_DISPLAY_NAME,
-    },
+  // Public keys (Exposed to client)
+  public: {
+    appUrl: '',
+    primaryModel: '',
+    primaryModelDisplayName: '',
   },
+},
 
   ssr: true,
 

@@ -32,7 +32,15 @@ export default defineNitroPlugin((nitroApp) => {
       repositories.message,
       repositories.token,
       repositories.document,
-      config
+      {
+        zaiApiKey: config.zaiApiKey,
+        zaiApiBase: config.zaiApiBase,
+        primaryModel: config.public.primaryModel,
+        primaryModelDisplayName: config.public.primaryModelDisplayName,
+        openrouterApiKey: config.openrouterApiKey,
+        openrouterApiBase: config.openrouterApiBase,
+        fallbackModel: config.fallbackModel,
+      }
     );
     const documentService = new DocumentService(repositories.document);
 
