@@ -8,17 +8,19 @@ services:
       - "3001:3000"
     environment:
       - NODE_ENV=production
-      - NUXT_PUBLIC_APP_URL=http://localhost:3001
+      - NUXT_PUBLIC_APP_URL=${NUXT_PUBLIC_APP_URL:-http://localhost:3001}
       - NUXT_DATABASE_PATH=/app/data/app.db
       - NUXT_STORAGE_DIR=/app/storage
-      - NUXT_CORS_ORIGINS=http://localhost:3001
-      - NUXT_ZAI_API_KEY=${ZAI_API_KEY}
-      - NUXT_ZAI_API_BASE=${ZAI_API_BASE}
-      - NUXT_PRIMARY_MODEL=${PRIMARY_MODEL}
-      - NUXT_OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - NUXT_OPENROUTER_API_BASE=${OPENROUTER_API_BASE}
-      - NUXT_FALLBACK_MODEL=${FALLBACK_MODEL}
-      - NUXT_SESSION_SECRET=${SESSION_SECRET}
+      - NUXT_CORS_ORIGINS=${NUXT_CORS_ORIGINS:-http://localhost:3001}
+      # The following are loaded from .env via env_file
+      # NUXT_ZAI_API_KEY
+      # NUXT_ZAI_API_BASE
+      # NUXT_PRIMARY_MODEL
+      # NUXT_PRIMARY_MODEL_DISPLAY_NAME
+      # NUXT_OPENROUTER_API_KEY
+      # NUXT_OPENROUTER_API_BASE
+      # NUXT_FALLBACK_MODEL
+      # NUXT_SESSION_SECRET
     env_file:
       - .env
     volumes:
