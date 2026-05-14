@@ -127,47 +127,22 @@ export class DocumentService {
   }
 
   /**
-   * Extract text from PDF buffer using pdfjs-dist directly
+   * Extract text from PDF buffer using pdf-parse
    */
   private async extractPDFText(buffer: Buffer): Promise<string> {
     const startTime = Date.now();
     try {
-      console.log('📄 Starting PDF text extraction...');
-      const pdfjsPath = require.resolve('pdfjs-dist/legacy/build/pdf.mjs');
-      const pdfjs = await import(pathToFileURL(pdfjsPath).href);
+      console.log('📄 Starting PDF text extraction (pdf-parse)...');
       
-      const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
-      pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
-      
-      const uint8Array = new Uint8Array(buffer);
-      const loadingTask = pdfjs.getDocument({
-        data: uint8Array,
-        useSystemFonts: true,
-        disableFontFace: true,
-        isEvalSupported: false,
-        useWorkerFetch: false,
-      });
-      
-      const pdf = await loadingTask.promise;
-      console.log(`📄 PDF loaded: ${pdf.numPages} pages found.`);
-      let fullText = '';
-      
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items
-          .map((item: PdfTextItem) => item.str)
-          .join(' ');
-        fullText += pageText + '\n';
-        
-        if (i % 10 === 0) console.log(`📄 Extracted ${i}/${pdf.numPages} pages...`);
-      }
+      // Dynamic import for pdf-parse (it's already in your package.json)
+      const pdf = await import('pdf-parse/lib/pdf-parse.js');
+      const data = await pdf.default(buffer);
       
       const duration = Date.now() - startTime;
-      console.log(`✅ PDF extraction completed in ${duration}ms`);
-      return fullText.trim();
+      console.log(`✅ PDF extraction completed in ${duration}ms. Pages: ${data.numpages}`);
+      return data.text.trim();
     } catch (error) {
-      console.error('PDF extraction error (pdfjs):', error);
+      console.error('PDF extraction error (pdf-parse):', error);
       throw new ValidationError(
         'ไม่สามารถอ่านไฟล์ PDF ได้ กรุณาลองไฟล์อื่น',
         'PDF_PARSE_ERROR'

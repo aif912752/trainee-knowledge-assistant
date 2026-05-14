@@ -196,13 +196,10 @@ const formatTime = (dateStr: string) => {
                 <Bot class="size-4" />
               </div>
               <div class="rounded-xl rounded-tl-sm border bg-card px-4 py-3 shadow-sm">
-                <div class="flex items-center gap-2">
-                  <div class="flex gap-1">
-                    <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:-0.3s]"></span>
-                    <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:-0.15s]"></span>
-                    <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce"></span>
-                  </div>
-                  <span class="text-xs text-muted-foreground">กำลังพิมพ์...</span>
+                <div class="flex gap-1">
+                  <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:-0.3s]"></span>
+                  <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:-0.15s]"></span>
+                  <span class="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce"></span>
                 </div>
               </div>
             </div>

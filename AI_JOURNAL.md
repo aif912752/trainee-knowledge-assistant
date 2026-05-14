@@ -1028,4 +1028,27 @@
 - เพิ่ม word-break styles ให้ทุก elements (p, h1-h6, li, blockquote, code, a, table)
 - เพิ่ม `table-layout: auto` ให้ table
 
-**Status:** Responsive design ทำงานถูกต้อง ✅
+**Status:** Responsive designทำงานถูกต้อง ✅
+
+## Session 88: Docker Configuration, Production Environment Fixes & PDF Extraction
+**Prompts:**
+- "เช็คไฟล์ docker ให้ที ว่าเขียนถูกไหม และลอง build ให้ที"
+- "ปรับให้ที" (ปรับ Dockerfile ให้ใช้ pnpm)
+- "ทำไมต้องเอา lockfile มาด้วย"
+- "แล้วทำไมต้องเปลี่ยนเป็น npm"
+- "ลองใช้งานดูแล้ว api chat มันขึ้น OPENROUTER_API_KEY is not configured"
+
+**AI Response:**
+- **Docker Optimization:** ปรับปรุง `Dockerfile` ให้รองรับ **pnpm v10** และตั้งค่า `only-allow-trusted-dependencies=false` เพื่อให้สามารถ Build native modules (`better-sqlite3`, `bcrypt`) ใน Docker ได้สำเร็จ
+- **Port Mapping:** เปลี่ยนพอร์ต Docker จาก `3000:3000` เป็น **`3001:3000`** เพื่อไม่ให้ชนกับ Dev Server ที่รันอยู่ในเครื่อง (localhost:3000)
+- **Database Path Fix:** แก้ไข `server/db/init.ts` ให้ใช้ `process.cwd()` ในการหา `schema.sql` เพื่อให้ทำงานได้ถูกต้องทั้งบน Windows และใน Docker (Linux)
+- **Production Env Config:** ปรับปรุง `docker-compose.yml` ให้ใช้คำนำหน้า **`NUXT_`** สำหรับ Environment Variables เพื่อให้ Nuxt 3 ในโหมด Production ดึงค่าไปใช้ใน `runtimeConfig` ได้ถูกต้อง
+- **PDF Extraction Compatibility:** เปลี่ยนจาก `pdfjs-dist` กลับมาใช้ **`pdf-parse`** ใน `DocumentService.ts` เนื่องจาก `pdfjs-dist` มีปัญหาเรื่องการ Bundle ไฟล์ลึกๆ ในโหมด Standalone ของ Docker ทำให้เกิด Error `MODULE_NOT_FOUND`
+
+**My Adjustment:**
+- ระบบ Docker สามารถ Build และรันได้สมบูรณ์ (Healthy) เข้าใช้งานได้ที่ `localhost:3001`
+- แก้ไขปัญหา Database Initialization ใน Docker สำเร็จ
+- แก้ไขปัญหา API Key ไม่ถูกโหลดในโหมด Production ด้วยมาตรฐาน `NUXT_` prefix
+- ระบบอัปโหลดและดึงข้อความ PDF กลับมาใช้งานได้ปกติใน Docker
+- บันทึกประวัติการแก้ไขลงใน `AI_JOURNAL.md` ตามคำขอ
+
